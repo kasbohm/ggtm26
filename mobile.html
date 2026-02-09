@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gåpings Mallorca - Mobile</title>
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Gåpings Mallorca Getaway 2026">
+    <meta property="og:description" content="Plan din sykkelferie på Mallorca! Elite eller Mosjonist over 4 dager.">
+    <meta property="og:image" content="https://mallorca.gaping.no/logo.png">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; }
+        
+        /* Splash */
+        .splash { position: fixed; inset: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+        .splash.hidden { opacity: 0; pointer-events: none; }
+        .splash img { width: 80%; max-width: 400px; }
+        .splash-bar { width: 80%; max-width: 400px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-top: 2rem; overflow: hidden; }
+        .splash-fill { height: 100%; background: linear-gradient(90deg, #00f5ff, #ff00ff, #ffaa00); background-size: 200%; animation: shimmer 2s linear infinite; transition: width 0.3s; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .splash-text { color: #00f5ff; font-size: 0.9rem; margin-top: 1rem; font-family: 'Courier New', monospace; }
+        
+        /* Hamburger Menu */
+        .menu-btn { position: fixed; top: 10px; right: 10px; z-index: 2000; width: 50px; height: 50px; background: #2c3e50; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .menu-btn span { width: 25px; height: 3px; background: white; transition: 0.3s; }
+        .menu-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .menu-btn.active span:nth-child(2) { opacity: 0; }
+        .menu-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+        
+        .menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: #2c3e50; z-index: 1999; transition: right 0.3s; padding: 70px 20px 20px; overflow-y: auto; }
+        .menu.active { right: 0; }
+        .menu-item { background: #34495e; color: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: none; width: 100%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .menu-item:active { background: #3d566e; }
+        
+        /* Map Container */
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 120px; }
+        
+        /* Day Swiper */
+        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: white; box-shadow: 0 -4px 12px rgba(0,0,0,0.2); overflow: hidden; }
+        .day-cards { display: flex; height: 100%; transition: transform 0.3s; }
+        .day-card { min-width: 100%; padding: 15px; display: flex; flex-direction: column; }
+        .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .day-title { font-weight: 600; font-size: 1.1rem; }
+        .day-stats { font-size: 0.9rem; color: #7f8c8d; }
+        .day-routes { display: flex; gap: 8px; overflow-x: auto; }
+        .route-chip { padding: 8px 12px; background: #ecf0f1; border-radius: 20px; font-size: 0.75rem; white-space: nowrap; border-left: 3px solid; }
+        .day-dots { display: flex; justify-content: center; gap: 8px; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .dot { width: 8px; height: 8px; background: #bdc3c7; border-radius: 50%; }
+        .dot.active { background: #3498db; }
+        
+        /* Fab Buttons */
+        .fab-group { position: fixed; bottom: 140px; right: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .fab { width: 56px; height: 56px; background: #3498db; border-radius: 50%; border: none; color: white; font-size: 1.5rem; box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .fab:active { transform: scale(0.95); }
+        .fab.download { background: #27ae60; }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash" id="splash">
+        <img src="logo.png" alt="Gåpings Mallorca">
+        <div class="splash-bar"><div class="splash-fill" id="splashFill" style="width:0%"></div></div>
+        <div class="splash-text" id="splashText">Initializing...</div>
+    </div>
+    
+    <!-- Hamburger Menu -->
+    <div class="menu-btn" id="menuBtn"><span></span><span></span><span></span></div>
+    <div class="menu" id="menu">
+        <button class="menu-item" onclick="autoMakeElite(); closeMenu();">⚡ Auto Elite (A)</button>
+        <button class="menu-item" onclick="autoMakeMosjonist(); closeMenu();">🚴 Auto Mosjonist (B)</button>
+        <button class="menu-item" onclick="document.getElementById('gpxInput').click();">📁 Last opp GPX</button>
+        <button class="menu-item" onclick="clearAll(); closeMenu();">🗑️ Fjern alle</button>
+    </div>
+    <input type="file" id="gpxInput" accept=".gpx" multiple style="display:none">
+    
+    <!-- Map -->
+    <div id="map"></div>
+    
+    <!-- FAB Buttons -->
+    <div class="fab-group">
+        <button class="fab download" onclick="downloadCurrentDay()">⬇️</button>
+    </div>
+    
+    <!-- Day Swiper -->
+    <div class="day-swiper">
+        <div class="day-cards" id="dayCards">
+            <div class="day-card" style="border-top: 4px solid #e74c3c;">
+                <div class="day-header"><span class="day-title">Dag 1</span><span class="day-stats" id="day1stats"></span></div>
+                <div class="day-routes" id="day1routes"></div>
+            </div>
+            <div class="day-card" style="border-top: 4px solid #3498db;">
+                <div class="day-header"><span class="day-title">Dag 2</span><span class="day-stats" id="day2stats"></span></div>
+                <div class="day-routes" id="day2routes"></div>
+            </div>
+            <div class="day-card" style="border-top: 4px solid #2ecc71;">
+                <div class="day-header"><span class="day-title">Dag 3</span><span class="day-stats" id="day3stats"></span></div>
+                <div class="day-routes" id="day3routes"></div>
+            </div>
+            <div class="day-card" style="border-top: 4px solid #f39c12;">
+                <div class="day-header"><span class="day-title">Dag 4</span><span class="day-stats" id="day4stats"></span></div>
+                <div class="day-routes" id="day4routes"></div>
+            </div>
+        </div>
+        <div class="day-dots">
+            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="gpx-common.js"></script>
+    <script>
+        let map, currentDay = 0;
+        
+        // Init map
+        map = L.map('map').setView([39.6, 2.9], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        
+        // Menu toggle
+        document.getElementById('menuBtn').onclick = () => {
+            document.getElementById('menu').classList.toggle('active');
+            document.getElementById('menuBtn').classList.toggle('active');
+        };
+        function closeMenu() {
+            document.getElementById('menu').classList.remove('active');
+            document.getElementById('menuBtn').classList.remove('active');
+        }
+        
+        // Swipe
+        let startX = 0;
+        const cards = document.getElementById('dayCards');
+        const dots = document.querySelectorAll('.dot');
+        
+        cards.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        cards.addEventListener('touchend', e => {
+            const endX = e.changedTouches[0].clientX;
+            if (startX - endX > 50 && currentDay < 3) currentDay++;
+            else if (endX - startX > 50 && currentDay > 0) currentDay--;
+            updateSwiper();
+        });
+        
+        function updateSwiper() {
+            cards.style.transform = `translateX(-${currentDay * 100}%)`;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentDay));
+        }
+        
+        function addRoute(fileName, points, color) {
+            const latLngs = points.map(p => [p.lat, p.lon]);
+            const polyline = L.polyline(latLngs, { color, weight: 3, opacity: 0.7 }).addTo(map);
+            const startMarker = L.circleMarker(latLngs[0], { radius: 6, fillColor: '#2ecc71', color: '#27ae60', weight: 2, fillOpacity: 0.8 }).addTo(map);
+            const endMarker = L.circleMarker(latLngs[latLngs.length-1], { radius: 6, fillColor: '#e74c3c', color: '#c0392b', weight: 2, fillOpacity: 0.8 }).addTo(map);
+            
+            routes.push({
+                id: routes.length,
+                fileName,
+                gpxPoints: points,
+                polyline,
+                startMarker,
+                endMarker,
+                color,
+                originalColor: color,
+                stats: calculateStats(points),
+                visible: true
+            });
+            
+            if (routes.length === 1) map.fitBounds(polyline.getBounds());
+            updateUI();
+        }
+        
+        function updateUI() {
+            days.forEach((day, idx) => {
+                const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+                let km = 0, hm = 0;
+                dayRoutes.forEach(r => { if(r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain; } });
+                
+                document.getElementById(`day${idx+1}stats`).textContent = dayRoutes.length ? `${km.toFixed(1)} km | ⬆️ ${hm} m` : '';
+                document.getElementById(`day${idx+1}routes`).innerHTML = dayRoutes.map(r => 
+                    `<div class="route-chip" style="border-left-color:${r.color}">${r.fileName.split('_').slice(3,5).join(' ')}</div>`
+                ).join('');
+                
+                // Update route colors
+                dayRoutes.forEach(r => r.polyline.setStyle({ color: day.color }));
+            });
+        }
+        
+        async function loadBundledRoutes() {
+            const splashFill = document.getElementById('splashFill');
+            const splashText = document.getElementById('splashText');
+            
+            for (let i = 0; i < bundledRouteFiles.length; i++) {
+                const fileName = bundledRouteFiles[i];
+                splashText.textContent = `${i+1} av ${bundledRouteFiles.length} - ${fileName.substring(0, 30)}...`;
+                
+                try {
+                    const response = await fetch(`routes/${encodeURIComponent(fileName)}`);
+                    const gpxContent = await response.text();
+                    const points = parseGPX(gpxContent);
+                    
+                    if (!points.some(p => p.ele !== null)) {
+                        await enrichWithElevation(points);
+                    }
+                    
+                    addRoute(fileName, points, colors[routes.length % colors.length]);
+                } catch (error) {
+                    console.error(`Failed: ${fileName}`);
+                }
+                
+                splashFill.style.width = `${((i+1) / bundledRouteFiles.length) * 100}%`;
+            }
+            
+            splashText.textContent = 'Ferdig!';
+            setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
+        }
+        
+        document.getElementById('gpxInput').onchange = async (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            
+            document.getElementById('splash').classList.remove('hidden');
+            const splashFill = document.getElementById('splashFill');
+            const splashText = document.getElementById('splashText');
+            
+            for (let i = 0; i < files.length; i++) {
+                splashText.textContent = `${i+1} av ${files.length} - ${files[i].name}`;
+                const content = await files[i].text();
+                const points = parseGPX(content);
+                if (!points.some(p => p.ele !== null)) await enrichWithElevation(points);
+                addRoute(files[i].name, points, colors[routes.length % colors.length]);
+                splashFill.style.width = `${((i+1) / files.length) * 100}%`;
+            }
+            
+            setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
+            e.target.value = '';
+        };
+        
+        function clearAll() {
+            routes.forEach(r => { r.polyline.remove(); r.startMarker.remove(); r.endMarker.remove(); });
+            routes.length = 0;
+            days.forEach(d => d.routes = []);
+            updateUI();
+        }
+        
+        function downloadCurrentDay() {
+            downloadDayGPX(currentDay + 1);
+        }
+        
+        loadBundledRoutes();
+    </script>
+</body>
+</html>
