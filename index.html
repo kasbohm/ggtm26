@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPX Overlappskart</title>
+    <title>Gåpings Mallorca Getaway</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -28,7 +28,7 @@
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 600;
         }
 
@@ -278,6 +278,27 @@
             flex-shrink: 0;
         }
 
+        .btn-download-day {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-download-day:hover {
+            background: #229954;
+        }
+
+        .btn-download-day:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
         .day-content {
             display: flex;
             flex-direction: column;
@@ -366,49 +387,100 @@
             color: white;
         }
 
-        .progress-container {
+        /* Splash Screen */
+        .splash-screen {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 2rem;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: all 0.8s ease-in-out;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .splash-screen.minimized {
+            top: auto;
+            bottom: 10px;
+            left: 10px;
+            height: auto;
+            width: auto;
+            background: transparent;
+            box-shadow: none;
+            justify-content: flex-start;
+            padding: 0.5rem;
+        }
+
+        .splash-logo {
+            max-width: 80%;
+            width: 600px;
+            height: auto;
+            animation: pulse 2s ease-in-out infinite;
+            transition: all 0.8s ease-in-out;
+        }
+
+        .splash-screen.minimized .splash-logo {
+            width: 150px;
+            animation: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            min-width: 300px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .splash-progress {
+            width: 400px;
+            max-width: 80%;
+            margin-top: 3rem;
+            transition: all 0.8s ease-in-out;
+        }
+
+        .splash-screen.minimized .splash-progress {
             display: none;
         }
 
-        .progress-container.active {
-            display: block;
-        }
-
-        .progress-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-
-        .progress-bar {
+        .splash-progress-bar {
             width: 100%;
-            height: 8px;
-            background: #ecf0f1;
-            border-radius: 4px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .progress-fill {
+        .splash-progress-fill {
             height: 100%;
-            background: #3498db;
-            transition: width 0.3s;
-            border-radius: 4px;
+            background: linear-gradient(90deg, #00f5ff 0%, #ff00ff 50%, #ffaa00 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+            border-radius: 10px;
+            transition: width 0.3s ease;
         }
 
-        .progress-text {
-            font-size: 0.85rem;
-            color: #7f8c8d;
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .splash-text {
+            color: #00f5ff;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
         }
 
         .day-box-header {
@@ -448,16 +520,19 @@
     </style>
 </head>
 <body>
-    <div class="progress-container" id="progressContainer">
-        <div class="progress-title">Laster GPX-filer...</div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <img src="logo.png" alt="Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo">
+        <div class="splash-progress">
+            <div class="splash-progress-bar">
+                <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
+            </div>
+            <div class="splash-text" id="splashText">Initializing configurator...</div>
         </div>
-        <div class="progress-text" id="progressText">0 av 0</div>
     </div>
 
     <div class="header">
-        <h1>🗺️ GPX Overlappskart</h1>
+        <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop</h1>
     </div>
 
     <div class="controls">
@@ -486,6 +561,7 @@
                                 <div class="day-title">Dag 1</div>
                                 <div class="day-stats-compact" id="day-1-stats"></div>
                             </div>
+                            <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️ GPX</button>
                             <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(1)">
                         </div>
                         <div class="day-content" id="day-1-content"></div>
@@ -496,6 +572,7 @@
                                 <div class="day-title">Dag 2</div>
                                 <div class="day-stats-compact" id="day-2-stats"></div>
                             </div>
+                            <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️ GPX</button>
                             <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(2)">
                         </div>
                         <div class="day-content" id="day-2-content"></div>
@@ -506,6 +583,7 @@
                                 <div class="day-title">Dag 3</div>
                                 <div class="day-stats-compact" id="day-3-stats"></div>
                             </div>
+                            <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️ GPX</button>
                             <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(3)">
                         </div>
                         <div class="day-content" id="day-3-content"></div>
@@ -516,6 +594,7 @@
                                 <div class="day-title">Dag 4</div>
                                 <div class="day-stats-compact" id="day-4-stats"></div>
                             </div>
+                            <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️ GPX</button>
                             <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(4)">
                         </div>
                         <div class="day-content" id="day-4-content"></div>
@@ -896,6 +975,7 @@
             const route = {
                 id: routes.length,
                 fileName,
+                gpxPoints: points, // Store original GPX points with elevation
                 polyline,
                 startMarker,
                 endMarker,
@@ -1174,9 +1254,9 @@
 
         function getProgressElements() {
             return {
-                progressContainer: document.getElementById('progressContainer'),
-                progressFill: document.getElementById('progressFill'),
-                progressText: document.getElementById('progressText')
+                progressContainer: document.getElementById('splashScreen'),
+                progressFill: document.getElementById('splashProgressFill'),
+                progressText: document.getElementById('splashText')
             };
         }
 
@@ -1253,8 +1333,9 @@
 
             progressText.textContent = `Ferdig! ${bundledRouteFiles.length} standardfiler lastet.`;
             setTimeout(() => {
-                progressContainer.classList.remove('active');
-            }, 1000);
+                const splashScreen = document.getElementById('splashScreen');
+                splashScreen.classList.add('minimized');
+            }, 500);
         }
 
         document.getElementById('gpxInput').addEventListener('change', async (e) => {
@@ -1475,6 +1556,64 @@
             
             updateRouteColors();
             updateSidebar();
+        };
+
+        window.downloadDayGPX = function(dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (!day || day.routes.length === 0) {
+                alert('Ingen ruter valgt for denne dagen!');
+                return;
+            }
+
+            const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
+            
+            if (!dayRoutes[0] || !dayRoutes[0].gpxPoints) {
+                alert('GPX-punkter mangler for rutene.');
+                return;
+            }
+
+            // Merge alle rutene i dagen
+            let allPoints = [];
+            dayRoutes.forEach(route => {
+                if (route.gpxPoints) {
+                    allPoints = allPoints.concat(route.gpxPoints);
+                }
+            });
+
+            // Generer GPX XML
+            let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Gåpings Mallorca Getaway" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Dag ${dayId} - ${dayRoutes.map(r => r.fileName).join(' + ')}</name>
+  </metadata>
+  <trk>
+    <name>Dag ${dayId}</name>
+    <trkseg>
+`;
+            
+            allPoints.forEach(point => {
+                gpxContent += `      <trkpt lat="${point.lat}" lon="${point.lon}">`;
+                if (point.ele !== null && point.ele !== undefined) {
+                    gpxContent += `<ele>${point.ele}</ele>`;
+                }
+                gpxContent += `</trkpt>
+`;
+            });
+            
+            gpxContent += `    </trkseg>
+  </trk>
+</gpx>`;
+            
+            // Last ned fil
+            const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Dag_${dayId}_Mallorca.gpx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         };
 
         // Initialize
