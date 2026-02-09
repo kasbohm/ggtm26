@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX Overlappskart</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .controls {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            background: #3498db;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .file-input-label:hover {
+            background: #2980b9;
+        }
+
+        .btn {
+            background: #e74c3c;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #c0392b;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #map {
+            flex: 1;
+            transition: background-color 0.3s;
+        }
+
+        #map.light-background {
+            background: #f8f8f8;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .route-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid;
+        }
+
+        .route-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .route-toggle {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .route-name {
+            flex: 1;
+            font-weight: 500;
+            font-size: 0.9rem;
+            word-break: break-word;
+            padding-right: 1.5rem;
+        }
+
+        .remove-route {
+            position: absolute;
+            top: 0;
+            right: 0;
+            cursor: pointer;
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 0 0.3rem;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .remove-route:hover {
+            color: #c0392b;
+        }
+
+        .route-stats {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .route-stats div {
+            margin-bottom: 0.2rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .stats-summary {
+            background: #e8f4f8;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .stats-summary strong {
+            color: #2c3e50;
+        }
+
+        .days-overlay {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            right: 220px;
+            z-index: 1000;
+            background: white;
+            padding: 0.8rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        .days-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        .days-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+            user-select: none;
+            padding: 0 0.3rem;
+        }
+
+        .days-content {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .days-content.collapsed {
+            display: none;
+        }
+
+        .day-box {
+            flex: 1;
+            min-width: 150px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 0.6rem;
+            border: 2px dashed #ddd;
+            transition: all 0.2s;
+        }
+
+        .day-box.drag-over {
+            background: #e8f4f8;
+            border-color: #3498db;
+            transform: scale(1.02);
+        }
+
+        .day-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .day-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .day-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #34495e;
+        }
+
+        .day-stats-compact {
+            font-size: 0.65rem;
+            color: #7f8c8d;
+            white-space: nowrap;
+        }
+
+        .day-visibility-toggle {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .day-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .day-stats {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-bottom: 0.3rem;
+        }
+
+        .day-route-item {
+            background: white;
+            border-radius: 4px;
+            padding: 0.4rem;
+            font-size: 0.7rem;
+            border-left: 3px solid;
+            cursor: move;
+            position: relative;
+        }
+
+        .day-route-item:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .day-route-name {
+            font-weight: 500;
+            margin-bottom: 0.1rem;
+            padding-right: 1rem;
+            word-break: break-word;
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        .day-route-stats {
+            font-size: 0.65rem;
+            color: #7f8c8d;
+        }
+
+        .remove-from-day {
+            position: absolute;
+            top: 0.2rem;
+            right: 0.2rem;
+            cursor: pointer;
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 0 0.2rem;
+            line-height: 1;
+            font-size: 0.9rem;
+        }
+
+        .remove-from-day:hover {
+            color: #c0392b;
+        }
+
+        .route-item {
+            cursor: move;
+            position: relative;
+        }
+
+        .route-item:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .route-item.dragging {
+            opacity: 0.5;
+        }
+
+        .remove-route {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            cursor: pointer;
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            background: white;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+
+        .remove-route:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .progress-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 300px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .day-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .day-visibility-toggle {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .map-layer-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 0.8rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .map-layer-selector label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .map-layer-selector input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-title">Laster GPX-filer...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 av 0</div>
+    </div>
+
+    <div class="header">
+        <h1>🗺️ GPX Overlappskart</h1>
+    </div>
+
+    <div class="controls">
+        <div class="file-input-wrapper">
+            <input type="file" id="gpxInput" accept=".gpx" multiple>
+            <label for="gpxInput" class="file-input-label">📁 Last opp GPX-filer</label>
+        </div>
+        <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
+        <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
+        <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
+        <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
+        <div id="fileCount" style="color: #666; font-size: 0.9rem; display: flex; gap: 1.5rem; flex-wrap: wrap;"></div>
+    </div>
+
+    <div class="main-content">
+        <div id="map">
+            <div class="days-overlay" id="daysOverlay">
+                <div class="days-header">
+                    <span>📅 Dager</span>
+                    <span class="days-toggle" onclick="toggleDaysExpand()">▼</span>
+                </div>
+                <div class="days-content" id="daysContent">
+                    <div class="day-box" data-day-id="1" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title-section">
+                                <div class="day-title">Dag 1</div>
+                                <div class="day-stats-compact" id="day-1-stats"></div>
+                            </div>
+                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(1)">
+                        </div>
+                        <div class="day-content" id="day-1-content"></div>
+                    </div>
+                    <div class="day-box" data-day-id="2" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title-section">
+                                <div class="day-title">Dag 2</div>
+                                <div class="day-stats-compact" id="day-2-stats"></div>
+                            </div>
+                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(2)">
+                        </div>
+                        <div class="day-content" id="day-2-content"></div>
+                    </div>
+                    <div class="day-box" data-day-id="3" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title-section">
+                                <div class="day-title">Dag 3</div>
+                                <div class="day-stats-compact" id="day-3-stats"></div>
+                            </div>
+                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(3)">
+                        </div>
+                        <div class="day-content" id="day-3-content"></div>
+                    </div>
+                    <div class="day-box" data-day-id="4" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title-section">
+                                <div class="day-title">Dag 4</div>
+                                <div class="day-stats-compact" id="day-4-stats"></div>
+                            </div>
+                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(4)">
+                        </div>
+                        <div class="day-content" id="day-4-content"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-layer-selector">
+                <label><input type="radio" name="mapLayer" value="standard" checked onchange="changeMapLayer('standard')"> Standard</label>
+                <label><input type="radio" name="mapLayer" value="cycle" onchange="changeMapLayer('cycle')"> CyclOSM (Sykkelvennlig)</label>
+                <label><input type="radio" name="mapLayer" value="transport" onchange="changeMapLayer('transport')"> Transport (veier)</label>
+                <label><input type="radio" name="mapLayer" value="satellite" onchange="changeMapLayer('satellite')"> Satellitt</label>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div id="routeList"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Norway
+        const map = L.map('map').setView([60.472, 8.4689], 6);
+
+        // Define tile layers
+        const tileLayers = {
+            standard: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }),
+            cycle: L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors, CyclOSM',
+                maxZoom: 20
+            }),
+            transport: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri',
+                maxZoom: 19
+            })
+        };
+
+        let currentTileLayer = tileLayers.standard;
+        currentTileLayer.addTo(map);
+
+        window.changeMapLayer = function(layerName) {
+            if (currentTileLayer) {
+                map.removeLayer(currentTileLayer);
+            }
+            currentTileLayer = tileLayers[layerName];
+            currentTileLayer.addTo(map);
+        };
+
+        let mapVisible = true;
+
+        const routes = [];
+        const colors = [
+            '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
+            '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b',
+            '#27ae60', '#2980b9', '#8e44ad', '#d35400', '#7f8c8d'
+        ];
+
+        // Days structure: each day contains route IDs
+        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+        const days = [
+            { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
+            { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
+            { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
+            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
+        ];
+        const bundledRouteFiles = [
+            'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx',
+            'GGTM26_D1_A_Port_de_Soller_Helios_87km_1500hm.gpx',
+            'GGTM26_D1_B_Helios_Port_de_Soller_66km_1000hm.gpx',
+            'GGTM26_D1_B1_Port_de_Soller_Helios_40km_500hm.gpx',
+            'GGTM26_D1_B2_Port_de_Soller_Helios_60km_1100hm.gpx',
+            'GGTM26_D2_A_Cap_de_Formentor_Helios_125km_1300hm.gpx',
+            'GGTM26_D2_A_Helios_Cap_de_Formentor_108km_1930hm.gpx',
+            'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx',
+            'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
+            'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx',
+            'GGTM26_D3_A_Helios_Sa_Calobra__105km_1900hm.gpx',
+            'GGTM26_D3_A_Sa_Calobra__Helios_100km_2300hm.gpx',
+            'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
+            'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
+            'GGTM26_D3_B2_Sa_Calobra__Helios_90km_1500hm.gpx',
+            'GGTM26_D4_A_Helios_Puig_Major__72km_2400hm.gpx',
+            'GGTM26_D4_A_Puig_Major_Helios_100km_1700hm.gpx',
+            'GGTM26_D4_B_Helios_Puig_Major__62km_1700hm.gpx',
+            'GGTM26_D4_B_Puig_Major_Helios_76km_850hm.gpx'
+        ];
+
+        function parseGPX(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            
+            const points = [];
+            const trkpts = xmlDoc.getElementsByTagName('trkpt');
+            
+            for (let i = 0; i < trkpts.length; i++) {
+                const lat = parseFloat(trkpts[i].getAttribute('lat'));
+                const lon = parseFloat(trkpts[i].getAttribute('lon'));
+                
+                const eleNode = trkpts[i].getElementsByTagName('ele')[0];
+                const ele = eleNode ? parseFloat(eleNode.textContent) : null;
+                
+                points.push({ lat, lon, ele });
+            }
+            
+            return points;
+        }
+
+        async function enrichWithElevation(points) {
+            // Sample every Nth point to reduce API calls - more aggressive for long routes
+            const targetSamples = 50; // Max 50 samples per route for performance
+            const sampleRate = Math.max(1, Math.floor(points.length / targetSamples));
+            const sampledIndices = [];
+            
+            for (let i = 0; i < points.length; i += sampleRate) {
+                sampledIndices.push(i);
+            }
+            
+            // Always include last point
+            if (sampledIndices[sampledIndices.length - 1] !== points.length - 1) {
+                sampledIndices.push(points.length - 1);
+            }
+            
+            const sampledPoints = sampledIndices.map(i => points[i]);
+            
+            // Open-Elevation API (free, no key needed)
+            const locations = sampledPoints.map(p => ({
+                latitude: p.lat,
+                longitude: p.lon
+            }));
+            
+            try {
+                const response = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ locations })
+                });
+                
+                if (!response.ok) throw new Error('Elevation API failed');
+                
+                const data = await response.json();
+                
+                // Apply elevations to sampled points
+                data.results.forEach((result, idx) => {
+                    const originalIdx = sampledIndices[idx];
+                    points[originalIdx].ele = result.elevation;
+                });
+                
+                // Interpolate elevation for points between samples
+                for (let i = 0; i < sampledIndices.length - 1; i++) {
+                    const startIdx = sampledIndices[i];
+                    const endIdx = sampledIndices[i + 1];
+                    const startEle = points[startIdx].ele;
+                    const endEle = points[endIdx].ele;
+                    
+                    for (let j = startIdx + 1; j < endIdx; j++) {
+                        const ratio = (j - startIdx) / (endIdx - startIdx);
+                        points[j].ele = startEle + (endEle - startEle) * ratio;
+                    }
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Failed to enrich elevation:', error);
+                return false;
+            }
+        }
+
+        function calculateStats(points) {
+            if (points.length < 2) return null;
+            
+            let distance = 0;
+            let elevationGain = 0;
+            let elevationLoss = 0;
+            let minEle = Infinity;
+            let maxEle = -Infinity;
+            
+            for (let i = 1; i < points.length; i++) {
+                const p1 = points[i - 1];
+                const p2 = points[i];
+                
+                // Calculate distance using Haversine formula
+                const R = 6371000; // Earth radius in meters
+                const φ1 = p1.lat * Math.PI / 180;
+                const φ2 = p2.lat * Math.PI / 180;
+                const Δφ = (p2.lat - p1.lat) * Math.PI / 180;
+                const Δλ = (p2.lon - p1.lon) * Math.PI / 180;
+                
+                const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                         Math.cos(φ1) * Math.cos(φ2) *
+                         Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                
+                distance += R * c;
+                
+                // Calculate elevation changes
+                if (p1.ele !== null && p2.ele !== null) {
+                    const eleDiff = p2.ele - p1.ele;
+                    if (eleDiff > 0) elevationGain += eleDiff;
+                    else elevationLoss += Math.abs(eleDiff);
+                    
+                    minEle = Math.min(minEle, p1.ele, p2.ele);
+                    maxEle = Math.max(maxEle, p1.ele, p2.ele);
+                }
+            }
+            
+            return {
+                distance: (distance / 1000).toFixed(2), // km
+                elevationGain: Math.round(elevationGain),
+                elevationLoss: Math.round(elevationLoss),
+                minEle: minEle === Infinity ? null : Math.round(minEle),
+                maxEle: maxEle === -Infinity ? null : Math.round(maxEle)
+            };
+        }
+
+        function calculateOverlap() {
+            const visibleRoutes = routes.filter(r => r.visible);
+            
+            if (visibleRoutes.length < 2) {
+                return { overlapPercentage: 0, commonSegments: 0 };
+            }
+
+            // Get all route coordinates
+            const routeCoords = visibleRoutes.map(route => {
+                return route.polyline.getLatLngs().map(ll => ({
+                    lat: ll.lat,
+                    lng: ll.lng
+                }));
+            });
+
+            // Tolerance in degrees (approximately 50 meters)
+            const tolerance = 0.0005;
+            
+            // Find common segments (segments that appear in ALL routes)
+            let commonPoints = 0;
+            const route1 = routeCoords[0];
+            
+            for (let i = 0; i < route1.length; i++) {
+                const p1 = route1[i];
+                let inAllRoutes = true;
+                
+                // Check if this point exists in all other routes
+                for (let r = 1; r < routeCoords.length; r++) {
+                    const routePoints = routeCoords[r];
+                    let foundInRoute = false;
+                    
+                    for (let j = 0; j < routePoints.length; j++) {
+                        const p2 = routePoints[j];
+                        const dist = Math.sqrt(
+                            Math.pow(p1.lat - p2.lat, 2) + 
+                            Math.pow(p1.lng - p2.lng, 2)
+                        );
+                        
+                        if (dist < tolerance) {
+                            foundInRoute = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!foundInRoute) {
+                        inAllRoutes = false;
+                        break;
+                    }
+                }
+                
+                if (inAllRoutes) {
+                    commonPoints++;
+                }
+            }
+
+            // Calculate overlap considering direction
+            let overlapPoints = 0;
+            let totalComparisons = 0;
+            
+            // Compare each pair of routes
+            for (let r1 = 0; r1 < routeCoords.length; r1++) {
+                for (let r2 = r1 + 1; r2 < routeCoords.length; r2++) {
+                    const coords1 = routeCoords[r1];
+                    const coords2 = routeCoords[r2];
+                    
+                    let pairOverlap = 0;
+                    
+                    for (let i = 0; i < coords1.length - 1; i++) {
+                        const seg1Start = coords1[i];
+                        const seg1End = coords1[i + 1];
+                        
+                        // Check direction vector
+                        const dir1 = {
+                            lat: seg1End.lat - seg1Start.lat,
+                            lng: seg1End.lng - seg1Start.lng
+                        };
+                        
+                        for (let j = 0; j < coords2.length - 1; j++) {
+                            const seg2Start = coords2[j];
+                            const seg2End = coords2[j + 1];
+                            
+                            // Check if segments are close
+                            const dist = Math.sqrt(
+                                Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
+                                Math.pow(seg1Start.lng - seg2Start.lng, 2)
+                            );
+                            
+                            if (dist < tolerance) {
+                                // Check direction
+                                const dir2 = {
+                                    lat: seg2End.lat - seg2Start.lat,
+                                    lng: seg2End.lng - seg2Start.lng
+                                };
+                                
+                                // Dot product to check same direction
+                                const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
+                                
+                                if (dotProduct > 0) {
+                                    pairOverlap++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    overlapPoints += pairOverlap;
+                    totalComparisons += coords1.length;
+                }
+            }
+            
+            const overlapPercentage = totalComparisons > 0 ? 
+                (overlapPoints / totalComparisons * 100) : 0;
+            
+            return {
+                overlapPercentage: overlapPercentage.toFixed(1),
+                commonPoints: commonPoints,
+                commonPercentage: route1.length > 0 ? 
+                    (commonPoints / route1.length * 100).toFixed(1) : 0
+            };
+        }
+
+        function addRoute(fileName, points, color) {
+            const latLngs = points.map(p => [p.lat, p.lon]);
+            
+            const polyline = L.polyline(latLngs, {
+                color: color,
+                weight: 3,
+                opacity: 0.7
+            }).addTo(map);
+            
+            // Add start marker (green circle)
+            const startMarker = L.circleMarker(latLngs[0], {
+                radius: 8,
+                fillColor: '#2ecc71',
+                color: '#27ae60',
+                weight: 2,
+                opacity: 0.9,
+                fillOpacity: 0.8
+            }).addTo(map);
+            startMarker.bindTooltip(`${fileName}<br><strong>Start</strong>`, { permanent: false });
+            
+            // Add end marker (red circle)
+            const endMarker = L.circleMarker(latLngs[latLngs.length - 1], {
+                radius: 8,
+                fillColor: '#e74c3c',
+                color: '#c0392b',
+                weight: 2,
+                opacity: 0.9,
+                fillOpacity: 0.8
+            }).addTo(map);
+            endMarker.bindTooltip(`${fileName}<br><strong>Slutt</strong>`, { permanent: false });
+            
+            const stats = calculateStats(points);
+            
+            const route = {
+                id: routes.length,
+                fileName,
+                polyline,
+                startMarker,
+                endMarker,
+                originalColor: color, // Store original color
+                color,
+                visible: true,
+                stats,
+                points: latLngs.length
+            };
+            
+            routes.push(route);
+            
+            // Fit map to show all routes
+            if (routes.length === 1) {
+                map.fitBounds(polyline.getBounds());
+            } else {
+                const allBounds = routes.map(r => r.polyline.getBounds());
+                const group = L.featureGroup(routes.map(r => r.polyline));
+                map.fitBounds(group.getBounds());
+            }
+            
+            updateSidebar();
+        }
+
+        function updateRouteColors() {
+            // Update colors for routes in days
+            days.forEach(day => {
+                day.routes.forEach(routeId => {
+                    const route = routes.find(r => r.id === routeId);
+                    if (route) {
+                        route.color = day.color;
+                        route.polyline.setStyle({ color: day.color });
+                    }
+                });
+            });
+            
+            // Reset colors for routes not in days
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            routes.forEach(route => {
+                if (!routesInDays.has(route.id)) {
+                    route.color = route.originalColor;
+                    route.polyline.setStyle({ color: route.originalColor });
+                }
+            });
+        }
+
+        function toggleRoute(routeId) {
+            const route = routes[routeId];
+            route.visible = !route.visible;
+            
+            if (route.visible) {
+                route.polyline.addTo(map);
+                route.startMarker.addTo(map);
+                route.endMarker.addTo(map);
+            } else {
+                route.polyline.remove();
+                route.startMarker.remove();
+                route.endMarker.remove();
+            }
+            
+            updateSidebar();
+        }
+
+        function toggleMapBackground() {
+            const btn = document.getElementById('toggleMapBtn');
+            const mapElement = document.getElementById('map');
+            
+            if (mapVisible) {
+                // Skjul kartet
+                currentTileLayer.setOpacity(0);
+                mapElement.classList.add('light-background');
+                btn.textContent = '🗺️ Vis kart';
+                btn.style.background = '#27ae60';
+            } else {
+                // Vis kartet
+                currentTileLayer.setOpacity(1);
+                mapElement.classList.remove('light-background');
+                btn.textContent = '🗺️ Skjul kart';
+                btn.style.background = '#95a5a6';
+            }
+            
+            mapVisible = !mapVisible;
+        }
+
+        function hideAllRoutes() {
+            routes.forEach(route => {
+                if (route.visible) {
+                    route.visible = false;
+                    route.polyline.remove();
+                    route.startMarker.remove();
+                    route.endMarker.remove();
+                }
+            });
+            updateSidebar();
+        }
+
+        function showAllRoutes() {
+            routes.forEach(route => {
+                if (!route.visible) {
+                    route.visible = true;
+                    route.polyline.addTo(map);
+                    route.startMarker.addTo(map);
+                    route.endMarker.addTo(map);
+                }
+            });
+            updateSidebar();
+        }
+
+        function updateSidebar() {
+            const routeList = document.getElementById('routeList');
+            const fileCountDiv = document.getElementById('fileCount');
+            
+            // Update day boxes
+            updateDayBoxes();
+            
+            if (routes.length === 0) {
+                routeList.innerHTML = '<div class="empty-state">Ingen ruter lastet opp ennå.<br>Last opp GPX-filer for å komme i gang.</div>';
+                fileCountDiv.innerHTML = '';
+                return;
+            }
+            
+            // Calculate stats for visible routes only
+            const visibleRoutes = routes.filter(r => r.visible);
+            let totalDistance = 0;
+            let totalElevationGain = 0;
+            let totalPoints = 0;
+            
+            visibleRoutes.forEach(route => {
+                if (route.stats) {
+                    totalDistance += parseFloat(route.stats.distance);
+                    totalElevationGain += route.stats.elevationGain || 0;
+                }
+                totalPoints += route.points;
+            });
+            
+            // Calculate overlap
+            const overlapData = calculateOverlap();
+            
+            // Update file count display with detailed stats
+            let statsHtml = `<strong>${routes.length} ${routes.length === 1 ? 'rute' : 'ruter'}</strong>`;
+            
+            if (visibleRoutes.length > 0) {
+                statsHtml += ` <span style="color: #27ae60;">(${visibleRoutes.length} synlig)</span>`;
+                statsHtml += ` | <strong>${totalDistance.toFixed(1)} km</strong>`;
+                
+                // Vis høydemeter hvis noen ruter har data
+                const hasElevation = visibleRoutes.some(r => r.stats && r.stats.elevationGain > 0);
+                if (hasElevation && totalElevationGain > 0) {
+                    statsHtml += ` | <strong>⬆️ ${totalElevationGain.toLocaleString('no-NO')} m</strong>`;
+                }
+                
+                if (visibleRoutes.length >= 2) {
+                    statsHtml += ` | Overlapp: <strong>${overlapData.overlapPercentage}%</strong>`;
+                    if (overlapData.commonPercentage > 0) {
+                        statsHtml += ` <span style="color: #e67e22;">(Felles: ${overlapData.commonPercentage}%)</span>`;
+                    }
+                }
+            }
+            
+            fileCountDiv.innerHTML = statsHtml;
+            
+            let html = `
+                <div class="stats-summary">
+                    <strong>Synlige ruter:</strong><br>
+                    ${visibleRoutes.length} av ${routes.length} ruter<br>
+                    ${totalDistance.toFixed(2)} km kombinert<br>
+                    ${totalElevationGain > 0 ? `${totalElevationGain} m stigning<br>` : ''}
+                    ${totalPoints.toLocaleString('no-NO')} GPS-punkter
+                    ${visibleRoutes.length >= 2 ? `<br><br><strong>Overlappanalyse:</strong><br>
+                    ${overlapData.overlapPercentage}% overlapp i samme retning<br>
+                    ${overlapData.commonPercentage}% felles segment (alle ruter)` : ''}
+                </div>
+            `;
+            
+            // Get route IDs that are already in days
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            
+            // Sort routes alphabetically by filename
+            const sortedRoutes = [...routes].sort((a, b) => 
+                a.fileName.localeCompare(b.fileName, 'no')
+            );
+            
+            // Filter out routes that are already in days
+            const availableRoutes = sortedRoutes.filter(r => !routesInDays.has(r.id));
+            
+            availableRoutes.forEach(route => {
+                html += `
+                    <div class="route-item" 
+                         style="border-left-color: ${route.color}; ${!route.visible ? 'opacity: 0.5;' : ''}"
+                         draggable="true"
+                         ondragstart="dragStart(event, ${route.id})">
+                        <div class="route-header">
+                            <input type="checkbox" 
+                                   class="route-toggle" 
+                                   ${route.visible ? 'checked' : ''} 
+                                   onchange="toggleRoute(${route.id})">
+                            <div class="route-name">${route.fileName}</div>
+                            <span class="remove-route" onclick="removeRoute(${route.id}); event.stopPropagation();" title="Fjern rute">✕</span>
+                        </div>
+                        ${route.stats ? `
+                            <div class="route-stats">
+                                <div>📏 ${route.stats.distance} km</div>
+                                ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m stigning</div>` : ''}
+                                ${route.stats.elevationLoss ? `<div>⬇️ ${route.stats.elevationLoss} m nedstigning</div>` : ''}
+                                ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
+                                <div>📍 ${route.points.toLocaleString('no-NO')} punkter</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            routeList.innerHTML = html;
+        }
+
+        function updateDayBoxes() {
+            days.forEach(day => {
+                const contentDiv = document.getElementById(`day-${day.id}-content`);
+                const statsDiv = document.getElementById(`day-${day.id}-stats`);
+                if (!contentDiv) return;
+                
+                const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
+                let dayDistance = 0;
+                let dayElevation = 0;
+                
+                dayRoutes.forEach(route => {
+                    if (route.stats) {
+                        dayDistance += parseFloat(route.stats.distance);
+                        dayElevation += route.stats.elevationGain || 0;
+                    }
+                });
+                
+                // Update compact stats
+                if (statsDiv) {
+                    if (dayRoutes.length > 0) {
+                        statsDiv.textContent = `${dayDistance.toFixed(1)} km | ⬆️ ${dayElevation} m`;
+                    } else {
+                        statsDiv.textContent = '';
+                    }
+                }
+                
+                let html = '';
+                
+                dayRoutes.forEach(route => {
+                    html += `
+                        <div class="day-route-item" 
+                             style="border-left-color: ${route.color};" 
+                             draggable="true" 
+                             ondragstart="dragFromDay(event, ${route.id}, ${day.id})">
+                            <span class="remove-from-day" onclick="removeFromDay(${route.id}, ${day.id})">✕</span>
+                            <div class="day-route-name">${route.fileName}</div>
+                            <div class="day-route-stats">
+                                ${route.stats ? route.stats.distance + ' km' : ''}
+                                ${route.stats && route.stats.elevationGain ? ' | ⬆️ ' + route.stats.elevationGain + ' m' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentDiv.innerHTML = html;
+            });
+        }
+
+        window.toggleDaysExpand = function() {
+            const content = document.getElementById('daysContent');
+            const toggle = document.querySelector('.days-toggle');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        };
+
+        function getProgressElements() {
+            return {
+                progressContainer: document.getElementById('progressContainer'),
+                progressFill: document.getElementById('progressFill'),
+                progressText: document.getElementById('progressText')
+            };
+        }
+
+        async function addRouteFromGpxContent(fileName, gpxContent, index, total, progressText, progressFill, showAlerts = true) {
+            try {
+                const points = parseGPX(gpxContent);
+                if (points.length === 0) {
+                    if (showAlerts) {
+                        alert(`Ingen GPS-punkter funnet i ${fileName}`);
+                    }
+                    return;
+                }
+
+                const hasElevation = points.some(p => p.ele !== null);
+                if (!hasElevation) {
+                    progressText.textContent = `${index + 1} av ${total} - Henter høydedata for ${fileName}...`;
+                    await enrichWithElevation(points);
+                }
+
+                progressText.textContent = `${index + 1} av ${total} - Legger til ${fileName} på kartet...`;
+                const color = colors[routes.length % colors.length];
+                addRoute(fileName, points, color);
+            } catch (error) {
+                console.error(`Feil ved parsing av ${fileName}:`, error);
+                if (showAlerts) {
+                    alert(`Kunne ikke lese ${fileName}. Sjekk at det er en gyldig GPX-fil.`);
+                }
+            } finally {
+                progressFill.style.width = `${((index + 1) / total) * 100}%`;
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = () => reject(new Error(`Kunne ikke lese filen ${file.name}`));
+                reader.readAsText(file);
+            });
+        }
+
+        async function loadBundledRoutes() {
+            if (bundledRouteFiles.length === 0) return;
+
+            const { progressContainer, progressFill, progressText } = getProgressElements();
+            progressContainer.classList.add('active');
+            progressFill.style.width = '0%';
+
+            for (let i = 0; i < bundledRouteFiles.length; i++) {
+                const fileName = bundledRouteFiles[i];
+                progressText.textContent = `${i + 1} av ${bundledRouteFiles.length} - Laster ${fileName}...`;
+
+                try {
+                    const encodedFileName = fileName.split('/').map(encodeURIComponent).join('/');
+                    const response = await fetch(`routes/${encodedFileName}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const gpxContent = await response.text();
+                    await addRouteFromGpxContent(
+                        fileName,
+                        gpxContent,
+                        i,
+                        bundledRouteFiles.length,
+                        progressText,
+                        progressFill,
+                        false
+                    );
+                } catch (error) {
+                    console.error(`Kunne ikke laste ${fileName}:`, error);
+                    progressFill.style.width = `${((i + 1) / bundledRouteFiles.length) * 100}%`;
+                }
+            }
+
+            progressText.textContent = `Ferdig! ${bundledRouteFiles.length} standardfiler lastet.`;
+            setTimeout(() => {
+                progressContainer.classList.remove('active');
+            }, 1000);
+        }
+
+        document.getElementById('gpxInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const { progressContainer, progressFill, progressText } = getProgressElements();
+            progressContainer.classList.add('active');
+            progressFill.style.width = '0%';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                progressText.textContent = `${i + 1} av ${files.length} - Leser ${file.name}...`;
+                try {
+                    const gpxContent = await readFileAsText(file);
+                    await addRouteFromGpxContent(
+                        file.name,
+                        gpxContent,
+                        i,
+                        files.length,
+                        progressText,
+                        progressFill,
+                        true
+                    );
+                } catch (error) {
+                    console.error(`Kunne ikke lese ${file.name}:`, error);
+                    alert(`Kunne ikke lese ${file.name}.`);
+                    progressFill.style.width = `${((i + 1) / files.length) * 100}%`;
+                }
+            }
+
+            progressText.textContent = `Ferdig! ${files.length} filer lastet.`;
+            setTimeout(() => {
+                progressContainer.classList.remove('active');
+            }, 1000);
+            e.target.value = '';
+        });
+
+        window.toggleDayVisibility = function(dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (!day) return;
+            
+            day.visible = !day.visible;
+            
+            // Toggle visibility for all routes in this day
+            day.routes.forEach(routeId => {
+                const route = routes.find(r => r.id === routeId);
+                if (route) {
+                    route.visible = day.visible;
+                    if (day.visible) {
+                        route.polyline.addTo(map);
+                        route.startMarker.addTo(map);
+                        route.endMarker.addTo(map);
+                    } else {
+                        route.polyline.remove();
+                        route.startMarker.remove();
+                        route.endMarker.remove();
+                    }
+                }
+            });
+            
+            updateSidebar();
+        };
+
+        document.getElementById('toggleMapBtn').addEventListener('click', toggleMapBackground);
+
+        document.getElementById('hideAllBtn').addEventListener('click', hideAllRoutes);
+
+        document.getElementById('showAllBtn').addEventListener('click', showAllRoutes);
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (routes.length === 0) return;
+            
+            if (confirm('Er du sikker på at du vil fjerne alle ruter?')) {
+                // Remove all routes from map
+                routes.forEach(route => {
+                    route.polyline.remove();
+                    route.startMarker.remove();
+                    route.endMarker.remove();
+                });
+                
+                // Clear routes array
+                routes.length = 0;
+                
+                // Reset all days
+                days.forEach(day => {
+                    day.routes = [];
+                    day.visible = true;
+                });
+                
+                // Reset day checkboxes
+                for (let i = 1; i <= 4; i++) {
+                    const checkbox = document.querySelector(`.day-box[data-day-id="${i}"] .day-visibility-toggle`);
+                    if (checkbox) checkbox.checked = true;
+                }
+                
+                // Update UI
+                updateSidebar();
+                
+                // Reset map view
+                map.setView([60.472, 8.4689], 6);
+            }
+        });
+
+        // Make toggleRoute available globally
+        window.toggleRoute = toggleRoute;
+
+        window.removeRoute = function(routeId) {
+            const route = routes.find(r => r.id === routeId);
+            if (!route) return;
+            
+            if (confirm(`Fjerne "${route.fileName}"?`)) {
+                // Remove from map
+                route.polyline.remove();
+                route.startMarker.remove();
+                route.endMarker.remove();
+                
+                // Remove from any day
+                days.forEach(day => {
+                    day.routes = day.routes.filter(id => id !== routeId);
+                });
+                
+                // Remove from routes array
+                const index = routes.findIndex(r => r.id === routeId);
+                if (index !== -1) {
+                    routes.splice(index, 1);
+                }
+                
+                updateRouteColors();
+                updateSidebar();
+            }
+        };
+
+        // Drag and drop functions
+        let draggedRouteId = null;
+        let draggedFromDayId = null;
+
+        window.dragStart = function(event, routeId) {
+            draggedRouteId = routeId;
+            draggedFromDayId = null;
+            event.target.classList.add('dragging');
+        };
+
+        window.dragFromDay = function(event, routeId, dayId) {
+            draggedRouteId = routeId;
+            draggedFromDayId = dayId;
+            event.stopPropagation();
+        };
+
+        window.allowDrop = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        };
+
+        window.dragLeave = function(event) {
+            event.currentTarget.classList.remove('drag-over');
+        };
+
+        window.dropOnDay = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            const dayId = parseInt(event.currentTarget.dataset.dayId);
+            const day = days.find(d => d.id === dayId);
+            
+            if (!day || draggedRouteId === null) return;
+            
+            // Remove from old day if coming from another day
+            if (draggedFromDayId !== null) {
+                const oldDay = days.find(d => d.id === draggedFromDayId);
+                if (oldDay) {
+                    oldDay.routes = oldDay.routes.filter(id => id !== draggedRouteId);
+                }
+            }
+            
+            // Add to new day (max 2 routes per day)
+            if (!day.routes.includes(draggedRouteId) && day.routes.length < 2) {
+                day.routes.push(draggedRouteId);
+            }
+            
+            draggedRouteId = null;
+            draggedFromDayId = null;
+            
+            updateRouteColors();
+            updateSidebar();
+        };
+
+        window.removeFromDay = function(routeId, dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (day) {
+                day.routes = day.routes.filter(id => id !== routeId);
+                updateRouteColors();
+                updateSidebar();
+            }
+        };
+
+        window.removeRoute = function(routeId) {
+            if (!confirm('Er du sikker på at du vil fjerne denne ruten?')) return;
+            
+            const route = routes.find(r => r.id === routeId);
+            if (!route) return;
+            
+            // Remove from map
+            route.polyline.remove();
+            route.startMarker.remove();
+            route.endMarker.remove();
+            
+            // Remove from any day
+            days.forEach(day => {
+                day.routes = day.routes.filter(id => id !== routeId);
+            });
+            
+            // Remove from routes array
+            const index = routes.findIndex(r => r.id === routeId);
+            if (index > -1) {
+                routes.splice(index, 1);
+            }
+            
+            updateRouteColors();
+            updateSidebar();
+        };
+
+        // Initialize
+        updateSidebar();
+        loadBundledRoutes();
+    </script>
+</body>
+</html>
