@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gåpings Mallorca Getaway</title>
+    <title>Gåpings Mallorca Getaway - Semi-Automatic Configurator</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mallorca.gaping.no/">
+    <meta property="og:title" content="Gåpings Mallorca Getaway 2026">
+    <meta property="og:description" content="Plan din ultimate sykkelferie på Mallorca! Velg mellom Elite (A) og Mosjonist (B) ruter over 4 dager. Semi-Automatic Configurator for perfekt sykkelplanlegging.">
+    <meta property="og:image" content="https://mallorca.gaping.no/logo.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Gåpings Mallorca Getaway Logo">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://mallorca.gaping.no/">
+    <meta property="twitter:title" content="Gåpings Mallorca Getaway 2026">
+    <meta property="twitter:description" content="Plan din ultimate sykkelferie på Mallorca! Elite eller Mosjonist ruter over 4 dager.">
+    <meta property="twitter:image" content="https://mallorca.gaping.no/logo.png">
+    
+    <!-- General Meta -->
+    <meta name="description" content="Gåpings Mallorca Getaway - Semi-Automatic Configurator for å planlegge din perfekte sykkelferie. Velg mellom Elite (A) og Mosjonist (B) ruter.">
+    <meta name="keywords" content="Mallorca, sykkel, sykkelferie, GPS, GPX, ruter, planlegging, Gåping">
+    <meta name="author" content="Gåping">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -532,7 +555,7 @@
     </div>
 
     <div class="header">
-        <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop</h1>
+        <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop Computers</h1>
     </div>
 
     <div class="controls">
@@ -540,6 +563,8 @@
             <input type="file" id="gpxInput" accept=".gpx" multiple>
             <label for="gpxInput" class="file-input-label">📁 Last opp GPX-filer</label>
         </div>
+        <button class="btn" style="background: #e67e22;" onclick="autoMakeElite()">⚡ Auto Make Elite (A)</button>
+        <button class="btn" style="background: #3498db;" onclick="autoMakeMosjonist()">🚴 Auto Make Mosjonist (B)</button>
         <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
         <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
         <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
@@ -1097,13 +1122,24 @@
                 return;
             }
             
-            // Calculate stats for visible routes only
-            const visibleRoutes = routes.filter(r => r.visible);
+            // Get routes that are in days
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            
+            // Calculate stats for routes in days (if any), otherwise all visible
+            let statsRoutes;
+            if (routesInDays.size > 0) {
+                // Only count routes that are selected in days
+                statsRoutes = routes.filter(r => routesInDays.has(r.id));
+            } else {
+                // No routes in days yet, show all visible
+                statsRoutes = routes.filter(r => r.visible);
+            }
+            
             let totalDistance = 0;
             let totalElevationGain = 0;
             let totalPoints = 0;
             
-            visibleRoutes.forEach(route => {
+            statsRoutes.forEach(route => {
                 if (route.stats) {
                     totalDistance += parseFloat(route.stats.distance);
                     totalElevationGain += route.stats.elevationGain || 0;
@@ -1117,17 +1153,21 @@
             // Update file count display with detailed stats
             let statsHtml = `<strong>${routes.length} ${routes.length === 1 ? 'rute' : 'ruter'}</strong>`;
             
-            if (visibleRoutes.length > 0) {
-                statsHtml += ` <span style="color: #27ae60;">(${visibleRoutes.length} synlig)</span>`;
+            if (statsRoutes.length > 0) {
+                if (routesInDays.size > 0) {
+                    statsHtml += ` <span style="color: #27ae60;">(${statsRoutes.length} valgt)</span>`;
+                } else {
+                    statsHtml += ` <span style="color: #27ae60;">(${statsRoutes.length} synlig)</span>`;
+                }
                 statsHtml += ` | <strong>${totalDistance.toFixed(1)} km</strong>`;
                 
                 // Vis høydemeter hvis noen ruter har data
-                const hasElevation = visibleRoutes.some(r => r.stats && r.stats.elevationGain > 0);
+                const hasElevation = statsRoutes.some(r => r.stats && r.stats.elevationGain > 0);
                 if (hasElevation && totalElevationGain > 0) {
                     statsHtml += ` | <strong>⬆️ ${totalElevationGain.toLocaleString('no-NO')} m</strong>`;
                 }
                 
-                if (visibleRoutes.length >= 2) {
+                if (statsRoutes.length >= 2) {
                     statsHtml += ` | Overlapp: <strong>${overlapData.overlapPercentage}%</strong>`;
                     if (overlapData.commonPercentage > 0) {
                         statsHtml += ` <span style="color: #e67e22;">(Felles: ${overlapData.commonPercentage}%)</span>`;
@@ -1137,21 +1177,21 @@
             
             fileCountDiv.innerHTML = statsHtml;
             
+            const visibleRoutes = routes.filter(r => r.visible);
             let html = `
                 <div class="stats-summary">
-                    <strong>Synlige ruter:</strong><br>
-                    ${visibleRoutes.length} av ${routes.length} ruter<br>
+                    <strong>${routesInDays.size > 0 ? 'Valgte' : 'Synlige'} ruter:</strong><br>
+                    ${statsRoutes.length} av ${routes.length} ruter<br>
                     ${totalDistance.toFixed(2)} km kombinert<br>
                     ${totalElevationGain > 0 ? `${totalElevationGain} m stigning<br>` : ''}
                     ${totalPoints.toLocaleString('no-NO')} GPS-punkter
-                    ${visibleRoutes.length >= 2 ? `<br><br><strong>Overlappanalyse:</strong><br>
+                    ${statsRoutes.length >= 2 ? `<br><br><strong>Overlappanalyse:</strong><br>
                     ${overlapData.overlapPercentage}% overlapp i samme retning<br>
                     ${overlapData.commonPercentage}% felles segment (alle ruter)` : ''}
                 </div>
             `;
             
-            // Get route IDs that are already in days
-            const routesInDays = new Set(days.flatMap(d => d.routes));
+            // routesInDays already defined above - reuse it
             
             // Sort routes alphabetically by filename
             const sortedRoutes = [...routes].sort((a, b) => 
@@ -1343,7 +1383,9 @@
             if (files.length === 0) return;
 
             const { progressContainer, progressFill, progressText } = getProgressElements();
-            progressContainer.classList.add('active');
+            
+            // Show splash screen (remove minimized class)
+            progressContainer.classList.remove('minimized');
             progressFill.style.width = '0%';
 
             for (let i = 0; i < files.length; i++) {
@@ -1369,8 +1411,8 @@
 
             progressText.textContent = `Ferdig! ${files.length} filer lastet.`;
             setTimeout(() => {
-                progressContainer.classList.remove('active');
-            }, 1000);
+                progressContainer.classList.add('minimized');
+            }, 500);
             e.target.value = '';
         });
 
@@ -1614,6 +1656,87 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        };
+
+        window.autoMakeElite = function() {
+            // Clear current selections
+            days.forEach(day => day.routes = []);
+            
+            // Find A routes (Elite) - prioriter A over A1/A2
+            for (let dayNum = 1; dayNum <= 4; dayNum++) {
+                const day = days.find(d => d.id === dayNum);
+                if (!day) continue;
+                
+                // Find A routes (not A1, A2)
+                const dayARoutes = routes.filter(r => {
+                    const match = r.fileName.match(/GGTM26_D(\d+)_A_/);
+                    if (!match || parseInt(match[1]) !== dayNum) return false;
+                    // Exclude A1, A2, etc - only want pure "A"
+                    const afterA = r.fileName.split('_A_')[1];
+                    return afterA && !afterA.match(/^[12]/);
+                });
+                
+                if (dayARoutes.length >= 2) {
+                    // Find UT (Helios first) and HJEM (Helios last)
+                    const utRoute = dayARoutes.find(r => r.fileName.includes('Helios_'));
+                    const hjemRoute = dayARoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                    
+                    if (utRoute && hjemRoute) {
+                        day.routes.push(utRoute.id, hjemRoute.id);
+                    } else {
+                        // Fallback: just take first two
+                        dayARoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
+                    }
+                }
+            }
+            
+            updateRouteColors();
+            updateSidebar();
+            alert('✅ Elite (A) ruter lastet for alle 4 dager!');
+        };
+
+        window.autoMakeMosjonist = function() {
+            // Clear current selections
+            days.forEach(day => day.routes = []);
+            
+            // Find B routes (Mosjonist) - prioriter B over B1/B2
+            for (let dayNum = 1; dayNum <= 4; dayNum++) {
+                const day = days.find(d => d.id === dayNum);
+                if (!day) continue;
+                
+                // First try to find plain B routes (not B1, B2)
+                const dayBRoutes = routes.filter(r => {
+                    const match = r.fileName.match(/GGTM26_D(\d+)_B_/);
+                    if (!match || parseInt(match[1]) !== dayNum) return false;
+                    // Exclude B1, B2, etc - only want pure "B"
+                    const afterB = r.fileName.split('_B_')[1];
+                    return afterB && !afterB.match(/^[12]/);
+                });
+                
+                if (dayBRoutes.length >= 2) {
+                    // We have B routes, use them
+                    const utRoute = dayBRoutes.find(r => r.fileName.includes('Helios_'));
+                    const hjemRoute = dayBRoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                    
+                    if (utRoute && hjemRoute) {
+                        day.routes.push(utRoute.id, hjemRoute.id);
+                    } else {
+                        dayBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
+                    }
+                } else {
+                    // Fallback to B1 and B2 if no B routes exist
+                    const b1Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
+                    const b2Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
+                    
+                    if (b1Route && b2Route) {
+                        day.routes.push(b1Route.id, b2Route.id);
+                    }
+                }
+            }
+            
+            updateRouteColors();
+            updateSidebar();
+            alert('✅ Mosjonist (B) ruter lastet for alle 4 dager!');
         };
 
         // Initialize
