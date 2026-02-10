@@ -40,6 +40,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            
             background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
         }
 
@@ -458,7 +459,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: black; /*linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);*/
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1420,10 +1421,7 @@
                 const splashScreen = document.getElementById('splashScreen');
                 splashScreen.classList.add('minimized');
 
-                // Start audio
-    const audio = document.getElementById('bgAudio');
-    audio.volume = 0.3; // 30% volume
-    audio.play().catch(e => console.log('Audio autoplay blocked:', e));
+                
             }, 500);
         }
 
