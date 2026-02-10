@@ -53,8 +53,8 @@
         #map { position: absolute; top: 0; left: 0; right: 0; bottom: 180px; z-index: 1; }
         
         /* Day Swiper */
-        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); border-top: 2px solid #ff00ff; z-index: 1000; }
-        .day-cards { display: flex; height: 100%; transition: transform 0.3s; overflow: hidden; }
+        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); border-top: 2px solid #ff00ff; z-index: 1000; overflow: hidden; }
+        .day-cards { display: flex; height: 100%; transition: transform 0.3s; }
         .day-card { min-width: 100%; padding: 15px; display: flex; flex-direction: column; }
         .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .day-title { font-weight: 700; font-size: 1.2rem; color: #00f5ff; text-shadow: 0 0 10px rgba(0,245,255,0.8); }
@@ -399,68 +399,34 @@
             document.getElementById('menuBtn').classList.remove('active');
         }
         
-        // Swipe med forbedret touch handling
-        let startX = 0, startY = 0, isDragging = false;
+        // Swipe - simplified version
+        let startX = 0;
         const swiper = document.querySelector('.day-swiper');
         const cards = document.getElementById('dayCards');
         
-        console.log('🎯 SWIPE SETUP - swiper element:', swiper);
-        console.log('🎯 SWIPE SETUP - cards element:', cards);
-        console.log('🎯 Swiper clientWidth:', swiper ? swiper.clientWidth : 'NULL');
-        
-        if (!swiper || !cards) {
-            console.error('❌ ERROR: swiper or cards element not found!');
-        }
+        console.log('🎯 SWIPE SETUP:', { swiper: !!swiper, cards: !!cards });
         
         swiper.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isDragging = true;
-            console.log('👆 TOUCHSTART:', { startX, startY, isDragging, target: e.target.className });
-        }, { passive: true });
-        
-        swiper.addEventListener('touchmove', e => {
-            if (!isDragging) {
-                console.log('⚠️ TOUCHMOVE skipped - not dragging');
-                return;
-            }
-            // Prevent vertical scroll during horizontal swipe
-            const deltaX = Math.abs(e.touches[0].clientX - startX);
-            const deltaY = Math.abs(e.touches[0].clientY - startY);
-            console.log('👉 TOUCHMOVE:', { deltaX, deltaY });
-            if (deltaX > deltaY) {
-                e.preventDefault();
-                console.log('🚫 Prevented default scroll');
-            }
-        }, { passive: false });
+            console.log('👆 TOUCHSTART at', startX);
+        });
         
         swiper.addEventListener('touchend', e => {
-            console.log('🏁 TOUCHEND start:', { isDragging, currentDay });
-            if (!isDragging) {
-                console.log('⚠️ TOUCHEND skipped - not dragging');
-                return;
-            }
-            isDragging = false;
             const endX = e.changedTouches[0].clientX;
             const diff = startX - endX;
+            console.log('🏁 TOUCHEND:', { start: startX, end: endX, diff, currentDay });
             
-            console.log('📊 TOUCHEND calculation:', { startX, endX, diff, abs: Math.abs(diff) });
-            
-            // Minimum 50px swipe
             if (Math.abs(diff) < 50) {
-                console.log('❌ Swipe too short (<50px)');
+                console.log('❌ Too short');
                 return;
             }
             
-            const oldDay = currentDay;
             if (diff > 0 && currentDay < 3) {
                 currentDay++;
-                console.log('➡️ Swipe right:', oldDay, '→', currentDay);
+                console.log('➡️ Next day:', currentDay);
             } else if (diff < 0 && currentDay > 0) {
                 currentDay--;
-                console.log('⬅️ Swipe left:', oldDay, '→', currentDay);
-            } else {
-                console.log('🛑 At boundary - cant swipe further');
+                console.log('⬅️ Prev day:', currentDay);
             }
             updateSwiper();
         });
