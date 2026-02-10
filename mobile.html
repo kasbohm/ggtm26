@@ -249,36 +249,32 @@
             for (let i = 0; i < points.length; i += sampleRate) sampledIndices.push(i);
             if (sampledIndices[sampledIndices.length - 1] !== points.length - 1) sampledIndices.push(points.length - 1);
             
-            // Build locations string for Open-Topo-Data (lat,lon|lat,lon format)
-            const locationsString = sampledIndices.map(i => `${points[i].lat},${points[i].lon}`).join('|');
+            const locations = sampledIndices.map(i => ({ latitude: points[i].lat, longitude: points[i].lon }));
             
             try {
-                // Using Open-Topo-Data instead of Open-Elevation (better CORS support)
-                const response = await fetch(`https://api.opentopodata.org/v1/aster30m?locations=${locationsString}`);
+                const response = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ locations })
+                });
                 
                 if (!response.ok) {
                     console.warn('⚠️ Elevation API returned', response.status, '- skipping elevation');
                     return false;
                 }
                 const data = await response.json();
+                data.results.forEach((result, idx) => { points[sampledIndices[idx]].ele = result.elevation; });
                 
-                if (data.results) {
-                    data.results.forEach((result, idx) => { 
-                        points[sampledIndices[idx]].ele = result.elevation; 
-                    });
-                    
-                    // Interpolate between sampled points
-                    for (let i = 0; i < sampledIndices.length - 1; i++) {
-                        const startIdx = sampledIndices[i], endIdx = sampledIndices[i + 1];
-                        const startEle = points[startIdx].ele, endEle = points[endIdx].ele;
-                        for (let j = startIdx + 1; j < endIdx; j++) {
-                            points[j].ele = startEle + (endEle - startEle) * ((j - startIdx) / (endIdx - startIdx));
-                        }
+                // Interpolate between sampled points
+                for (let i = 0; i < sampledIndices.length - 1; i++) {
+                    const startIdx = sampledIndices[i], endIdx = sampledIndices[i + 1];
+                    const startEle = points[startIdx].ele, endEle = points[endIdx].ele;
+                    for (let j = startIdx + 1; j < endIdx; j++) {
+                        points[j].ele = startEle + (endEle - startEle) * ((j - startIdx) / (endIdx - startIdx));
                     }
-                    console.log('✅ Elevation enriched successfully via Open-Topo-Data');
-                    return true;
                 }
-                return false;
+                console.log('✅ Elevation enriched successfully');
+                return true;
             } catch (error) {
                 console.warn('⚠️ Elevation failed:', error.message, '- continuing without elevation');
                 return false;
@@ -405,23 +401,25 @@
         
         // Swipe med forbedret touch handling
         let startX = 0, startY = 0, isDragging = false;
+        const swiper = document.querySelector('.day-swiper');
         const cards = document.getElementById('dayCards');
         
+        console.log('🎯 SWIPE SETUP - swiper element:', swiper);
         console.log('🎯 SWIPE SETUP - cards element:', cards);
-        console.log('🎯 Cards clientWidth:', cards ? cards.clientWidth : 'NULL');
+        console.log('🎯 Swiper clientWidth:', swiper ? swiper.clientWidth : 'NULL');
         
-        if (!cards) {
-            console.error('❌ ERROR: dayCards element not found!');
+        if (!swiper || !cards) {
+            console.error('❌ ERROR: swiper or cards element not found!');
         }
         
-        cards.addEventListener('touchstart', e => {
+        swiper.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isDragging = true;
             console.log('👆 TOUCHSTART:', { startX, startY, isDragging, target: e.target.className });
         }, { passive: true });
         
-        cards.addEventListener('touchmove', e => {
+        swiper.addEventListener('touchmove', e => {
             if (!isDragging) {
                 console.log('⚠️ TOUCHMOVE skipped - not dragging');
                 return;
@@ -436,7 +434,7 @@
             }
         }, { passive: false });
         
-        cards.addEventListener('touchend', e => {
+        swiper.addEventListener('touchend', e => {
             console.log('🏁 TOUCHEND start:', { isDragging, currentDay });
             if (!isDragging) {
                 console.log('⚠️ TOUCHEND skipped - not dragging');
