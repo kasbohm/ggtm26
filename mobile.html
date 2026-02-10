@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GGåpings Mallorca Getaway - Semi-Automatic Configurator - Mobile</title>
+    <title>Gåpings Mallorca - Mobile</title>
     
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -50,23 +50,24 @@
         .menu-item:active { transform: scale(0.95); box-shadow: 0 6px 15px rgba(0,245,255,0.5); }
         
         /* Map */
-        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 120px; }
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 180px; }
         
         /* Day Swiper */
-        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); overflow: hidden; border-top: 2px solid #ff00ff; }
+        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); overflow: hidden; border-top: 2px solid #ff00ff; }
         .day-cards { display: flex; height: 100%; transition: transform 0.3s; }
         .day-card { min-width: 100%; padding: 15px; display: flex; flex-direction: column; }
         .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .day-title { font-weight: 700; font-size: 1.1rem; color: #00f5ff; text-shadow: 0 0 10px rgba(0,245,255,0.8); }
-        .day-stats { font-size: 0.9rem; color: #ffaa00; text-shadow: 0 0 5px rgba(255,170,0,0.6); }
-        .day-routes { display: flex; gap: 8px; overflow-x: auto; flex: 1; }
-        .route-chip { padding: 8px 12px; background: linear-gradient(135deg, rgba(48,43,99,0.8), rgba(36,36,62,0.8)); border-radius: 20px; font-size: 0.75rem; white-space: nowrap; border-left: 3px solid; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        .day-dots { display: flex; justify-content: center; gap: 8px; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
-        .dot { width: 8px; height: 8px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 1px solid #00f5ff; }
-        .dot.active { background: #00f5ff; box-shadow: 0 0 10px rgba(0,245,255,0.8); }
+        .day-title { font-weight: 700; font-size: 1.2rem; color: #00f5ff; text-shadow: 0 0 10px rgba(0,245,255,0.8); }
+        .day-stats { font-size: 0.95rem; color: #ffaa00; text-shadow: 0 0 5px rgba(255,170,0,0.6); }
+        .day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); }
+        .day-routes { display: flex; gap: 8px; overflow-x: auto; flex: 1; margin-top: 8px; }
+        .route-chip { padding: 10px 14px; background: linear-gradient(135deg, rgba(48,43,99,0.8), rgba(36,36,62,0.8)); border-radius: 20px; font-size: 0.8rem; white-space: nowrap; border-left: 3px solid; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .day-dots { display: flex; justify-content: center; gap: 10px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
+        .dot { width: 10px; height: 10px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 2px solid #00f5ff; cursor: pointer; transition: all 0.3s; }
+        .dot.active { background: #00f5ff; box-shadow: 0 0 10px rgba(0,245,255,0.8); transform: scale(1.2); }
         
         /* FAB */
-        .fab-group { position: fixed; bottom: 140px; right: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .fab-group { position: fixed; bottom: 200px; right: 15px; display: flex; flex-direction: column; gap: 10px; }
         .fab { width: 56px; height: 56px; background: linear-gradient(135deg, #00f5ff, #0080ff); border-radius: 50%; border: 2px solid #00f5ff; color: #0a0a0a; font-size: 1.5rem; font-weight: 900; box-shadow: 0 4px 15px rgba(0,245,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
         .fab:active { transform: scale(0.9); }
         .fab.select { background: linear-gradient(135deg, #ffaa00, #ff8800); border-color: #ffaa00; box-shadow: 0 4px 15px rgba(255,170,0,0.6); }
@@ -111,7 +112,6 @@
     
     <!-- FAB Buttons -->
     <div class="fab-group">
-        <button class="fab select" onclick="openRouteSelector()">✓</button>
         <button class="fab download" onclick="downloadCurrentDay()">⬇️</button>
     </div>
     
@@ -131,24 +131,43 @@
     <div class="day-swiper">
         <div class="day-cards" id="dayCards">
             <div class="day-card" style="border-top: 4px solid #e74c3c;">
-                <div class="day-header"><span class="day-title">Dag 1</span><span class="day-stats" id="day1stats"></span></div>
+                <div class="day-header">
+                    <span class="day-title">Dag 1</span>
+                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                </div>
+                <div class="day-stats" id="day1stats"></div>
                 <div class="day-routes" id="day1routes"></div>
             </div>
             <div class="day-card" style="border-top: 4px solid #3498db;">
-                <div class="day-header"><span class="day-title">Dag 2</span><span class="day-stats" id="day2stats"></span></div>
+                <div class="day-header">
+                    <span class="day-title">Dag 2</span>
+                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                </div>
+                <div class="day-stats" id="day2stats"></div>
                 <div class="day-routes" id="day2routes"></div>
             </div>
             <div class="day-card" style="border-top: 4px solid #2ecc71;">
-                <div class="day-header"><span class="day-title">Dag 3</span><span class="day-stats" id="day3stats"></span></div>
+                <div class="day-header">
+                    <span class="day-title">Dag 3</span>
+                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                </div>
+                <div class="day-stats" id="day3stats"></div>
                 <div class="day-routes" id="day3routes"></div>
             </div>
             <div class="day-card" style="border-top: 4px solid #f39c12;">
-                <div class="day-header"><span class="day-title">Dag 4</span><span class="day-stats" id="day4stats"></span></div>
+                <div class="day-header">
+                    <span class="day-title">Dag 4</span>
+                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                </div>
+                <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
             </div>
         </div>
-        <div class="day-dots">
-            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="day-dots" id="dayDots">
+            <div class="dot active" onclick="goToDay(0)"></div>
+            <div class="dot" onclick="goToDay(1)"></div>
+            <div class="dot" onclick="goToDay(2)"></div>
+            <div class="dot" onclick="goToDay(3)"></div>
         </div>
     </div>
     
@@ -278,21 +297,40 @@
             for (let dayNum = 1; dayNum <= 4; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
-                const dayBRoutes = routes.filter(r => {
-                    const match = r.fileName.match(/GGTM26_D(\d+)_B_/);
-                    if (!match || parseInt(match[1]) !== dayNum) return false;
-                    const afterB = r.fileName.split('_B_')[1];
-                    return afterB && !afterB.match(/^[12]/);
+                
+                // Find all B routes for this day (B, B1, B2)
+                const allBRoutes = routes.filter(r => {
+                    const match = r.fileName.match(/GGTM26_D(\d+)_B/);
+                    return match && parseInt(match[1]) === dayNum;
                 });
-                if (dayBRoutes.length >= 2) {
-                    const utRoute = dayBRoutes.find(r => r.fileName.includes('Helios_'));
-                    const hjemRoute = dayBRoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
-                    if (utRoute && hjemRoute) day.routes.push(utRoute.id, hjemRoute.id);
-                    else dayBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
-                } else {
-                    const b1Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
-                    const b2Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
-                    if (b1Route && b2Route) day.routes.push(b1Route.id, b2Route.id);
+                
+                // Separate B from B1/B2
+                const pureB = allBRoutes.filter(r => {
+                    const afterD = r.fileName.split(`GGTM26_D${dayNum}_`)[1];
+                    return afterD && afterD.startsWith('B_');
+                });
+                
+                const b1b2 = allBRoutes.filter(r => {
+                    return r.fileName.includes(`_B1_`) || r.fileName.includes(`_B2_`);
+                });
+                
+                if (pureB.length >= 1) {
+                    // We have B routes - prefer these
+                    const utRoute = pureB.find(r => r.fileName.includes('Helios_'));
+                    const hjemRoute = pureB.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                    
+                    if (utRoute && hjemRoute) {
+                        day.routes.push(utRoute.id, hjemRoute.id);
+                    } else if (pureB.length >= 2) {
+                        // If can't find UT/HJEM pattern, take first two B
+                        pureB.slice(0, 2).forEach(route => day.routes.push(route.id));
+                    } else if (pureB.length === 1 && b1b2.length >= 1) {
+                        // 1 B route + 1 from B1/B2
+                        day.routes.push(pureB[0].id, b1b2[0].id);
+                    }
+                } else if (b1b2.length >= 2) {
+                    // No B routes, use B1 + B2
+                    b1b2.slice(0, 2).forEach(route => day.routes.push(route.id));
                 }
             }
             updateUI();
@@ -348,18 +386,41 @@
             document.getElementById('menuBtn').classList.remove('active');
         }
         
-        // Swipe
-        let startX = 0;
+        // Swipe med forbedret touch handling
+        let startX = 0, isDragging = false;
         const cards = document.getElementById('dayCards');
         const dots = document.querySelectorAll('.dot');
         
-        cards.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        cards.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        }, { passive: true });
+        
+        cards.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+        }, { passive: true });
+        
         cards.addEventListener('touchend', e => {
+            if (!isDragging) return;
+            isDragging = false;
             const endX = e.changedTouches[0].clientX;
-            if (startX - endX > 50 && currentDay < 3) currentDay++;
-            else if (endX - startX > 50 && currentDay > 0) currentDay--;
+            const diff = startX - endX;
+            
+            // Minimum 50px swipe
+            if (Math.abs(diff) < 50) return;
+            
+            if (diff > 0 && currentDay < 3) {
+                currentDay++;
+            } else if (diff < 0 && currentDay > 0) {
+                currentDay--;
+            }
             updateSwiper();
         });
+        
+        function goToDay(dayIndex) {
+            currentDay = dayIndex;
+            updateSwiper();
+        }
         
         function updateSwiper() {
             cards.style.transform = `translateX(-${currentDay * 100}%)`;
