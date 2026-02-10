@@ -50,10 +50,10 @@
         .menu-item:active { transform: scale(0.95); box-shadow: 0 6px 15px rgba(0,245,255,0.5); }
         
         /* Map */
-        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 180px; }
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 180px; z-index: 1; }
         
         /* Day Swiper */
-        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); overflow: hidden; border-top: 2px solid #ff00ff; }
+        .day-swiper { position: fixed; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.98) 100%); box-shadow: 0 -4px 20px rgba(255,0,255,0.3); overflow: hidden; border-top: 2px solid #ff00ff; z-index: 1000; }
         .day-cards { display: flex; height: 100%; transition: transform 0.3s; }
         .day-card { min-width: 100%; padding: 15px; display: flex; flex-direction: column; }
         .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -62,12 +62,12 @@
         .day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); }
         .day-routes { display: flex; gap: 8px; overflow-x: auto; flex: 1; margin-top: 8px; }
         .route-chip { padding: 10px 14px; background: linear-gradient(135deg, rgba(48,43,99,0.8), rgba(36,36,62,0.8)); border-radius: 20px; font-size: 0.8rem; white-space: nowrap; border-left: 3px solid; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        .day-dots { display: flex; justify-content: center; gap: 10px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
+        .day-dots { display: flex; justify-content: center; gap: 10px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 10; }
         .dot { width: 10px; height: 10px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 2px solid #00f5ff; cursor: pointer; transition: all 0.3s; }
         .dot.active { background: #00f5ff; box-shadow: 0 0 10px rgba(0,245,255,0.8); transform: scale(1.2); }
         
         /* FAB */
-        .fab-group { position: fixed; bottom: 200px; right: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .fab-group { position: fixed; bottom: 200px; right: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 2001; }
         .fab { width: 56px; height: 56px; background: linear-gradient(135deg, #00f5ff, #0080ff); border-radius: 50%; border: 2px solid #00f5ff; color: #0a0a0a; font-size: 1.5rem; font-weight: 900; box-shadow: 0 4px 15px rgba(0,245,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
         .fab:active { transform: scale(0.9); }
         .fab.select { background: linear-gradient(135deg, #ffaa00, #ff8800); border-color: #ffaa00; box-shadow: 0 4px 15px rgba(255,170,0,0.6); }
@@ -242,6 +242,7 @@
         }
 
         async function enrichWithElevation(points) {
+            console.log('📡 Enriching elevation for', points.length, 'points');
             const targetSamples = 50;
             const sampleRate = Math.max(1, Math.floor(points.length / targetSamples));
             const sampledIndices = [];
@@ -253,7 +254,10 @@
                     method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ locations })
                 });
-                if (!response.ok) throw new Error('Elevation API failed');
+                if (!response.ok) {
+                    console.warn('⚠️ Elevation API returned', response.status, '- skipping elevation');
+                    return false;
+                }
                 const data = await response.json();
                 data.results.forEach((result, idx) => { points[sampledIndices[idx]].ele = result.elevation; });
                 for (let i = 0; i < sampledIndices.length - 1; i++) {
@@ -263,9 +267,10 @@
                         points[j].ele = startEle + (endEle - startEle) * ((j - startIdx) / (endIdx - startIdx));
                     }
                 }
+                console.log('✅ Elevation enriched successfully');
                 return true;
             } catch (error) {
-                console.error('Elevation failed:', error);
+                console.warn('⚠️ Elevation failed:', error.message, '- continuing without elevation');
                 return false;
             }
         }
@@ -392,11 +397,18 @@
         let startX = 0, startY = 0, isDragging = false;
         const cards = document.getElementById('dayCards');
         
+        console.log('🎯 SWIPE SETUP - cards element:', cards);
+        console.log('🎯 Cards clientWidth:', cards ? cards.clientWidth : 'NULL');
+        
+        if (!cards) {
+            console.error('❌ ERROR: dayCards element not found!');
+        }
+        
         cards.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isDragging = true;
-            console.log('👆 TOUCHSTART:', { startX, startY, isDragging });
+            console.log('👆 TOUCHSTART:', { startX, startY, isDragging, target: e.target.className });
         }, { passive: true });
         
         cards.addEventListener('touchmove', e => {
@@ -408,6 +420,11 @@
             const deltaX = Math.abs(e.touches[0].clientX - startX);
             const deltaY = Math.abs(e.touches[0].clientY - startY);
             console.log('👉 TOUCHMOVE:', { deltaX, deltaY });
+            if (deltaX > deltaY) {
+                e.preventDefault();
+                console.log('🚫 Prevented default scroll');
+            }
+        }, { passive: false });
             if (deltaX > deltaY) {
                 e.preventDefault();
                 console.log('🚫 Prevented default scroll');
