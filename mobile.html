@@ -435,11 +435,6 @@
                 console.log('🚫 Prevented default scroll');
             }
         }, { passive: false });
-            if (deltaX > deltaY) {
-                e.preventDefault();
-                console.log('🚫 Prevented default scroll');
-            }
-        }, { passive: false });
         
         cards.addEventListener('touchend', e => {
             console.log('🏁 TOUCHEND start:', { isDragging, currentDay });
