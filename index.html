@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            window.location.replace('mobile.html');
+        }
+    </script>
     <title>Gåpings Mallorca Getaway - Semi-Automatic Configurator</title>
     
     <!-- Open Graph / Facebook -->
