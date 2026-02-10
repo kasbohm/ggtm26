@@ -396,45 +396,73 @@
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isDragging = true;
+            console.log('👆 TOUCHSTART:', { startX, startY, isDragging });
         }, { passive: true });
         
         cards.addEventListener('touchmove', e => {
-            if (!isDragging) return;
+            if (!isDragging) {
+                console.log('⚠️ TOUCHMOVE skipped - not dragging');
+                return;
+            }
             // Prevent vertical scroll during horizontal swipe
             const deltaX = Math.abs(e.touches[0].clientX - startX);
             const deltaY = Math.abs(e.touches[0].clientY - startY);
+            console.log('👉 TOUCHMOVE:', { deltaX, deltaY });
             if (deltaX > deltaY) {
                 e.preventDefault();
+                console.log('🚫 Prevented default scroll');
             }
         }, { passive: false });
         
         cards.addEventListener('touchend', e => {
-            if (!isDragging) return;
+            console.log('🏁 TOUCHEND start:', { isDragging, currentDay });
+            if (!isDragging) {
+                console.log('⚠️ TOUCHEND skipped - not dragging');
+                return;
+            }
             isDragging = false;
             const endX = e.changedTouches[0].clientX;
             const diff = startX - endX;
             
-            // Minimum 50px swipe
-            if (Math.abs(diff) < 50) return;
+            console.log('📊 TOUCHEND calculation:', { startX, endX, diff, abs: Math.abs(diff) });
             
+            // Minimum 50px swipe
+            if (Math.abs(diff) < 50) {
+                console.log('❌ Swipe too short (<50px)');
+                return;
+            }
+            
+            const oldDay = currentDay;
             if (diff > 0 && currentDay < 3) {
                 currentDay++;
+                console.log('➡️ Swipe right:', oldDay, '→', currentDay);
             } else if (diff < 0 && currentDay > 0) {
                 currentDay--;
+                console.log('⬅️ Swipe left:', oldDay, '→', currentDay);
+            } else {
+                console.log('🛑 At boundary - cant swipe further');
             }
             updateSwiper();
         });
         
         function goToDay(dayIndex) {
+            console.log('🎯 goToDay:', currentDay, '→', dayIndex);
             currentDay = dayIndex;
             updateSwiper();
         }
         
         function updateSwiper() {
+            console.log('🔄 updateSwiper - currentDay:', currentDay);
             cards.style.transform = `translateX(-${currentDay * 100}%)`;
             const dots = document.querySelectorAll('.dot');
-            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentDay));
+            console.log('🔍 Found dots:', dots.length);
+            dots.forEach((dot, i) => {
+                const isActive = i === currentDay;
+                dot.classList.toggle('active', isActive);
+                console.log(`  Dot ${i}: ${isActive ? 'ACTIVE' : 'inactive'}`);
+            });
             updateMapVisibility();
+            console.log('✅ updateSwiper complete');
         }
         
         function updateMapVisibility() {
