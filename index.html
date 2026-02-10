@@ -594,7 +594,10 @@
             <div class="splash-text" id="splashText">Initializing configurator...</div>
         </div>
     </div>
-
+    <!-- Background Audio -->
+<audio id="bgAudio" loop>
+    <source src="audio.m4a" type="audio/mp4">
+</audio>
     <div class="header">
         <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop Computers</h1>
     </div>
@@ -1416,6 +1419,11 @@
             setTimeout(() => {
                 const splashScreen = document.getElementById('splashScreen');
                 splashScreen.classList.add('minimized');
+
+                // Start audio
+    const audio = document.getElementById('bgAudio');
+    audio.volume = 0.3; // 30% volume
+    audio.play().catch(e => console.log('Audio autoplay blocked:', e));
             }, 500);
         }
 
