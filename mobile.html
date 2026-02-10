@@ -61,6 +61,51 @@
         .day-stats { font-size: 0.95rem; color: #ffaa00; text-shadow: 0 0 5px rgba(255,170,0,0.6); }
         .day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); }
         .day-routes { display: flex; gap: 8px; overflow-x: auto; flex: 1; margin-top: 8px; }
+        /* Route timeline (Legs) */
+.route-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route-leg {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border-left: 4px solid;
+  border-radius: 6px;
+}
+
+.route-leg-index {
+  font-weight: 900;
+  font-size: 1rem;
+  color: #ffaa00;
+  min-width: 22px;
+  text-align: center;
+}
+
+.route-leg-content {
+  flex: 1;
+}
+
+.route-leg-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #00f5ff;
+  margin-bottom: 2px;
+}
+
+.route-leg-stats {
+  font-size: 0.75rem;
+  color: #ffaa00;
+}
+.route-connector {
+  height: 14px;
+  margin-left: 21px;
+  border-left: 2px dotted rgba(255,255,255,0.25);
+}
+
         .route-chip { padding: 10px 14px; background: linear-gradient(135deg, rgba(48,43,99,0.8), rgba(36,36,62,0.8)); border-radius: 20px; font-size: 0.8rem; white-space: nowrap; border-left: 3px solid; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .day-dots { display: flex; justify-content: center; gap: 10px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 10; }
         .dot { width: 10px; height: 10px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 2px solid #00f5ff; cursor: pointer; transition: all 0.3s; }
@@ -175,6 +220,8 @@
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        let highlightedRouteId = null;
+
         // Inline common code for mobile
         const routes = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'];
@@ -447,6 +494,8 @@
                 dot.classList.toggle('active', isActive);
                 console.log(`  Dot ${i}: ${isActive ? 'ACTIVE' : 'inactive'}`);
             });
+            highlightedRouteId = null;
+
             updateMapVisibility();
             console.log('✅ updateSwiper complete');
         }
@@ -455,21 +504,27 @@
             const day = days[currentDay];
             const selectedRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
             
-            routes.forEach(route => {
-                const isSelected = selectedRoutes.some(r => r.id === route.id);
-                
-                // Update polyline
-                route.polyline.setStyle({ opacity: isSelected ? 0.7 : 0 });
-                
-                // Update markers - use setOpacity for CircleMarker
-                if (isSelected) {
-                    route.startMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
-                    route.endMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
-                } else {
-                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-                }
-            });
+            const isHighlighted = highlightedRouteId !== null;
+
+routes.forEach(route => {
+  const isSelected = selectedRoutes.some(r => r.id === route.id);
+  const isActive =
+    isHighlighted ? route.id === highlightedRouteId : isSelected;
+
+  route.polyline.setStyle({
+    opacity: isActive ? 0.9 : 0,
+    weight: isActive ? 5 : 3
+  });
+
+  if (isActive) {
+    route.startMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+    route.endMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+  } else {
+    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+  }
+});
+
             
             if (selectedRoutes.length > 0) {
                 const bounds = L.featureGroup(selectedRoutes.map(r => r.polyline)).getBounds();
@@ -606,7 +661,19 @@
             if (routes.length === 1) map.fitBounds(polyline.getBounds());
             updateUI();
         }
-        
+        function sortRoutesUtHjem(dayRoutes) {
+  if (dayRoutes.length !== 2) return dayRoutes;
+
+  const score = (r) => {
+    const name = r.fileName;
+    if (name.includes('Helios_')) return 0;      // UT
+    if (name.includes('_Helios')) return 1;      // HJEM
+    return 2;
+  };
+
+  return [...dayRoutes].sort((a, b) => score(a) - score(b));
+}
+
         function updateUI() {
             days.forEach((day, idx) => {
                 const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
@@ -614,9 +681,60 @@
                 dayRoutes.forEach(r => { if(r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain; } });
                 
                 document.getElementById(`day${idx+1}stats`).textContent = dayRoutes.length ? `${km.toFixed(1)} km | ⬆️ ${hm} m` : '';
-                document.getElementById(`day${idx+1}routes`).innerHTML = dayRoutes.map(r => 
-                    `<div class="route-chip" style="border-left-color:${r.color}">${r.fileName.split('_').slice(3,5).join(' ')}</div>`
-                ).join('');
+                
+                
+                const routesContainer = document.getElementById(`day${idx+1}routes`);
+
+if (!dayRoutes.length) {
+  routesContainer.innerHTML = '';
+  return;
+}
+
+const sortedRoutes = sortRoutesUtHjem(dayRoutes);
+
+routesContainer.innerHTML = `
+  <div class="route-timeline">
+    ${sortedRoutes.map((r, i) => {
+      const parts = r.fileName.replace('.gpx', '').split('_');
+
+      let levelIndex = parts.findIndex(p => p.match(/^D\d+$/)) + 1;
+      const locationParts = [];
+
+      for (let j = levelIndex + 1; j < parts.length; j++) {
+        if (parts[j].match(/^\d+km$/) || parts[j].match(/^\d+hm$/)) break;
+        locationParts.push(parts[j]);
+      }
+
+      let fromTo = locationParts.join(' ');
+      const heliosIndex = locationParts.indexOf('Helios');
+
+      if (heliosIndex !== -1) {
+        if (heliosIndex === 0) {
+          fromTo = `Helios → ${locationParts.slice(1).join(' ')}`;
+        } else {
+          fromTo = `${locationParts.slice(0, heliosIndex).join(' ')} → Helios`;
+        }
+      }
+
+      return `
+        <div class="route-leg"
+             style="border-left-color:${day.color}"
+             onclick="highlightedRouteId=${r.id}; updateMapVisibility();">
+          <div class="route-leg-index">${i + 1}</div>
+          <div class="route-leg-content">
+            <div class="route-leg-name">${fromTo}</div>
+            <div class="route-leg-stats">
+              ${r.stats ? `${r.stats.distance} km · ⬆️ ${r.stats.elevationGain} m` : ''}
+            </div>
+          </div>
+        </div>
+        ${i === 0 && sortedRoutes.length === 2 ? `<div class="route-connector"></div>` : ''}
+      `;
+    }).join('')}
+  </div>
+`;
+
+
                 
                 // Update route colors
                 dayRoutes.forEach(r => r.polyline.setStyle({ color: day.color }));
