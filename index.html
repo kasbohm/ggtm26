@@ -594,6 +594,25 @@
         .map-layer-selector input[type="radio"] {
             margin-right: 0.5rem;
         }
+        /* Route Selector Modal */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.modal-content { background: linear-gradient(180deg, #1a1a2e, #16213e); border: 2px solid #00f5ff; border-radius: 12px; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 20px; box-shadow: 0 0 40px rgba(0,245,255,0.5); }
+.modal-header { color: #00f5ff; font-size: 1.3rem; font-weight: 700; margin-bottom: 15px; text-shadow: 0 0 10px rgba(0,245,255,0.8); text-align: center; }
+.route-selector { display: flex; flex-direction: column; gap: 10px; }
+.route-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(48,43,99,0.5); border: 2px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+.route-option.selected { background: rgba(0,245,255,0.2); border-color: #00f5ff; box-shadow: 0 0 15px rgba(0,245,255,0.4); }
+.route-option input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: #00f5ff; flex-shrink: 0; }
+.route-option label { flex: 1; color: white; font-size: 0.9rem; cursor: pointer; }
+.route-name { font-weight: 700; color: #00f5ff; margin-bottom: 4px; }
+.route-details { font-size: 0.8rem; color: #ffaa00; }
+.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+.modal-btn { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 1rem; }
+.modal-btn.save { background: linear-gradient(135deg, #00ff88, #00cc66); border-color: #00ff88; color: #0a0a0a; }
+.modal-btn.cancel { background: transparent; border-color: #ff0080; color: #ff0080; }
+.modal-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,245,255,0.4); }
+
+.day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); transition: all 0.3s; white-space: nowrap; }
+.day-select-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,170,0,0.6); }
     </style>
 </head>
 <body>
@@ -633,50 +652,57 @@
                     <span class="days-toggle" onclick="toggleDaysExpand()">▼</span>
                 </div>
                 <div class="days-content" id="daysContent">
-                    <div class="day-box" data-day-id="1" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title-section">
-                                <div class="day-title">Dag 1</div>
-                                <div class="day-stats-compact" id="day-1-stats"></div>
-                            </div>
-                            <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️ GPX</button>
-                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(1)">
-                        </div>
-                        <div class="day-content" id="day-1-content"></div>
-                    </div>
-                    <div class="day-box" data-day-id="2" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title-section">
-                                <div class="day-title">Dag 2</div>
-                                <div class="day-stats-compact" id="day-2-stats"></div>
-                            </div>
-                            <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️ GPX</button>
-                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(2)">
-                        </div>
-                        <div class="day-content" id="day-2-content"></div>
-                    </div>
-                    <div class="day-box" data-day-id="3" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title-section">
-                                <div class="day-title">Dag 3</div>
-                                <div class="day-stats-compact" id="day-3-stats"></div>
-                            </div>
-                            <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️ GPX</button>
-                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(3)">
-                        </div>
-                        <div class="day-content" id="day-3-content"></div>
-                    </div>
-                    <div class="day-box" data-day-id="4" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title-section">
-                                <div class="day-title">Dag 4</div>
-                                <div class="day-stats-compact" id="day-4-stats"></div>
-                            </div>
-                            <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️ GPX</button>
-                            <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(4)">
-                        </div>
-                        <div class="day-content" id="day-4-content"></div>
-                    </div>
+                    <div class="day-box" data-day-id="1">
+    <div class="day-box-header">
+        <div class="day-title-section">
+            <div class="day-title">Dag 1 - Port de Soller</div>
+            <div class="day-stats-compact" id="day-1-stats"></div>
+        </div>
+        <button class="day-select-btn" onclick="openRouteSelector(1)">Velg ruter</button>
+        <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️ GPX</button>
+        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(1)">
+    </div>
+    <div class="day-content" id="day-1-content"></div>
+</div>
+
+<div class="day-box" data-day-id="2">
+    <div class="day-box-header">
+        <div class="day-title-section">
+            <div class="day-title">Dag 2 - Cap de Formentor</div>
+            <div class="day-stats-compact" id="day-2-stats"></div>
+        </div>
+        <button class="day-select-btn" onclick="openRouteSelector(2)">Velg ruter</button>
+        <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️ GPX</button>
+        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(2)">
+    </div>
+    <div class="day-content" id="day-2-content"></div>
+</div>
+
+<div class="day-box" data-day-id="3">
+    <div class="day-box-header">
+        <div class="day-title-section">
+            <div class="day-title">Dag 3 - Sa Calobra</div>
+            <div class="day-stats-compact" id="day-3-stats"></div>
+        </div>
+        <button class="day-select-btn" onclick="openRouteSelector(3)">Velg ruter</button>
+        <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️ GPX</button>
+        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(3)">
+    </div>
+    <div class="day-content" id="day-3-content"></div>
+</div>
+
+<div class="day-box" data-day-id="4">
+    <div class="day-box-header">
+        <div class="day-title-section">
+            <div class="day-title">Dag 4 - Puig Major</div>
+            <div class="day-stats-compact" id="day-4-stats"></div>
+        </div>
+        <button class="day-select-btn" onclick="openRouteSelector(4)">Velg ruter</button>
+        <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️ GPX</button>
+        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(4)">
+    </div>
+    <div class="day-content" id="day-4-content"></div>
+</div>
                 </div>
             </div>
             <div class="map-layer-selector">
@@ -687,12 +713,130 @@
             </div>
         </div>
         <div class="sidebar">
-            <div id="routeList"></div>
+    <div id="routeList"></div>
+</div>
+
+<!-- Route Selector Modal -->
+<div class="modal" id="routeModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">Velg ruter for <span id="modalDayTitle">Dag 1</span></div>
+        <div class="route-selector" id="routeSelector"></div>
+        <div class="modal-actions">
+            <button class="modal-btn save" onclick="saveRouteSelection()">Lagre</button>
+            <button class="modal-btn cancel" onclick="closeRouteSelector()">Avbryt</button>
         </div>
+    </div>
+</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        let currentSelectingDay = 1;
+
+window.openRouteSelector = function(dayId) {
+    currentSelectingDay = dayId;
+    const modal = document.getElementById('routeModal');
+    const selector = document.getElementById('routeSelector');
+    const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+    document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
+    
+    // Filter routes for current day only
+    const dayRoutes = routes.filter(r => {
+        const match = r.fileName.match(/GGTM26_D(\d+)_/);
+        return match && parseInt(match[1]) === dayId;
+    });
+    
+    const day = days.find(d => d.id === dayId);
+    
+    selector.innerHTML = '';
+    dayRoutes.forEach(route => {
+        const isSelected = day.routes.includes(route.id);
+        const div = document.createElement('div');
+        div.className = `route-option ${isSelected ? 'selected' : ''}`;
+        
+        // Parse filename
+        const parts = route.fileName.replace('.gpx', '').split('_');
+        let level = '';
+        let levelIndex = -1;
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i].match(/^D\d+$/)) {
+                level = parts[i + 1];
+                levelIndex = i + 1;
+                break;
+            }
+        }
+        
+        const locationParts = [];
+        for (let i = levelIndex + 1; i < parts.length; i++) {
+            if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+            locationParts.push(parts[i]);
+        }
+        
+        let fromTo = locationParts.join(' ');
+        const heliosIndex = locationParts.indexOf('Helios');
+        
+        if (heliosIndex !== -1) {
+            if (heliosIndex === 0) {
+                const destination = locationParts.slice(1).join(' ');
+                fromTo = `Helios > ${destination}`;
+            } else {
+                const origin = locationParts.slice(0, heliosIndex).join(' ');
+                fromTo = `${origin} > Helios`;
+            }
+        }
+        
+        const name = `${fromTo} (${level})`;
+        const km = route.stats ? route.stats.distance : '?';
+        const hm = route.stats ? route.stats.elevationGain : '?';
+        
+        div.innerHTML = `
+            <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
+            <label for="route-${route.id}">
+                <div class="route-name">${name}</div>
+                <div class="route-details">${km} km | ⬆️ ${hm} m</div>
+            </label>
+        `;
+        div.onclick = (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                const checkbox = div.querySelector('input');
+                const checked = document.querySelectorAll('.route-option input:checked').length;
+                if (!checkbox.checked && checked >= 2) {
+                    alert('Maks 2 ruter per dag!');
+                    return;
+                }
+                checkbox.checked = !checkbox.checked;
+                div.classList.toggle('selected', checkbox.checked);
+            } else {
+                const checked = document.querySelectorAll('.route-option input:checked').length;
+                if (e.target.checked && checked > 2) {
+                    e.target.checked = false;
+                    alert('Maks 2 ruter per dag!');
+                    return;
+                }
+                div.classList.toggle('selected', e.target.checked);
+            }
+        };
+        selector.appendChild(div);
+    });
+    
+    modal.style.display = 'flex';
+};
+
+window.closeRouteSelector = function() {
+    document.getElementById('routeModal').style.display = 'none';
+};
+
+window.saveRouteSelection = function() {
+    const selected = Array.from(document.querySelectorAll('.route-option input:checked'))
+        .map(cb => parseInt(cb.id.split('-')[1]));
+    
+    const day = days.find(d => d.id === currentSelectingDay);
+    day.routes = selected;
+    
+    updateRouteColors();
+    updateSidebar();
+    closeRouteSelector();
+};
         // Initialize map centered on Norway
         const map = L.map('map').setView([60.472, 8.4689], 6);
 
@@ -897,125 +1041,88 @@
         }
 
         function calculateOverlap() {
-            const visibleRoutes = routes.filter(r => r.visible);
+    // Get routes in days
+    const routesInDays = new Set(days.flatMap(d => d.routes));
+    const statsRoutes = routesInDays.size > 0 
+        ? routes.filter(r => routesInDays.has(r.id))
+        : routes.filter(r => r.visible);
+    
+    if (statsRoutes.length < 2) {
+        return { overlapPercentage: 0, commonPercentage: 0 };
+    }
+
+    const routeCoords = statsRoutes.map(route => {
+        return route.polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
+    });
+
+    const tolerance = 0.0005;
+    let commonPoints = 0;
+    const route1 = routeCoords[0];
+    
+    for (let i = 0; i < route1.length; i++) {
+        const p1 = route1[i];
+        let inAllRoutes = true;
+        
+        for (let r = 1; r < routeCoords.length; r++) {
+            const routePoints = routeCoords[r];
+            let foundInRoute = false;
             
-            if (visibleRoutes.length < 2) {
-                return { overlapPercentage: 0, commonSegments: 0 };
+            for (let j = 0; j < routePoints.length; j++) {
+                const p2 = routePoints[j];
+                const dist = Math.sqrt(
+                    Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2)
+                );
+                if (dist < tolerance) {
+                    foundInRoute = true;
+                    break;
+                }
             }
+            if (!foundInRoute) {
+                inAllRoutes = false;
+                break;
+            }
+        }
+        if (inAllRoutes) commonPoints++;
+    }
 
-            // Get all route coordinates
-            const routeCoords = visibleRoutes.map(route => {
-                return route.polyline.getLatLngs().map(ll => ({
-                    lat: ll.lat,
-                    lng: ll.lng
-                }));
-            });
-
-            // Tolerance in degrees (approximately 50 meters)
-            const tolerance = 0.0005;
-            
-            // Find common segments (segments that appear in ALL routes)
-            let commonPoints = 0;
-            const route1 = routeCoords[0];
-            
-            for (let i = 0; i < route1.length; i++) {
-                const p1 = route1[i];
-                let inAllRoutes = true;
+    let overlapPoints = 0, totalComparisons = 0;
+    for (let r1 = 0; r1 < routeCoords.length; r1++) {
+        for (let r2 = r1 + 1; r2 < routeCoords.length; r2++) {
+            const coords1 = routeCoords[r1];
+            const coords2 = routeCoords[r2];
+            for (let i = 0; i < coords1.length - 1; i++) {
+                const seg1Start = coords1[i];
+                const seg1End = coords1[i + 1];
+                const dir1 = { lat: seg1End.lat - seg1Start.lat, lng: seg1End.lng - seg1Start.lng };
                 
-                // Check if this point exists in all other routes
-                for (let r = 1; r < routeCoords.length; r++) {
-                    const routePoints = routeCoords[r];
-                    let foundInRoute = false;
-                    
-                    for (let j = 0; j < routePoints.length; j++) {
-                        const p2 = routePoints[j];
-                        const dist = Math.sqrt(
-                            Math.pow(p1.lat - p2.lat, 2) + 
-                            Math.pow(p1.lng - p2.lng, 2)
-                        );
-                        
-                        if (dist < tolerance) {
-                            foundInRoute = true;
+                for (let j = 0; j < coords2.length - 1; j++) {
+                    const seg2Start = coords2[j];
+                    const seg2End = coords2[j + 1];
+                    const dist = Math.sqrt(
+                        Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
+                        Math.pow(seg1Start.lng - seg2Start.lng, 2)
+                    );
+                    if (dist < tolerance) {
+                        const dir2 = { lat: seg2End.lat - seg2Start.lat, lng: seg2End.lng - seg2Start.lng };
+                        const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
+                        if (dotProduct > 0) {
+                            overlapPoints++;
                             break;
                         }
                     }
-                    
-                    if (!foundInRoute) {
-                        inAllRoutes = false;
-                        break;
-                    }
-                }
-                
-                if (inAllRoutes) {
-                    commonPoints++;
                 }
             }
-
-            // Calculate overlap considering direction
-            let overlapPoints = 0;
-            let totalComparisons = 0;
-            
-            // Compare each pair of routes
-            for (let r1 = 0; r1 < routeCoords.length; r1++) {
-                for (let r2 = r1 + 1; r2 < routeCoords.length; r2++) {
-                    const coords1 = routeCoords[r1];
-                    const coords2 = routeCoords[r2];
-                    
-                    let pairOverlap = 0;
-                    
-                    for (let i = 0; i < coords1.length - 1; i++) {
-                        const seg1Start = coords1[i];
-                        const seg1End = coords1[i + 1];
-                        
-                        // Check direction vector
-                        const dir1 = {
-                            lat: seg1End.lat - seg1Start.lat,
-                            lng: seg1End.lng - seg1Start.lng
-                        };
-                        
-                        for (let j = 0; j < coords2.length - 1; j++) {
-                            const seg2Start = coords2[j];
-                            const seg2End = coords2[j + 1];
-                            
-                            // Check if segments are close
-                            const dist = Math.sqrt(
-                                Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
-                                Math.pow(seg1Start.lng - seg2Start.lng, 2)
-                            );
-                            
-                            if (dist < tolerance) {
-                                // Check direction
-                                const dir2 = {
-                                    lat: seg2End.lat - seg2Start.lat,
-                                    lng: seg2End.lng - seg2Start.lng
-                                };
-                                
-                                // Dot product to check same direction
-                                const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
-                                
-                                if (dotProduct > 0) {
-                                    pairOverlap++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    
-                    overlapPoints += pairOverlap;
-                    totalComparisons += coords1.length;
-                }
-            }
-            
-            const overlapPercentage = totalComparisons > 0 ? 
-                (overlapPoints / totalComparisons * 100) : 0;
-            
-            return {
-                overlapPercentage: overlapPercentage.toFixed(1),
-                commonPoints: commonPoints,
-                commonPercentage: route1.length > 0 ? 
-                    (commonPoints / route1.length * 100).toFixed(1) : 0
-            };
+            totalComparisons += coords1.length;
         }
+    }
+    
+    const overlapPercentage = totalComparisons > 0 ? (overlapPoints / totalComparisons * 100) : 0;
+    
+    return {
+        overlapPercentage: overlapPercentage.toFixed(1),
+        commonPercentage: route1.length > 0 ? (commonPoints / route1.length * 100).toFixed(1) : 0
+    };
+}
 
         function addRoute(fileName, points, color) {
             const latLngs = points.map(p => [p.lat, p.lon]);
@@ -1197,7 +1304,7 @@
                     totalDistance += parseFloat(route.stats.distance);
                     totalElevationGain += route.stats.elevationGain || 0;
                 }
-                totalPoints += route.points;
+                
             });
             
             // Calculate overlap
@@ -1237,7 +1344,7 @@
                     ${statsRoutes.length} av ${routes.length} ruter<br>
                     ${totalDistance.toFixed(2)} km kombinert<br>
                     ${totalElevationGain > 0 ? `${totalElevationGain} m stigning<br>` : ''}
-                    ${totalPoints.toLocaleString('no-NO')} GPS-punkter
+                   
                     ${statsRoutes.length >= 2 ? `<br><br><strong>Overlappanalyse:</strong><br>
                     ${overlapData.overlapPercentage}% overlapp i samme retning<br>
                     ${overlapData.commonPercentage}% felles segment (alle ruter)` : ''}
@@ -1274,7 +1381,7 @@
                                 ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m stigning</div>` : ''}
                                 ${route.stats.elevationLoss ? `<div>⬇️ ${route.stats.elevationLoss} m nedstigning</div>` : ''}
                                 ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
-                                <div>📍 ${route.points.toLocaleString('no-NO')} punkter</div>
+                                
                             </div>
                         ` : ''}
                     </div>
@@ -1315,9 +1422,7 @@
                 dayRoutes.forEach(route => {
                     html += `
                         <div class="day-route-item" 
-                             style="border-left-color: ${route.color};" 
-                             draggable="true" 
-                             ondragstart="dragFromDay(event, ${route.id}, ${day.id})">
+                             style="border-left-color: ${route.color};">
                             <span class="remove-from-day" onclick="removeFromDay(${route.id}, ${day.id})">✕</span>
                             <div class="day-route-name">${route.fileName}</div>
                             <div class="day-route-stats">
@@ -1566,59 +1671,10 @@
             }
         };
 
-        // Drag and drop functions
-        let draggedRouteId = null;
-        let draggedFromDayId = null;
 
-        window.dragStart = function(event, routeId) {
-            draggedRouteId = routeId;
-            draggedFromDayId = null;
-            event.target.classList.add('dragging');
-        };
+       
 
-        window.dragFromDay = function(event, routeId, dayId) {
-            draggedRouteId = routeId;
-            draggedFromDayId = dayId;
-            event.stopPropagation();
-        };
-
-        window.allowDrop = function(event) {
-            event.preventDefault();
-            event.currentTarget.classList.add('drag-over');
-        };
-
-        window.dragLeave = function(event) {
-            event.currentTarget.classList.remove('drag-over');
-        };
-
-        window.dropOnDay = function(event) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('drag-over');
-            
-            const dayId = parseInt(event.currentTarget.dataset.dayId);
-            const day = days.find(d => d.id === dayId);
-            
-            if (!day || draggedRouteId === null) return;
-            
-            // Remove from old day if coming from another day
-            if (draggedFromDayId !== null) {
-                const oldDay = days.find(d => d.id === draggedFromDayId);
-                if (oldDay) {
-                    oldDay.routes = oldDay.routes.filter(id => id !== draggedRouteId);
-                }
-            }
-            
-            // Add to new day (max 2 routes per day)
-            if (!day.routes.includes(draggedRouteId) && day.routes.length < 2) {
-                day.routes.push(draggedRouteId);
-            }
-            
-            draggedRouteId = null;
-            draggedFromDayId = null;
-            
-            updateRouteColors();
-            updateSidebar();
-        };
+       
 
         window.removeFromDay = function(routeId, dayId) {
             const day = days.find(d => d.id === dayId);
