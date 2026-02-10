@@ -503,6 +503,13 @@
             animation: none;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .splash-screen.minimized .splash-logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5);
         }
 
         @keyframes pulse {
@@ -592,7 +599,7 @@
 <body>
     <!-- Splash Screen -->
     <div class="splash-screen" id="splashScreen">
-        <img src="logo.png" alt="Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo">
+        <img src="logo.png" alt="Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
         <div class="splash-progress">
             <div class="splash-progress-bar">
                 <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
@@ -1794,6 +1801,60 @@
         // Initialize
         updateSidebar();
         loadBundledRoutes();
+    </script>
+    <!-- SoundCloud Embed via oEmbed API -->
+    <div id="soundcloud-player" style="position: fixed; bottom: 20px; left: 180px; z-index: 10000; background: rgba(20, 20, 40, 0.95); border-radius: 8px; padding: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.4); display: none;"></div>
+    <script>
+    (function() {
+        const SC_URL = 'https://soundcloud.com/mrkrokett/looks-like-love-rayko-super-disco-rework-low-quality-4';
+        const oembedUrl = 'https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(SC_URL) + '&maxheight=60';
+        let playerLoaded = false;
+
+        window.toggleSCPlayer = function() {
+            const player = document.getElementById('soundcloud-player');
+            const isHidden = player.style.display === 'none';
+
+            if (isHidden) {
+                player.style.display = 'block';
+                if (!playerLoaded) {
+                    playerLoaded = true;
+                    player.innerHTML = '<span style="color:#aaa;font-size:12px;">Loading...</span>';
+                    fetch(oembedUrl)
+                        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(data => {
+                            const tmp = document.createElement('div');
+                            tmp.innerHTML = data.html;
+                            const iframe = tmp.querySelector('iframe');
+                            if (iframe) {
+                                iframe.width = '300';
+                                iframe.height = '80';
+                                const src = new URL(iframe.src);
+                                src.searchParams.set('auto_play', 'true');
+                                src.searchParams.set('visual', 'true');
+                                src.searchParams.set('hide_related', 'true');
+                                src.searchParams.set('show_comments', 'false');
+                                src.searchParams.set('show_user', 'false');
+                                src.searchParams.set('show_reposts', 'false');
+                                src.searchParams.set('show_teaser', 'false');
+                                src.searchParams.set('color', 'ff5500');
+                                iframe.src = src.toString();
+                                iframe.setAttribute('allow', 'autoplay');
+                                iframe.setAttribute('frameborder', '0');
+                                iframe.scrolling = 'no';
+                                player.innerHTML = '';
+                                player.appendChild(iframe);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('oEmbed failed:', err);
+                            player.innerHTML = '<span style="color:#f66;font-size:12px;">Failed to load</span>';
+                        });
+                }
+            } else {
+                player.style.display = 'none';
+            }
+        };
+    })();
     </script>
 </body>
 </html>
