@@ -457,9 +457,18 @@
             
             routes.forEach(route => {
                 const isSelected = selectedRoutes.some(r => r.id === route.id);
+                
+                // Update polyline
                 route.polyline.setStyle({ opacity: isSelected ? 0.7 : 0 });
-                route.startMarker.setStyle({ opacity: isSelected ? 0.8 : 0 });
-                route.endMarker.setStyle({ opacity: isSelected ? 0.8 : 0 });
+                
+                // Update markers - use setOpacity for CircleMarker
+                if (isSelected) {
+                    route.startMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
+                    route.endMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
+                } else {
+                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                }
             });
             
             if (selectedRoutes.length > 0) {
@@ -486,34 +495,45 @@
                 const div = document.createElement('div');
                 div.className = `route-option ${isSelected ? 'selected' : ''}`;
                 
-                // Parse filename: GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx
+                // Parse: GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx
                 const parts = route.fileName.replace('.gpx', '').split('_');
                 
-                // Extract level (A, B, A1, B2, etc)
+                // Extract level (A, B, A1, B2, etc) - it's after DX
                 let level = '';
+                let levelIndex = -1;
                 for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].startsWith('D') && i + 1 < parts.length) {
+                    if (parts[i].match(/^D\d+$/)) {
                         level = parts[i + 1];
+                        levelIndex = i + 1;
                         break;
                     }
                 }
                 
-                // Extract locations (everything between level and km)
-                const locations = [];
-                let foundLevel = false;
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i] === level) {
-                        foundLevel = true;
-                        continue;
-                    }
-                    if (foundLevel && !parts[i].match(/^\d+km$/)) {
-                        locations.push(parts[i]);
-                    } else if (parts[i].match(/^\d+km$/)) {
-                        break;
+                // Extract locations between level and km/hm
+                const locationParts = [];
+                for (let i = levelIndex + 1; i < parts.length; i++) {
+                    if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+                    locationParts.push(parts[i]);
+                }
+                
+                // Build location string: find "Helios" to determine direction
+                let fromTo = locationParts.join(' ');
+                const heliosIndex = locationParts.indexOf('Helios');
+                
+                if (heliosIndex !== -1) {
+                    // Helios is present
+                    if (heliosIndex === 0) {
+                        // Helios first: Helios > Destination
+                        const destination = locationParts.slice(1).join(' ');
+                        fromTo = `Helios > ${destination}`;
+                    } else {
+                        // Helios last: Origin > Helios
+                        const origin = locationParts.slice(0, heliosIndex).join(' ');
+                        fromTo = `${origin} > Helios`;
                     }
                 }
                 
-                const name = locations.join(' > ') + ' (' + level + ')';
+                const name = `${fromTo} (${level})`;
                 const km = route.stats ? route.stats.distance : '?';
                 const hm = route.stats ? route.stats.elevationGain : '?';
                 
