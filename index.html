@@ -1044,6 +1044,11 @@
                             return;
                         }
                         div.classList.toggle('selected', e.target.checked);
+
+                        if (div.classList.contains('selected') &&
+                            div.querySelector('.route-badge.best')) {
+                            triggerConfetti();
+                        }
                     }
                 };
                 selector.appendChild(div);
@@ -2445,22 +2450,7 @@
         }
     }
 
-    // Observer som sjekker når .selected legges til
-    document.querySelectorAll('.route-option').forEach(routeOption => {
-        const observer = new MutationObserver(mutations => {
-            mutations.forEach(mutation => {
-                if (
-                    mutation.attributeName === 'class' &&
-                    routeOption.classList.contains('selected') &&
-                    routeOption.querySelector('.route-badge.best')
-                ) {
-                    triggerConfetti();
-                }
-            });
-        });
 
-        observer.observe(routeOption, { attributes: true }); // vi observerer kun attributter
-    });
 
 
     </script>
