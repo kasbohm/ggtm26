@@ -936,7 +936,7 @@
             dayRoutes.forEach(route => {
                 const km = route.stats ? route.stats.distance : 0;
                 const hm = route.stats ? route.stats.elevationGain : 0;
-                route.score = parseNumber(km) + parseNumber(hm); // enkel måte å sammenligne totalt "verdi"
+                route.score = km + hm; // enkel måte å sammenligne totalt "verdi"
                 console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
             });
 
