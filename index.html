@@ -177,7 +177,7 @@
         }
 
         .sidebar {
-            width: 300px;
+            width: 230px;
             background: white;
             border-left: 1px solid #e0e0e0;
             overflow-y: auto;
@@ -275,7 +275,7 @@
             position: absolute;
             top: 10px;
             left: 50px;
-            right: 220px;
+            right: 240px;
             z-index: 1000;
             background: white;
             padding: 0.8rem;
@@ -350,6 +350,7 @@
             display: flex;
             gap: 0.3rem;
             align-items: center;
+            justify-content: center;
         }
 
         .day-select-btn {
@@ -926,6 +927,25 @@
             const day = days.find(d => d.id === currentSelectingDay);
             day.routes = selected;
             
+            // Hide all routes first
+            routes.forEach(route => {
+                route.visible = false;
+                route.polyline.remove();
+                route.startMarker.remove();
+                route.endMarker.remove();
+            });
+            
+            // Show only selected routes
+            selected.forEach(routeId => {
+                const route = routes.find(r => r.id === routeId);
+                if (route) {
+                    route.visible = true;
+                    route.polyline.addTo(map);
+                    route.startMarker.addTo(map);
+                    route.endMarker.addTo(map);
+                }
+            });
+            
             updateRouteColors();
             updateSidebar();
             closeRouteSelector();
@@ -1361,7 +1381,36 @@
             if (userRoutes.length === 0) {
                 routeList.innerHTML = '<div class="empty-state">Ingen opplastede ruter.<br>Last opp GPX-filer for å dra de til dagene.</div>';
             } else {
-                let html = `<div class="stats-summary"><strong>Opplastede ruter:</strong><br>${userRoutes.length} ${userRoutes.length === 1 ? 'rute' : 'ruter'}</div>`;
+                // Calculate stats for user routes
+                let totalDistance = 0;
+                let totalElevationGain = 0;
+                
+                userRoutes.forEach(route => {
+                    if (route.stats) {
+                        totalDistance += parseFloat(route.stats.distance);
+                        totalElevationGain += route.stats.elevationGain || 0;
+                    }
+                });
+                
+                // Calculate overlap for user routes
+                const userRoutesInDays = userRoutes.filter(r => routesInDays.has(r.id));
+                let overlapHtml = '';
+                if (userRoutesInDays.length >= 2) {
+                    const overlapData = calculateOverlap();
+                    overlapHtml = `<br><br><strong>Overlapp:</strong><br>
+                    ${overlapData.overlapPercentage}% overlapp<br>
+                    ${overlapData.commonPercentage}% felles segment`;
+                }
+                
+                let html = `
+                    <div class="stats-summary">
+                        <strong>Opplastede ruter:</strong><br>
+                        ${userRoutes.length} ${userRoutes.length === 1 ? 'rute' : 'ruter'}<br>
+                        ${totalDistance.toFixed(1)} km kombinert<br>
+                        ${totalElevationGain > 0 ? `⬆️ ${totalElevationGain} m` : ''}
+                        ${overlapHtml}
+                    </div>
+                `;
                 
                 const sortedUserRoutes = [...userRoutes].sort((a, b) => 
                     a.fileName.localeCompare(b.fileName, 'no')
@@ -1387,8 +1436,7 @@
                             ${route.stats ? `
                                 <div class="route-stats">
                                     <div>📏 ${route.stats.distance} km</div>
-                                    ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m stigning</div>` : ''}
-                                    ${route.stats.elevationLoss ? `<div>⬇️ ${route.stats.elevationLoss} m nedstigning</div>` : ''}
+                                    ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m</div>` : ''}
                                     ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
                                 </div>
                             ` : ''}
@@ -1454,18 +1502,31 @@
                 
                 const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
                 let dayDistance = 0;
-                let dayElevation = 0;
+                let dayElevationGain = 0;
+                let dayMinEle = Infinity;
+                let dayMaxEle = -Infinity;
                 
                 dayRoutes.forEach(route => {
                     if (route.stats) {
                         dayDistance += parseFloat(route.stats.distance);
-                        dayElevation += route.stats.elevationGain || 0;
+                        dayElevationGain += route.stats.elevationGain || 0;
+                        if (route.stats.minEle !== null) {
+                            dayMinEle = Math.min(dayMinEle, route.stats.minEle);
+                            dayMaxEle = Math.max(dayMaxEle, route.stats.maxEle);
+                        }
                     }
                 });
                 
                 if (statsDiv) {
                     if (dayRoutes.length > 0) {
-                        statsDiv.textContent = `${dayDistance.toFixed(1)} km | ⬆️ ${dayElevation} m`;
+                        let statsText = `${dayDistance.toFixed(1)} km`;
+                        if (dayElevationGain > 0) {
+                            statsText += ` | ⬆️ ${dayElevationGain} m`;
+                        }
+                        if (dayMinEle !== Infinity) {
+                            statsText += ` | 🏔️ ${dayMinEle}-${dayMaxEle}m`;
+                        }
+                        statsDiv.textContent = statsText;
                     } else {
                         statsDiv.textContent = '';
                     }
@@ -1744,6 +1805,7 @@
             
             if (!day || draggedRouteId === null) return;
             
+            // If dragging from another day, remove from that day
             if (draggedFromDayId !== null) {
                 const oldDay = days.find(d => d.id === draggedFromDayId);
                 if (oldDay) {
@@ -1751,8 +1813,33 @@
                 }
             }
             
-            if (!day.routes.includes(draggedRouteId) && day.routes.length < 2) {
+            // Smart auto-replace: if 2 routes already there, remove the oldest one
+            if (!day.routes.includes(draggedRouteId)) {
+                if (day.routes.length >= 2) {
+                    // Remove first route (oldest)
+                    day.routes.shift();
+                }
                 day.routes.push(draggedRouteId);
+                
+                // Hide all routes first
+                routes.forEach(route => {
+                    route.visible = false;
+                    route.polyline.remove();
+                    route.startMarker.remove();
+                    route.endMarker.remove();
+                });
+                
+                // Show only routes in days
+                const allDayRoutes = new Set(days.flatMap(d => d.routes));
+                allDayRoutes.forEach(routeId => {
+                    const route = routes.find(r => r.id === routeId);
+                    if (route) {
+                        route.visible = true;
+                        route.polyline.addTo(map);
+                        route.startMarker.addTo(map);
+                        route.endMarker.addTo(map);
+                    }
+                });
             }
             
             draggedRouteId = null;
