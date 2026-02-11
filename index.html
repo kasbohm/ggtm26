@@ -190,6 +190,16 @@
             padding: 0.8rem;
             margin-bottom: 0.8rem;
             border-left: 4px solid;
+            cursor: move;
+            position: relative;
+        }
+
+        .route-item:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .route-item.dragging {
+            opacity: 0.5;
         }
 
         .route-header {
@@ -221,13 +231,16 @@
             cursor: pointer;
             color: #e74c3c;
             font-weight: bold;
-            padding: 0 0.3rem;
-            font-size: 1rem;
-            line-height: 1;
+            padding: 0.2rem 0.5rem;
+            background: white;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            z-index: 10;
         }
 
         .remove-route:hover {
-            color: #c0392b;
+            background: #e74c3c;
+            color: white;
         }
 
         .route-stats {
@@ -303,7 +316,7 @@
             background: #f8f9fa;
             border-radius: 6px;
             padding: 0.6rem;
-            border: 2px dashed #ddd;
+            border: 2px solid #ddd;
             transition: all 0.2s;
         }
 
@@ -315,37 +328,48 @@
 
         .day-box-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .day-title-section {
-            display: flex;
             flex-direction: column;
-            gap: 0.1rem;
-            flex: 1;
-            min-width: 0;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .day-title {
-            font-weight: 600;
-            font-size: 0.8rem;
+            font-weight: 700;
+            font-size: 0.9rem;
             color: #34495e;
+            text-align: center;
         }
 
         .day-stats-compact {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #7f8c8d;
-            white-space: nowrap;
+            text-align: center;
         }
 
-        .day-visibility-toggle {
-            width: 14px;
-            height: 14px;
+        .day-controls {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+
+        .day-select-btn {
+            background: linear-gradient(135deg, #ffaa00, #ff8800);
+            border: 2px solid #ffaa00;
+            color: #0a0a0a;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
             cursor: pointer;
-            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(255,170,0,0.4);
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .day-select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,170,0,0.6);
         }
 
         .btn-download-day {
@@ -353,7 +377,7 @@
             color: white;
             border: none;
             border-radius: 4px;
-            padding: 0.3rem 0.5rem;
+            padding: 0.4rem 0.6rem;
             font-size: 0.7rem;
             cursor: pointer;
             transition: background 0.2s;
@@ -369,16 +393,33 @@
             cursor: not-allowed;
         }
 
+        .btn-toggle-day {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: 2px solid #3498db;
+            color: white;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-toggle-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.6);
+        }
+
+        .btn-toggle-day.hidden {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            border-color: #95a5a6;
+        }
+
         .day-content {
             display: flex;
             flex-direction: column;
             gap: 0.3rem;
-        }
-
-        .day-stats {
-            font-size: 0.7rem;
-            color: #7f8c8d;
-            margin-bottom: 0.3rem;
         }
 
         .day-route-item {
@@ -387,7 +428,6 @@
             padding: 0.4rem;
             font-size: 0.7rem;
             border-left: 3px solid;
-            cursor: move;
             position: relative;
         }
 
@@ -425,38 +465,6 @@
             color: #c0392b;
         }
 
-        .route-item {
-            cursor: move;
-            position: relative;
-        }
-
-        .route-item:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .route-item.dragging {
-            opacity: 0.5;
-        }
-
-        .remove-route {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            cursor: pointer;
-            color: #e74c3c;
-            font-weight: bold;
-            padding: 0.2rem 0.5rem;
-            background: white;
-            border-radius: 3px;
-            font-size: 0.9rem;
-            z-index: 10;
-        }
-
-        .remove-route:hover {
-            background: #e74c3c;
-            color: white;
-        }
-
         /* Splash Screen */
         .splash-screen {
             position: fixed;
@@ -464,7 +472,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: black; /*linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);*/
+            background: black;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -560,19 +568,6 @@
             text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
         }
 
-        .day-box-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .day-visibility-toggle {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
         .map-layer-selector {
             position: absolute;
             top: 10px;
@@ -594,25 +589,121 @@
         .map-layer-selector input[type="radio"] {
             margin-right: 0.5rem;
         }
-        /* Route Selector Modal */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-.modal-content { background: linear-gradient(180deg, #1a1a2e, #16213e); border: 2px solid #00f5ff; border-radius: 12px; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 20px; box-shadow: 0 0 40px rgba(0,245,255,0.5); }
-.modal-header { color: #00f5ff; font-size: 1.3rem; font-weight: 700; margin-bottom: 15px; text-shadow: 0 0 10px rgba(0,245,255,0.8); text-align: center; }
-.route-selector { display: flex; flex-direction: column; gap: 10px; }
-.route-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(48,43,99,0.5); border: 2px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-.route-option.selected { background: rgba(0,245,255,0.2); border-color: #00f5ff; box-shadow: 0 0 15px rgba(0,245,255,0.4); }
-.route-option input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: #00f5ff; flex-shrink: 0; }
-.route-option label { flex: 1; color: white; font-size: 0.9rem; cursor: pointer; }
-.route-name { font-weight: 700; color: #00f5ff; margin-bottom: 4px; }
-.route-details { font-size: 0.8rem; color: #ffaa00; }
-.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
-.modal-btn { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 1rem; }
-.modal-btn.save { background: linear-gradient(135deg, #00ff88, #00cc66); border-color: #00ff88; color: #0a0a0a; }
-.modal-btn.cancel { background: transparent; border-color: #ff0080; color: #ff0080; }
-.modal-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,245,255,0.4); }
 
-.day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); transition: all 0.3s; white-space: nowrap; }
-.day-select-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,170,0,0.6); }
+        /* Route Selector Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #1a1a2e, #16213e);
+            border: 2px solid #00f5ff;
+            border-radius: 12px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 0 40px rgba(0,245,255,0.5);
+        }
+
+        .modal-header {
+            color: #00f5ff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0,245,255,0.8);
+            text-align: center;
+        }
+
+        .route-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .route-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(48,43,99,0.5);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .route-option.selected {
+            background: rgba(0,245,255,0.2);
+            border-color: #00f5ff;
+            box-shadow: 0 0 15px rgba(0,245,255,0.4);
+        }
+
+        .route-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            accent-color: #00f5ff;
+            flex-shrink: 0;
+        }
+
+        .route-option label {
+            flex: 1;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .route-name {
+            font-weight: 700;
+            color: #00f5ff;
+            margin-bottom: 4px;
+        }
+
+        .route-details {
+            font-size: 0.8rem;
+            color: #ffaa00;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .modal-btn.save {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border-color: #00ff88;
+            color: #0a0a0a;
+        }
+
+        .modal-btn.cancel {
+            background: transparent;
+            border-color: #ff0080;
+            color: #ff0080;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,245,255,0.4);
+        }
     </style>
 </head>
 <body>
@@ -626,6 +717,7 @@
             <div class="splash-text" id="splashText">Initializing configurator...</div>
         </div>
     </div>
+
     <div class="header">
         <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop Computers</h1>
     </div>
@@ -652,57 +744,57 @@
                     <span class="days-toggle" onclick="toggleDaysExpand()">▼</span>
                 </div>
                 <div class="days-content" id="daysContent">
-                    <div class="day-box" data-day-id="1">
-    <div class="day-box-header">
-        <div class="day-title-section">
-            <div class="day-title">Dag 1 - Port de Soller</div>
-            <div class="day-stats-compact" id="day-1-stats"></div>
-        </div>
-        <button class="day-select-btn" onclick="openRouteSelector(1)">Velg ruter</button>
-        <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️ GPX</button>
-        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(1)">
-    </div>
-    <div class="day-content" id="day-1-content"></div>
-</div>
+                    <div class="day-box" data-day-id="1" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title">Dag 1 - Port de Soller</div>
+                            <div class="day-stats-compact" id="day-1-stats"></div>
+                            <div class="day-controls">
+                                <button class="day-select-btn" onclick="openRouteSelector(1)">Velg ruter</button>
+                                <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️ GPX</button>
+                                <button class="btn-toggle-day" id="toggle-day-1" onclick="toggleDayVisibility(1)">Skjul dag</button>
+                            </div>
+                        </div>
+                        <div class="day-content" id="day-1-content"></div>
+                    </div>
 
-<div class="day-box" data-day-id="2">
-    <div class="day-box-header">
-        <div class="day-title-section">
-            <div class="day-title">Dag 2 - Cap de Formentor</div>
-            <div class="day-stats-compact" id="day-2-stats"></div>
-        </div>
-        <button class="day-select-btn" onclick="openRouteSelector(2)">Velg ruter</button>
-        <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️ GPX</button>
-        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(2)">
-    </div>
-    <div class="day-content" id="day-2-content"></div>
-</div>
+                    <div class="day-box" data-day-id="2" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title">Dag 2 - Cap de Formentor</div>
+                            <div class="day-stats-compact" id="day-2-stats"></div>
+                            <div class="day-controls">
+                                <button class="day-select-btn" onclick="openRouteSelector(2)">Velg ruter</button>
+                                <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️ GPX</button>
+                                <button class="btn-toggle-day" id="toggle-day-2" onclick="toggleDayVisibility(2)">Skjul dag</button>
+                            </div>
+                        </div>
+                        <div class="day-content" id="day-2-content"></div>
+                    </div>
 
-<div class="day-box" data-day-id="3">
-    <div class="day-box-header">
-        <div class="day-title-section">
-            <div class="day-title">Dag 3 - Sa Calobra</div>
-            <div class="day-stats-compact" id="day-3-stats"></div>
-        </div>
-        <button class="day-select-btn" onclick="openRouteSelector(3)">Velg ruter</button>
-        <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️ GPX</button>
-        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(3)">
-    </div>
-    <div class="day-content" id="day-3-content"></div>
-</div>
+                    <div class="day-box" data-day-id="3" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title">Dag 3 - Sa Calobra</div>
+                            <div class="day-stats-compact" id="day-3-stats"></div>
+                            <div class="day-controls">
+                                <button class="day-select-btn" onclick="openRouteSelector(3)">Velg ruter</button>
+                                <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️ GPX</button>
+                                <button class="btn-toggle-day" id="toggle-day-3" onclick="toggleDayVisibility(3)">Skjul dag</button>
+                            </div>
+                        </div>
+                        <div class="day-content" id="day-3-content"></div>
+                    </div>
 
-<div class="day-box" data-day-id="4">
-    <div class="day-box-header">
-        <div class="day-title-section">
-            <div class="day-title">Dag 4 - Puig Major</div>
-            <div class="day-stats-compact" id="day-4-stats"></div>
-        </div>
-        <button class="day-select-btn" onclick="openRouteSelector(4)">Velg ruter</button>
-        <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️ GPX</button>
-        <input type="checkbox" class="day-visibility-toggle" checked onchange="toggleDayVisibility(4)">
-    </div>
-    <div class="day-content" id="day-4-content"></div>
-</div>
+                    <div class="day-box" data-day-id="4" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title">Dag 4 - Puig Major</div>
+                            <div class="day-stats-compact" id="day-4-stats"></div>
+                            <div class="day-controls">
+                                <button class="day-select-btn" onclick="openRouteSelector(4)">Velg ruter</button>
+                                <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️ GPX</button>
+                                <button class="btn-toggle-day" id="toggle-day-4" onclick="toggleDayVisibility(4)">Skjul dag</button>
+                            </div>
+                        </div>
+                        <div class="day-content" id="day-4-content"></div>
+                    </div>
                 </div>
             </div>
             <div class="map-layer-selector">
@@ -713,130 +805,132 @@
             </div>
         </div>
         <div class="sidebar">
-    <div id="routeList"></div>
-</div>
-
-<!-- Route Selector Modal -->
-<div class="modal" id="routeModal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">Velg ruter for <span id="modalDayTitle">Dag 1</span></div>
-        <div class="route-selector" id="routeSelector"></div>
-        <div class="modal-actions">
-            <button class="modal-btn save" onclick="saveRouteSelection()">Lagre</button>
-            <button class="modal-btn cancel" onclick="closeRouteSelector()">Avbryt</button>
+            <div id="routeList"></div>
         </div>
-    </div>
-</div>
+
+        <!-- Route Selector Modal -->
+        <div class="modal" id="routeModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">Velg ruter for <span id="modalDayTitle">Dag 1</span></div>
+                <div class="route-selector" id="routeSelector"></div>
+                <div class="modal-actions">
+                    <button class="modal-btn save" onclick="saveRouteSelection()">Lagre</button>
+                    <button class="modal-btn cancel" onclick="closeRouteSelector()">Avbryt</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let currentSelectingDay = 1;
 
-window.openRouteSelector = function(dayId) {
-    currentSelectingDay = dayId;
-    const modal = document.getElementById('routeModal');
-    const selector = document.getElementById('routeSelector');
-    const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
-    document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
-    
-    // Filter routes for current day only
-    const dayRoutes = routes.filter(r => {
-        const match = r.fileName.match(/GGTM26_D(\d+)_/);
-        return match && parseInt(match[1]) === dayId;
-    });
-    
-    const day = days.find(d => d.id === dayId);
-    
-    selector.innerHTML = '';
-    dayRoutes.forEach(route => {
-        const isSelected = day.routes.includes(route.id);
-        const div = document.createElement('div');
-        div.className = `route-option ${isSelected ? 'selected' : ''}`;
-        
-        // Parse filename
-        const parts = route.fileName.replace('.gpx', '').split('_');
-        let level = '';
-        let levelIndex = -1;
-        for (let i = 0; i < parts.length; i++) {
-            if (parts[i].match(/^D\d+$/)) {
-                level = parts[i + 1];
-                levelIndex = i + 1;
-                break;
-            }
-        }
-        
-        const locationParts = [];
-        for (let i = levelIndex + 1; i < parts.length; i++) {
-            if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
-            locationParts.push(parts[i]);
-        }
-        
-        let fromTo = locationParts.join(' ');
-        const heliosIndex = locationParts.indexOf('Helios');
-        
-        if (heliosIndex !== -1) {
-            if (heliosIndex === 0) {
-                const destination = locationParts.slice(1).join(' ');
-                fromTo = `Helios > ${destination}`;
-            } else {
-                const origin = locationParts.slice(0, heliosIndex).join(' ');
-                fromTo = `${origin} > Helios`;
-            }
-        }
-        
-        const name = `${fromTo} (${level})`;
-        const km = route.stats ? route.stats.distance : '?';
-        const hm = route.stats ? route.stats.elevationGain : '?';
-        
-        div.innerHTML = `
-            <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
-            <label for="route-${route.id}">
-                <div class="route-name">${name}</div>
-                <div class="route-details">${km} km | ⬆️ ${hm} m</div>
-            </label>
-        `;
-        div.onclick = (e) => {
-            if (e.target.tagName !== 'INPUT') {
-                const checkbox = div.querySelector('input');
-                const checked = document.querySelectorAll('.route-option input:checked').length;
-                if (!checkbox.checked && checked >= 2) {
-                    alert('Maks 2 ruter per dag!');
-                    return;
+        window.openRouteSelector = function(dayId) {
+            currentSelectingDay = dayId;
+            const modal = document.getElementById('routeModal');
+            const selector = document.getElementById('routeSelector');
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+            document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
+            
+            // Filter routes for current day from BUNDLED routes only
+            const dayRoutes = routes.filter(r => {
+                if (!r.isBundled) return false; // Only bundled routes
+                const match = r.fileName.match(/GGTM26_D(\d+)_/);
+                return match && parseInt(match[1]) === dayId;
+            });
+            
+            const day = days.find(d => d.id === dayId);
+            
+            selector.innerHTML = '';
+            dayRoutes.forEach(route => {
+                const isSelected = day.routes.includes(route.id);
+                const div = document.createElement('div');
+                div.className = `route-option ${isSelected ? 'selected' : ''}`;
+                
+                // Parse filename
+                const parts = route.fileName.replace('.gpx', '').split('_');
+                let level = '';
+                let levelIndex = -1;
+                for (let i = 0; i < parts.length; i++) {
+                    if (parts[i].match(/^D\d+$/)) {
+                        level = parts[i + 1];
+                        levelIndex = i + 1;
+                        break;
+                    }
                 }
-                checkbox.checked = !checkbox.checked;
-                div.classList.toggle('selected', checkbox.checked);
-            } else {
-                const checked = document.querySelectorAll('.route-option input:checked').length;
-                if (e.target.checked && checked > 2) {
-                    e.target.checked = false;
-                    alert('Maks 2 ruter per dag!');
-                    return;
+                
+                const locationParts = [];
+                for (let i = levelIndex + 1; i < parts.length; i++) {
+                    if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+                    locationParts.push(parts[i]);
                 }
-                div.classList.toggle('selected', e.target.checked);
-            }
+                
+                let fromTo = locationParts.join(' ');
+                const heliosIndex = locationParts.indexOf('Helios');
+                
+                if (heliosIndex !== -1) {
+                    if (heliosIndex === 0) {
+                        const destination = locationParts.slice(1).join(' ');
+                        fromTo = `Helios > ${destination}`;
+                    } else {
+                        const origin = locationParts.slice(0, heliosIndex).join(' ');
+                        fromTo = `${origin} > Helios`;
+                    }
+                }
+                
+                const name = `${fromTo} (${level})`;
+                const km = route.stats ? route.stats.distance : '?';
+                const hm = route.stats ? route.stats.elevationGain : '?';
+                
+                div.innerHTML = `
+                    <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
+                    <label for="route-${route.id}">
+                        <div class="route-name">${name}</div>
+                        <div class="route-details">${km} km | ⬆️ ${hm} m</div>
+                    </label>
+                `;
+                div.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        const checkbox = div.querySelector('input');
+                        const checked = document.querySelectorAll('.route-option input:checked').length;
+                        if (!checkbox.checked && checked >= 2) {
+                            alert('Maks 2 ruter per dag!');
+                            return;
+                        }
+                        checkbox.checked = !checkbox.checked;
+                        div.classList.toggle('selected', checkbox.checked);
+                    } else {
+                        const checked = document.querySelectorAll('.route-option input:checked').length;
+                        if (e.target.checked && checked > 2) {
+                            e.target.checked = false;
+                            alert('Maks 2 ruter per dag!');
+                            return;
+                        }
+                        div.classList.toggle('selected', e.target.checked);
+                    }
+                };
+                selector.appendChild(div);
+            });
+            
+            modal.style.display = 'flex';
         };
-        selector.appendChild(div);
-    });
-    
-    modal.style.display = 'flex';
-};
 
-window.closeRouteSelector = function() {
-    document.getElementById('routeModal').style.display = 'none';
-};
+        window.closeRouteSelector = function() {
+            document.getElementById('routeModal').style.display = 'none';
+        };
 
-window.saveRouteSelection = function() {
-    const selected = Array.from(document.querySelectorAll('.route-option input:checked'))
-        .map(cb => parseInt(cb.id.split('-')[1]));
-    
-    const day = days.find(d => d.id === currentSelectingDay);
-    day.routes = selected;
-    
-    updateRouteColors();
-    updateSidebar();
-    closeRouteSelector();
-};
+        window.saveRouteSelection = function() {
+            const selected = Array.from(document.querySelectorAll('.route-option input:checked'))
+                .map(cb => parseInt(cb.id.split('-')[1]));
+            
+            const day = days.find(d => d.id === currentSelectingDay);
+            day.routes = selected;
+            
+            updateRouteColors();
+            updateSidebar();
+            closeRouteSelector();
+        };
+
         // Initialize map centered on Norway
         const map = L.map('map').setView([60.472, 8.4689], 6);
 
@@ -888,6 +982,7 @@ window.saveRouteSelection = function() {
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
             { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
         ];
+
         const bundledRouteFiles = [
             'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx',
             'GGTM26_D1_A_Port_de_Soller_Helios_87km_1500hm.gpx',
@@ -931,8 +1026,7 @@ window.saveRouteSelection = function() {
         }
 
         async function enrichWithElevation(points) {
-            // Sample every Nth point to reduce API calls - more aggressive for long routes
-            const targetSamples = 50; // Max 50 samples per route for performance
+            const targetSamples = 50;
             const sampleRate = Math.max(1, Math.floor(points.length / targetSamples));
             const sampledIndices = [];
             
@@ -940,14 +1034,12 @@ window.saveRouteSelection = function() {
                 sampledIndices.push(i);
             }
             
-            // Always include last point
             if (sampledIndices[sampledIndices.length - 1] !== points.length - 1) {
                 sampledIndices.push(points.length - 1);
             }
             
             const sampledPoints = sampledIndices.map(i => points[i]);
             
-            // Open-Elevation API (free, no key needed)
             const locations = sampledPoints.map(p => ({
                 latitude: p.lat,
                 longitude: p.lon
@@ -967,13 +1059,11 @@ window.saveRouteSelection = function() {
                 
                 const data = await response.json();
                 
-                // Apply elevations to sampled points
                 data.results.forEach((result, idx) => {
                     const originalIdx = sampledIndices[idx];
                     points[originalIdx].ele = result.elevation;
                 });
                 
-                // Interpolate elevation for points between samples
                 for (let i = 0; i < sampledIndices.length - 1; i++) {
                     const startIdx = sampledIndices[i];
                     const endIdx = sampledIndices[i + 1];
@@ -1006,8 +1096,7 @@ window.saveRouteSelection = function() {
                 const p1 = points[i - 1];
                 const p2 = points[i];
                 
-                // Calculate distance using Haversine formula
-                const R = 6371000; // Earth radius in meters
+                const R = 6371000;
                 const φ1 = p1.lat * Math.PI / 180;
                 const φ2 = p2.lat * Math.PI / 180;
                 const Δφ = (p2.lat - p1.lat) * Math.PI / 180;
@@ -1020,7 +1109,6 @@ window.saveRouteSelection = function() {
                 
                 distance += R * c;
                 
-                // Calculate elevation changes
                 if (p1.ele !== null && p2.ele !== null) {
                     const eleDiff = p2.ele - p1.ele;
                     if (eleDiff > 0) elevationGain += eleDiff;
@@ -1032,7 +1120,7 @@ window.saveRouteSelection = function() {
             }
             
             return {
-                distance: (distance / 1000).toFixed(2), // km
+                distance: (distance / 1000).toFixed(2),
                 elevationGain: Math.round(elevationGain),
                 elevationLoss: Math.round(elevationLoss),
                 minEle: minEle === Infinity ? null : Math.round(minEle),
@@ -1041,90 +1129,89 @@ window.saveRouteSelection = function() {
         }
 
         function calculateOverlap() {
-    // Get routes in days
-    const routesInDays = new Set(days.flatMap(d => d.routes));
-    const statsRoutes = routesInDays.size > 0 
-        ? routes.filter(r => routesInDays.has(r.id))
-        : routes.filter(r => r.visible);
-    
-    if (statsRoutes.length < 2) {
-        return { overlapPercentage: 0, commonPercentage: 0 };
-    }
-
-    const routeCoords = statsRoutes.map(route => {
-        return route.polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
-    });
-
-    const tolerance = 0.0005;
-    let commonPoints = 0;
-    const route1 = routeCoords[0];
-    
-    for (let i = 0; i < route1.length; i++) {
-        const p1 = route1[i];
-        let inAllRoutes = true;
-        
-        for (let r = 1; r < routeCoords.length; r++) {
-            const routePoints = routeCoords[r];
-            let foundInRoute = false;
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            const statsRoutes = routesInDays.size > 0 
+                ? routes.filter(r => routesInDays.has(r.id))
+                : routes.filter(r => r.visible);
             
-            for (let j = 0; j < routePoints.length; j++) {
-                const p2 = routePoints[j];
-                const dist = Math.sqrt(
-                    Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2)
-                );
-                if (dist < tolerance) {
-                    foundInRoute = true;
-                    break;
-                }
+            if (statsRoutes.length < 2) {
+                return { overlapPercentage: 0, commonPercentage: 0 };
             }
-            if (!foundInRoute) {
-                inAllRoutes = false;
-                break;
-            }
-        }
-        if (inAllRoutes) commonPoints++;
-    }
 
-    let overlapPoints = 0, totalComparisons = 0;
-    for (let r1 = 0; r1 < routeCoords.length; r1++) {
-        for (let r2 = r1 + 1; r2 < routeCoords.length; r2++) {
-            const coords1 = routeCoords[r1];
-            const coords2 = routeCoords[r2];
-            for (let i = 0; i < coords1.length - 1; i++) {
-                const seg1Start = coords1[i];
-                const seg1End = coords1[i + 1];
-                const dir1 = { lat: seg1End.lat - seg1Start.lat, lng: seg1End.lng - seg1Start.lng };
+            const routeCoords = statsRoutes.map(route => {
+                return route.polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
+            });
+
+            const tolerance = 0.0005;
+            let commonPoints = 0;
+            const route1 = routeCoords[0];
+            
+            for (let i = 0; i < route1.length; i++) {
+                const p1 = route1[i];
+                let inAllRoutes = true;
                 
-                for (let j = 0; j < coords2.length - 1; j++) {
-                    const seg2Start = coords2[j];
-                    const seg2End = coords2[j + 1];
-                    const dist = Math.sqrt(
-                        Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
-                        Math.pow(seg1Start.lng - seg2Start.lng, 2)
-                    );
-                    if (dist < tolerance) {
-                        const dir2 = { lat: seg2End.lat - seg2Start.lat, lng: seg2End.lng - seg2Start.lng };
-                        const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
-                        if (dotProduct > 0) {
-                            overlapPoints++;
+                for (let r = 1; r < routeCoords.length; r++) {
+                    const routePoints = routeCoords[r];
+                    let foundInRoute = false;
+                    
+                    for (let j = 0; j < routePoints.length; j++) {
+                        const p2 = routePoints[j];
+                        const dist = Math.sqrt(
+                            Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2)
+                        );
+                        if (dist < tolerance) {
+                            foundInRoute = true;
                             break;
                         }
                     }
+                    if (!foundInRoute) {
+                        inAllRoutes = false;
+                        break;
+                    }
+                }
+                if (inAllRoutes) commonPoints++;
+            }
+
+            let overlapPoints = 0, totalComparisons = 0;
+            for (let r1 = 0; r1 < routeCoords.length; r1++) {
+                for (let r2 = r1 + 1; r2 < routeCoords.length; r2++) {
+                    const coords1 = routeCoords[r1];
+                    const coords2 = routeCoords[r2];
+                    for (let i = 0; i < coords1.length - 1; i++) {
+                        const seg1Start = coords1[i];
+                        const seg1End = coords1[i + 1];
+                        const dir1 = { lat: seg1End.lat - seg1Start.lat, lng: seg1End.lng - seg1Start.lng };
+                        
+                        for (let j = 0; j < coords2.length - 1; j++) {
+                            const seg2Start = coords2[j];
+                            const seg2End = coords2[j + 1];
+                            const dist = Math.sqrt(
+                                Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
+                                Math.pow(seg1Start.lng - seg2Start.lng, 2)
+                            );
+                            if (dist < tolerance) {
+                                const dir2 = { lat: seg2End.lat - seg2Start.lat, lng: seg2End.lng - seg2Start.lng };
+                                const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
+                                if (dotProduct > 0) {
+                                    overlapPoints++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    totalComparisons += coords1.length;
                 }
             }
-            totalComparisons += coords1.length;
+            
+            const overlapPercentage = totalComparisons > 0 ? (overlapPoints / totalComparisons * 100) : 0;
+            
+            return {
+                overlapPercentage: overlapPercentage.toFixed(1),
+                commonPercentage: route1.length > 0 ? (commonPoints / route1.length * 100).toFixed(1) : 0
+            };
         }
-    }
-    
-    const overlapPercentage = totalComparisons > 0 ? (overlapPoints / totalComparisons * 100) : 0;
-    
-    return {
-        overlapPercentage: overlapPercentage.toFixed(1),
-        commonPercentage: route1.length > 0 ? (commonPoints / route1.length * 100).toFixed(1) : 0
-    };
-}
 
-        function addRoute(fileName, points, color) {
+        function addRoute(fileName, points, color, isBundled = false) {
             const latLngs = points.map(p => [p.lat, p.lon]);
             
             const polyline = L.polyline(latLngs, {
@@ -1133,7 +1220,6 @@ window.saveRouteSelection = function() {
                 opacity: 0.7
             }).addTo(map);
             
-            // Add start marker (green circle)
             const startMarker = L.circleMarker(latLngs[0], {
                 radius: 8,
                 fillColor: '#2ecc71',
@@ -1144,7 +1230,6 @@ window.saveRouteSelection = function() {
             }).addTo(map);
             startMarker.bindTooltip(`${fileName}<br><strong>Start</strong>`, { permanent: false });
             
-            // Add end marker (red circle)
             const endMarker = L.circleMarker(latLngs[latLngs.length - 1], {
                 radius: 8,
                 fillColor: '#e74c3c',
@@ -1160,24 +1245,22 @@ window.saveRouteSelection = function() {
             const route = {
                 id: routes.length,
                 fileName,
-                gpxPoints: points, // Store original GPX points with elevation
+                gpxPoints: points,
                 polyline,
                 startMarker,
                 endMarker,
-                originalColor: color, // Store original color
+                originalColor: color,
                 color,
                 visible: true,
                 stats,
-                points: latLngs.length
+                isBundled: isBundled
             };
             
             routes.push(route);
             
-            // Fit map to show all routes
             if (routes.length === 1) {
                 map.fitBounds(polyline.getBounds());
             } else {
-                const allBounds = routes.map(r => r.polyline.getBounds());
                 const group = L.featureGroup(routes.map(r => r.polyline));
                 map.fitBounds(group.getBounds());
             }
@@ -1186,7 +1269,6 @@ window.saveRouteSelection = function() {
         }
 
         function updateRouteColors() {
-            // Update colors for routes in days
             days.forEach(day => {
                 day.routes.forEach(routeId => {
                     const route = routes.find(r => r.id === routeId);
@@ -1197,7 +1279,6 @@ window.saveRouteSelection = function() {
                 });
             });
             
-            // Reset colors for routes not in days
             const routesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
                 if (!routesInDays.has(route.id)) {
@@ -1229,13 +1310,11 @@ window.saveRouteSelection = function() {
             const mapElement = document.getElementById('map');
             
             if (mapVisible) {
-                // Skjul kartet
                 currentTileLayer.setOpacity(0);
                 mapElement.classList.add('light-background');
                 btn.textContent = '🗺️ Vis kart';
                 btn.style.background = '#27ae60';
             } else {
-                // Vis kartet
                 currentTileLayer.setOpacity(1);
                 mapElement.classList.remove('light-background');
                 btn.textContent = '🗺️ Skjul kart';
@@ -1273,44 +1352,73 @@ window.saveRouteSelection = function() {
             const routeList = document.getElementById('routeList');
             const fileCountDiv = document.getElementById('fileCount');
             
-            // Update day boxes
             updateDayBoxes();
             
-            if (routes.length === 0) {
-                routeList.innerHTML = '<div class="empty-state">Ingen ruter lastet opp ennå.<br>Last opp GPX-filer for å komme i gang.</div>';
-                fileCountDiv.innerHTML = '';
-                return;
-            }
-            
-            // Get routes that are in days
+            // Get user-uploaded routes only (not bundled)
+            const userRoutes = routes.filter(r => !r.isBundled);
             const routesInDays = new Set(days.flatMap(d => d.routes));
             
-            // Calculate stats for routes in days (if any), otherwise all visible
+            if (userRoutes.length === 0) {
+                routeList.innerHTML = '<div class="empty-state">Ingen opplastede ruter.<br>Last opp GPX-filer for å dra de til dagene.</div>';
+            } else {
+                let html = `<div class="stats-summary"><strong>Opplastede ruter:</strong><br>${userRoutes.length} ${userRoutes.length === 1 ? 'rute' : 'ruter'}</div>`;
+                
+                const sortedUserRoutes = [...userRoutes].sort((a, b) => 
+                    a.fileName.localeCompare(b.fileName, 'no')
+                );
+                
+                // Show user routes not in days
+                const availableUserRoutes = sortedUserRoutes.filter(r => !routesInDays.has(r.id));
+                
+                availableUserRoutes.forEach(route => {
+                    html += `
+                        <div class="route-item" 
+                             style="border-left-color: ${route.color}; ${!route.visible ? 'opacity: 0.5;' : ''}"
+                             draggable="true"
+                             ondragstart="dragStart(event, ${route.id})">
+                            <div class="route-header">
+                                <input type="checkbox" 
+                                       class="route-toggle" 
+                                       ${route.visible ? 'checked' : ''} 
+                                       onchange="toggleRoute(${route.id})">
+                                <div class="route-name">${route.fileName}</div>
+                                <span class="remove-route" onclick="removeRoute(${route.id}); event.stopPropagation();" title="Fjern rute">✕</span>
+                            </div>
+                            ${route.stats ? `
+                                <div class="route-stats">
+                                    <div>📏 ${route.stats.distance} km</div>
+                                    ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m stigning</div>` : ''}
+                                    ${route.stats.elevationLoss ? `<div>⬇️ ${route.stats.elevationLoss} m nedstigning</div>` : ''}
+                                    ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                routeList.innerHTML = html;
+            }
+            
+            // Update file count for ALL routes (bundled + user)
             let statsRoutes;
             if (routesInDays.size > 0) {
-                // Only count routes that are selected in days
                 statsRoutes = routes.filter(r => routesInDays.has(r.id));
             } else {
-                // No routes in days yet, show all visible
                 statsRoutes = routes.filter(r => r.visible);
             }
             
             let totalDistance = 0;
             let totalElevationGain = 0;
-            let totalPoints = 0;
             
             statsRoutes.forEach(route => {
                 if (route.stats) {
                     totalDistance += parseFloat(route.stats.distance);
                     totalElevationGain += route.stats.elevationGain || 0;
                 }
-                
             });
             
-            // Calculate overlap
             const overlapData = calculateOverlap();
             
-            // Update file count display with detailed stats
             let statsHtml = `<strong>${routes.length} ${routes.length === 1 ? 'rute' : 'ruter'}</strong>`;
             
             if (statsRoutes.length > 0) {
@@ -1321,7 +1429,6 @@ window.saveRouteSelection = function() {
                 }
                 statsHtml += ` | <strong>${totalDistance.toFixed(1)} km</strong>`;
                 
-                // Vis høydemeter hvis noen ruter har data
                 const hasElevation = statsRoutes.some(r => r.stats && r.stats.elevationGain > 0);
                 if (hasElevation && totalElevationGain > 0) {
                     statsHtml += ` | <strong>⬆️ ${totalElevationGain.toLocaleString('no-NO')} m</strong>`;
@@ -1336,65 +1443,13 @@ window.saveRouteSelection = function() {
             }
             
             fileCountDiv.innerHTML = statsHtml;
-            
-            const visibleRoutes = routes.filter(r => r.visible);
-            let html = `
-                <div class="stats-summary">
-                    <strong>${routesInDays.size > 0 ? 'Valgte' : 'Synlige'} ruter:</strong><br>
-                    ${statsRoutes.length} av ${routes.length} ruter<br>
-                    ${totalDistance.toFixed(2)} km kombinert<br>
-                    ${totalElevationGain > 0 ? `${totalElevationGain} m stigning<br>` : ''}
-                   
-                    ${statsRoutes.length >= 2 ? `<br><br><strong>Overlappanalyse:</strong><br>
-                    ${overlapData.overlapPercentage}% overlapp i samme retning<br>
-                    ${overlapData.commonPercentage}% felles segment (alle ruter)` : ''}
-                </div>
-            `;
-            
-            // routesInDays already defined above - reuse it
-            
-            // Sort routes alphabetically by filename
-            const sortedRoutes = [...routes].sort((a, b) => 
-                a.fileName.localeCompare(b.fileName, 'no')
-            );
-            
-            // Filter out routes that are already in days
-            const availableRoutes = sortedRoutes.filter(r => !routesInDays.has(r.id));
-            
-            availableRoutes.forEach(route => {
-                html += `
-                    <div class="route-item" 
-                         style="border-left-color: ${route.color}; ${!route.visible ? 'opacity: 0.5;' : ''}"
-                         draggable="true"
-                         ondragstart="dragStart(event, ${route.id})">
-                        <div class="route-header">
-                            <input type="checkbox" 
-                                   class="route-toggle" 
-                                   ${route.visible ? 'checked' : ''} 
-                                   onchange="toggleRoute(${route.id})">
-                            <div class="route-name">${route.fileName}</div>
-                            <span class="remove-route" onclick="removeRoute(${route.id}); event.stopPropagation();" title="Fjern rute">✕</span>
-                        </div>
-                        ${route.stats ? `
-                            <div class="route-stats">
-                                <div>📏 ${route.stats.distance} km</div>
-                                ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m stigning</div>` : ''}
-                                ${route.stats.elevationLoss ? `<div>⬇️ ${route.stats.elevationLoss} m nedstigning</div>` : ''}
-                                ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
-                                
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            });
-            
-            routeList.innerHTML = html;
         }
 
         function updateDayBoxes() {
             days.forEach(day => {
                 const contentDiv = document.getElementById(`day-${day.id}-content`);
                 const statsDiv = document.getElementById(`day-${day.id}-stats`);
+                const toggleBtn = document.getElementById(`toggle-day-${day.id}`);
                 if (!contentDiv) return;
                 
                 const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
@@ -1408,12 +1463,22 @@ window.saveRouteSelection = function() {
                     }
                 });
                 
-                // Update compact stats
                 if (statsDiv) {
                     if (dayRoutes.length > 0) {
                         statsDiv.textContent = `${dayDistance.toFixed(1)} km | ⬆️ ${dayElevation} m`;
                     } else {
                         statsDiv.textContent = '';
+                    }
+                }
+                
+                // Update toggle button text
+                if (toggleBtn) {
+                    if (day.visible) {
+                        toggleBtn.textContent = 'Skjul dag';
+                        toggleBtn.classList.remove('hidden');
+                    } else {
+                        toggleBtn.textContent = 'Vis dag';
+                        toggleBtn.classList.add('hidden');
                     }
                 }
                 
@@ -1458,7 +1523,7 @@ window.saveRouteSelection = function() {
             };
         }
 
-        async function addRouteFromGpxContent(fileName, gpxContent, index, total, progressText, progressFill, showAlerts = true) {
+        async function addRouteFromGpxContent(fileName, gpxContent, index, total, progressText, progressFill, showAlerts = true, isBundled = false) {
             try {
                 const points = parseGPX(gpxContent);
                 if (points.length === 0) {
@@ -1476,7 +1541,7 @@ window.saveRouteSelection = function() {
 
                 progressText.textContent = `${index + 1} av ${total} - Legger til ${fileName} på kartet...`;
                 const color = colors[routes.length % colors.length];
-                addRoute(fileName, points, color);
+                addRoute(fileName, points, color, isBundled);
             } catch (error) {
                 console.error(`Feil ved parsing av ${fileName}:`, error);
                 if (showAlerts) {
@@ -1521,7 +1586,8 @@ window.saveRouteSelection = function() {
                         bundledRouteFiles.length,
                         progressText,
                         progressFill,
-                        false
+                        false,
+                        true // Mark as bundled
                     );
                 } catch (error) {
                     console.error(`Kunne ikke laste ${fileName}:`, error);
@@ -1533,8 +1599,6 @@ window.saveRouteSelection = function() {
             setTimeout(() => {
                 const splashScreen = document.getElementById('splashScreen');
                 splashScreen.classList.add('minimized');
-
-                
             }, 500);
         }
 
@@ -1544,7 +1608,6 @@ window.saveRouteSelection = function() {
 
             const { progressContainer, progressFill, progressText } = getProgressElements();
             
-            // Show splash screen (remove minimized class)
             progressContainer.classList.remove('minimized');
             progressFill.style.width = '0%';
 
@@ -1560,7 +1623,8 @@ window.saveRouteSelection = function() {
                         files.length,
                         progressText,
                         progressFill,
-                        true
+                        true,
+                        false // User uploaded
                     );
                 } catch (error) {
                     console.error(`Kunne ikke lese ${file.name}:`, error);
@@ -1582,7 +1646,6 @@ window.saveRouteSelection = function() {
             
             day.visible = !day.visible;
             
-            // Toggle visibility for all routes in this day
             day.routes.forEach(routeId => {
                 const route = routes.find(r => r.id === routeId);
                 if (route) {
@@ -1603,46 +1666,31 @@ window.saveRouteSelection = function() {
         };
 
         document.getElementById('toggleMapBtn').addEventListener('click', toggleMapBackground);
-
         document.getElementById('hideAllBtn').addEventListener('click', hideAllRoutes);
-
         document.getElementById('showAllBtn').addEventListener('click', showAllRoutes);
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             if (routes.length === 0) return;
             
             if (confirm('Er du sikker på at du vil fjerne alle ruter?')) {
-                // Remove all routes from map
                 routes.forEach(route => {
                     route.polyline.remove();
                     route.startMarker.remove();
                     route.endMarker.remove();
                 });
                 
-                // Clear routes array
                 routes.length = 0;
                 
-                // Reset all days
                 days.forEach(day => {
                     day.routes = [];
                     day.visible = true;
                 });
                 
-                // Reset day checkboxes
-                for (let i = 1; i <= 4; i++) {
-                    const checkbox = document.querySelector(`.day-box[data-day-id="${i}"] .day-visibility-toggle`);
-                    if (checkbox) checkbox.checked = true;
-                }
-                
-                // Update UI
                 updateSidebar();
-                
-                // Reset map view
                 map.setView([60.472, 8.4689], 6);
             }
         });
 
-        // Make toggleRoute available globally
         window.toggleRoute = toggleRoute;
 
         window.removeRoute = function(routeId) {
@@ -1650,17 +1698,14 @@ window.saveRouteSelection = function() {
             if (!route) return;
             
             if (confirm(`Fjerne "${route.fileName}"?`)) {
-                // Remove from map
                 route.polyline.remove();
                 route.startMarker.remove();
                 route.endMarker.remove();
                 
-                // Remove from any day
                 days.forEach(day => {
                     day.routes = day.routes.filter(id => id !== routeId);
                 });
                 
-                // Remove from routes array
                 const index = routes.findIndex(r => r.id === routeId);
                 if (index !== -1) {
                     routes.splice(index, 1);
@@ -1671,10 +1716,51 @@ window.saveRouteSelection = function() {
             }
         };
 
+        // Drag and drop
+        let draggedRouteId = null;
+        let draggedFromDayId = null;
 
-       
+        window.dragStart = function(event, routeId) {
+            draggedRouteId = routeId;
+            draggedFromDayId = null;
+            event.target.classList.add('dragging');
+        };
 
-       
+        window.allowDrop = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        };
+
+        window.dragLeave = function(event) {
+            event.currentTarget.classList.remove('drag-over');
+        };
+
+        window.dropOnDay = function(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            const dayId = parseInt(event.currentTarget.dataset.dayId);
+            const day = days.find(d => d.id === dayId);
+            
+            if (!day || draggedRouteId === null) return;
+            
+            if (draggedFromDayId !== null) {
+                const oldDay = days.find(d => d.id === draggedFromDayId);
+                if (oldDay) {
+                    oldDay.routes = oldDay.routes.filter(id => id !== draggedRouteId);
+                }
+            }
+            
+            if (!day.routes.includes(draggedRouteId) && day.routes.length < 2) {
+                day.routes.push(draggedRouteId);
+            }
+            
+            draggedRouteId = null;
+            draggedFromDayId = null;
+            
+            updateRouteColors();
+            updateSidebar();
+        };
 
         window.removeFromDay = function(routeId, dayId) {
             const day = days.find(d => d.id === dayId);
@@ -1683,32 +1769,6 @@ window.saveRouteSelection = function() {
                 updateRouteColors();
                 updateSidebar();
             }
-        };
-
-        window.removeRoute = function(routeId) {
-            if (!confirm('Er du sikker på at du vil fjerne denne ruten?')) return;
-            
-            const route = routes.find(r => r.id === routeId);
-            if (!route) return;
-            
-            // Remove from map
-            route.polyline.remove();
-            route.startMarker.remove();
-            route.endMarker.remove();
-            
-            // Remove from any day
-            days.forEach(day => {
-                day.routes = day.routes.filter(id => id !== routeId);
-            });
-            
-            // Remove from routes array
-            const index = routes.findIndex(r => r.id === routeId);
-            if (index > -1) {
-                routes.splice(index, 1);
-            }
-            
-            updateRouteColors();
-            updateSidebar();
         };
 
         window.downloadDayGPX = function(dayId) {
@@ -1725,7 +1785,6 @@ window.saveRouteSelection = function() {
                 return;
             }
 
-            // Merge alle rutene i dagen
             let allPoints = [];
             dayRoutes.forEach(route => {
                 if (route.gpxPoints) {
@@ -1733,7 +1792,6 @@ window.saveRouteSelection = function() {
                 }
             });
 
-            // Generer GPX XML
             let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="Gåpings Mallorca Getaway" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
@@ -1757,7 +1815,6 @@ window.saveRouteSelection = function() {
   </trk>
 </gpx>`;
             
-            // Last ned fil
             const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1770,32 +1827,27 @@ window.saveRouteSelection = function() {
         };
 
         window.autoMakeElite = function() {
-            // Clear current selections
             days.forEach(day => day.routes = []);
             
-            // Find A routes (Elite) - prioriter A over A1/A2
             for (let dayNum = 1; dayNum <= 4; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
-                // Find A routes (not A1, A2)
                 const dayARoutes = routes.filter(r => {
+                    if (!r.isBundled) return false;
                     const match = r.fileName.match(/GGTM26_D(\d+)_A_/);
                     if (!match || parseInt(match[1]) !== dayNum) return false;
-                    // Exclude A1, A2, etc - only want pure "A"
                     const afterA = r.fileName.split('_A_')[1];
                     return afterA && !afterA.match(/^[12]/);
                 });
                 
                 if (dayARoutes.length >= 2) {
-                    // Find UT (Helios first) and HJEM (Helios last)
                     const utRoute = dayARoutes.find(r => r.fileName.includes('Helios_'));
                     const hjemRoute = dayARoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
                     
                     if (utRoute && hjemRoute) {
                         day.routes.push(utRoute.id, hjemRoute.id);
                     } else {
-                        // Fallback: just take first two
                         dayARoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                     }
                 }
@@ -1807,25 +1859,21 @@ window.saveRouteSelection = function() {
         };
 
         window.autoMakeMosjonist = function() {
-            // Clear current selections
             days.forEach(day => day.routes = []);
             
-            // Find B routes (Mosjonist) - prioriter B over B1/B2
             for (let dayNum = 1; dayNum <= 4; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
-                // First try to find plain B routes (not B1, B2)
                 const dayBRoutes = routes.filter(r => {
+                    if (!r.isBundled) return false;
                     const match = r.fileName.match(/GGTM26_D(\d+)_B_/);
                     if (!match || parseInt(match[1]) !== dayNum) return false;
-                    // Exclude B1, B2, etc - only want pure "B"
                     const afterB = r.fileName.split('_B_')[1];
                     return afterB && !afterB.match(/^[12]/);
                 });
                 
                 if (dayBRoutes.length >= 2) {
-                    // We have B routes, use them
                     const utRoute = dayBRoutes.find(r => r.fileName.includes('Helios_'));
                     const hjemRoute = dayBRoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
                     
@@ -1835,9 +1883,8 @@ window.saveRouteSelection = function() {
                         dayBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                     }
                 } else {
-                    // Fallback to B1 and B2 if no B routes exist
-                    const b1Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
-                    const b2Route = routes.find(r => r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
+                    const b1Route = routes.find(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
+                    const b2Route = routes.find(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
                     
                     if (b1Route && b2Route) {
                         day.routes.push(b1Route.id, b2Route.id);
@@ -1854,7 +1901,8 @@ window.saveRouteSelection = function() {
         updateSidebar();
         loadBundledRoutes();
     </script>
-    <!-- SoundCloud Embed via oEmbed API -->
+
+    <!-- SoundCloud Embed -->
     <div id="soundcloud-player" style="position: fixed; bottom: 20px; left: 180px; z-index: 10000; background: rgba(20, 20, 40, 0.95); border-radius: 8px; padding: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.4); display: none;"></div>
     <script>
     (function() {
