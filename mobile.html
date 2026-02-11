@@ -674,6 +674,11 @@
                             return;
                         }
                         div.classList.toggle('selected', e.target.checked);
+
+                        if (div.classList.contains('selected') &&
+                            div.querySelector('.route-badge.best')) {
+                            triggerConfetti();
+                        }
                     }
                 };
                 selector.appendChild(div);
@@ -866,6 +871,25 @@ routesContainer.innerHTML = `
         }
         
         loadBundledRoutes();
+
+        // Konfetti-funksjon
+    function triggerConfetti() {
+        const container = document.getElementById('confetti-container');
+
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
+            confetti.style.left = `${Math.random() * window.innerWidth}px`;
+            confetti.style.top = `-10px`;
+            const duration = 0.8 + Math.random() * 0.7;
+            confetti.style.animationDuration = `${duration}s`;
+
+            container.appendChild(confetti);
+            setTimeout(() => container.removeChild(confetti), duration * 1000);
+        }
+    }
     </script>
+    <div id="confetti-container"></div>
 </body>
 </html>
