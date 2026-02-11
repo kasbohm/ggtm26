@@ -932,7 +932,7 @@
             dayRoutes.forEach(route => {
                 const km = route.stats ? route.stats.distance : 0;
                 const hm = route.stats ? route.stats.elevationGain : 0;
-                route.score = km > 0 ? hm / km : 0; // enkel måte å sammenligne totalt "verdi"
+                route.score = km + hm; // enkel måte å sammenligne totalt "verdi"
             });
 
             // Finn best og worst basert på score
