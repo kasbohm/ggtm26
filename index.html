@@ -783,10 +783,36 @@
             background: #ffc107; /* gul */
             color: black;
         }
+        #confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: visible;
+            z-index: 9999;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            opacity: 0.8;
+            transform: rotate(45deg);
+            animation: fall 1s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
 
     </style>
 </head>
 <body>
+    
     <!-- Splash Screen -->
     <div class="splash-screen" id="splashScreen">
         <img src="logo.png" alt="Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
@@ -2401,7 +2427,48 @@
         ctx.fillStyle = '#ffd700';
         ctx.fill();
     };
+    // Konfetti-funksjon
+    function triggerConfetti() {
+        const container = document.getElementById('confetti-container');
+
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+
+            // tilfeldig farge
+            confetti.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
+
+            // tilfeldig startposisjon
+            confetti.style.left = `${Math.random() * window.innerWidth}px`;
+            confetti.style.top = `-10px`;
+
+            // tilfeldig hastighet
+            const duration = 0.8 + Math.random() * 0.7;
+            confetti.style.animationDuration = `${duration}s`;
+
+            container.appendChild(confetti);
+
+            // fjern konfetti etter animasjon
+            setTimeout(() => container.removeChild(confetti), duration * 1000);
+        }
+    }
+
+    // Legg til event på checkbox
+    document.querySelectorAll('.route-option input[type="checkbox"]').forEach(input => {
+        input.addEventListener('change', e => {
+            const routeOption = e.target.closest('.route-option');
+            routeOption.classList.toggle('selected', e.target.checked);
+
+            // Sjekk om denne har best badge og er valgt
+            if (routeOption.classList.contains('selected') &&
+                routeOption.querySelector('.route-badge.best')) {
+                triggerConfetti();
+            }
+        });
+    });
 
     </script>
+    <div id="confetti-container"></div>
+
 </body>
 </html>
