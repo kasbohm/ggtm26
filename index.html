@@ -2434,38 +2434,34 @@
         for (let i = 0; i < 30; i++) {
             const confetti = document.createElement('div');
             confetti.classList.add('confetti');
-
-            // tilfeldig farge
             confetti.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
-
-            // tilfeldig startposisjon
             confetti.style.left = `${Math.random() * window.innerWidth}px`;
             confetti.style.top = `-10px`;
-
-            // tilfeldig hastighet
             const duration = 0.8 + Math.random() * 0.7;
             confetti.style.animationDuration = `${duration}s`;
 
             container.appendChild(confetti);
-
-            // fjern konfetti etter animasjon
             setTimeout(() => container.removeChild(confetti), duration * 1000);
         }
     }
 
-    // Legg til event på checkbox
-    document.querySelectorAll('.route-option input[type="checkbox"]').forEach(input => {
-        input.addEventListener('change', e => {
-            const routeOption = e.target.closest('.route-option');
-            routeOption.classList.toggle('selected', e.target.checked);
-
-            // Sjekk om denne har best badge og er valgt
-            if (routeOption.classList.contains('selected') &&
-                routeOption.querySelector('.route-badge.best')) {
-                triggerConfetti();
-            }
+    // Observer som sjekker når .selected legges til
+    document.querySelectorAll('.route-option').forEach(routeOption => {
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (
+                    mutation.attributeName === 'class' &&
+                    routeOption.classList.contains('selected') &&
+                    routeOption.querySelector('.route-badge.best')
+                ) {
+                    triggerConfetti();
+                }
+            });
         });
+
+        observer.observe(routeOption, { attributes: true }); // vi observerer kun attributter
     });
+
 
     </script>
     <div id="confetti-container"></div>
