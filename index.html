@@ -908,11 +908,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let currentSelectingDay = 1;
-        function parseNumber(str) {
-            // Fjerner bokstaver og symboler, konverterer til float
-            const num = parseFloat(str.replace(/[^\d.,]/g, '').replace(',', '.'));
-            return isNaN(num) ? 0 : num;
-        }
+
+        
         window.openRouteSelector = function(dayId) {
             currentSelectingDay = dayId;
             const modal = document.getElementById('routeModal');
@@ -936,7 +933,9 @@
             dayRoutes.forEach(route => {
                 const km = route.stats ? route.stats.distance : 0;
                 const hm = route.stats ? route.stats.elevationGain : 0;
-                route.score = Math.round(km + hm); // enkel måte å sammenligne totalt "verdi"
+                const kmNum = Number(km);
+                const hmNum = Number(hm);
+                route.score = Math.round(kmNum + hmNum ); // enkel måte å sammenligne totalt "verdi"
                 console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
             });
 

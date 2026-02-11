@@ -246,11 +246,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let highlightedRouteId = null;
-        function parseNumber(str) {
-            // Fjerner bokstaver og symboler, konverterer til float
-            const num = parseFloat(str.replace(/[^\d.,]/g, '').replace(',', '.'));
-            return isNaN(num) ? 0 : num;
-        }
+
+        
         // Inline common code for mobile
         const routes = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'];
@@ -582,7 +579,10 @@
             dayRoutes.forEach(route => {
                 const km = route.stats ? route.stats.distance : 0;
                 const hm = route.stats ? route.stats.elevationGain : 0;
-                route.score = parseNumber(km) + parseNumber(hm); // enkel måte å sammenligne totalt "verdi"
+
+                const kmNum = Number(km);
+                const hmNum = Number(hm);
+                route.score = Math.round(kmNum + hmNum ); // enkel måte å sammenligne totalt "verdi"
                 console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
             });
 
