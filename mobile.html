@@ -160,7 +160,7 @@
             background: #ffc107; /* gul */
             color: black;
         }
-         #confetti-container {
+        #confetti-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -173,18 +173,24 @@
 
         .confetti {
             position: absolute;
-            width: 8px;
-            height: 8px;
-            background-color: red;
-            opacity: 0.8;
-            transform: rotate(45deg);
-            animation: fall 1s linear forwards;
+            width: 10px;
+            height: 10px;
+            opacity: 0.9;
+            border-radius: 2px;
+            animation: explode 1.5s forwards;
         }
 
-        @keyframes fall {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        @keyframes explode {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) rotate(720deg);
+                opacity: 0;
+            }
         }
+
     </style>
 </head>
 <body>
@@ -899,20 +905,38 @@ routesContainer.innerHTML = `
         // Konfetti-funksjon
     function triggerConfetti() {
         const container = document.getElementById('confetti-container');
-        console.log('🎉 Triggering confetti!');
-        for (let i = 0; i < 30; i++) {
+        const numConfetti = 50; // flere biter
+
+        for (let i = 0; i < numConfetti; i++) {
             const confetti = document.createElement('div');
             confetti.classList.add('confetti');
-            confetti.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
-            confetti.style.left = `${Math.random() * window.innerWidth}px`;
-            confetti.style.top = `-10px`;
-            const duration = 0.8 + Math.random() * 0.7;
-            confetti.style.animationDuration = `${duration}s`;
 
+            // tilfeldig farge
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 80%, 60%)`;
+
+            // startposisjon (midten av skjermen / kan justeres til badge)
+            confetti.style.left = `${window.innerWidth / 2}px`;
+            confetti.style.top = `${window.innerHeight / 3}px`;
+
+            // tilfeldig retning og avstand
+            const x = (Math.random() - 0.5) * 400; // -200 til +200 px
+            const y = (Math.random() - 0.5) * 300; // -150 til +150 px
+            confetti.style.setProperty('--x', `${x}px`);
+            confetti.style.setProperty('--y', `${y}px`);
+
+            // tilfeldig størrelse
+            const size = 8 + Math.random() * 8;
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+
+            // legg til i container
             container.appendChild(confetti);
-            setTimeout(() => container.removeChild(confetti), duration * 1000);
+
+            // fjern etter animasjon
+            setTimeout(() => container.removeChild(confetti), 1500);
         }
     }
+
     </script>
     <div id="confetti-container"></div>
 </body>
