@@ -761,28 +761,28 @@
         }
 
         .route-badge {
-    position: absolute;
-    top: 5px;
-    right: -5px;
-    background: gold;
-    color: black;
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 5px;
-    transform: rotate(15deg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    font-size: 0.75rem;
-}
+            position: absolute;
+            top: 5px;
+            right: -5px;
+            background: gold;
+            color: black;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 5px;
+            transform: rotate(15deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-size: 0.75rem;
+        }
 
-.route-badge.best {
-    background: #28a745; /* grønn */
-    color: white;
-}
+        .route-badge.best {
+            background: #28a745; /* grønn */
+            color: white;
+        }
 
-.route-badge.worst {
-    background: #ffc107; /* gul */
-    color: black;
-}
+        .route-badge.worst {
+            background: #ffc107; /* gul */
+            color: black;
+        }
 
     </style>
 </head>
@@ -908,7 +908,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let currentSelectingDay = 1;
-
+        function parseNumber(str) {
+            // Fjerner bokstaver og symboler, konverterer til float
+            const num = parseFloat(str.replace(/[^\d.,]/g, '').replace(',', '.'));
+            return isNaN(num) ? 0 : num;
+        }
         window.openRouteSelector = function(dayId) {
             currentSelectingDay = dayId;
             const modal = document.getElementById('routeModal');
@@ -932,7 +936,7 @@
             dayRoutes.forEach(route => {
                 const km = route.stats ? route.stats.distance : 0;
                 const hm = route.stats ? route.stats.elevationGain : 0;
-                route.score = km + hm; // enkel måte å sammenligne totalt "verdi"
+                route.score = parseNumber(km) + parseNumber(hm); // enkel måte å sammenligne totalt "verdi"
                 console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
             });
 

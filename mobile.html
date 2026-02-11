@@ -127,13 +127,38 @@
         .route-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(48,43,99,0.5); border: 2px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
         .route-option.selected { background: rgba(0,245,255,0.2); border-color: #00f5ff; box-shadow: 0 0 15px rgba(0,245,255,0.4); }
         .route-option input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: #00f5ff; flex-shrink: 0; }
-        .route-option label { flex: 1; color: white; font-size: 0.85rem; cursor: pointer; }
+        .route-option label { position: relative; flex: 1; color: white; font-size: 0.85rem; cursor: pointer; }
         .route-name { font-weight: 700; color: #00f5ff; margin-bottom: 4px; }
         .route-details { font-size: 0.75rem; color: #ffaa00; }
         .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
         .modal-btn { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid; font-weight: 700; cursor: pointer; transition: all 0.3s; }
         .modal-btn.save { background: linear-gradient(135deg, #00ff88, #00cc66); border-color: #00ff88; color: #0a0a0a; }
         .modal-btn.cancel { background: transparent; border-color: #ff0080; color: #ff0080; }
+   
+        .route-badge {
+            position: absolute;
+            top: 5px;
+            right: -5px;
+            background: gold;
+            color: black;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 5px;
+            transform: rotate(15deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-size: 0.75rem;
+        }
+
+        .route-badge.best {
+            background: #28a745; /* grønn */
+            color: white;
+        }
+
+        .route-badge.worst {
+            background: #ffc107; /* gul */
+            color: black;
+        }
+   
     </style>
 </head>
 <body>
@@ -221,7 +246,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let highlightedRouteId = null;
-
+        function parseNumber(str) {
+            // Fjerner bokstaver og symboler, konverterer til float
+            const num = parseFloat(str.replace(/[^\d.,]/g, '').replace(',', '.'));
+            return isNaN(num) ? 0 : num;
+        }
         // Inline common code for mobile
         const routes = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'];
@@ -506,24 +535,24 @@
             
             const isHighlighted = highlightedRouteId !== null;
 
-routes.forEach(route => {
-  const isSelected = selectedRoutes.some(r => r.id === route.id);
-  const isActive =
-    isHighlighted ? route.id === highlightedRouteId : isSelected;
+            routes.forEach(route => {
+            const isSelected = selectedRoutes.some(r => r.id === route.id);
+            const isActive =
+                isHighlighted ? route.id === highlightedRouteId : isSelected;
 
-  route.polyline.setStyle({
-    opacity: isActive ? 0.9 : 0,
-    weight: isActive ? 5 : 3
-  });
+            route.polyline.setStyle({
+                opacity: isActive ? 0.9 : 0,
+                weight: isActive ? 5 : 3
+            });
 
-  if (isActive) {
-    route.startMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
-    route.endMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
-  } else {
-    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-  }
-});
+            if (isActive) {
+                route.startMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+                route.endMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+            } else {
+                route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+            }
+            });
 
             
             if (selectedRoutes.length > 0) {
@@ -545,6 +574,23 @@ routes.forEach(route => {
             });
             
             selector.innerHTML = '';
+
+                // Før du løkker gjennom dayRoutes
+            let bestRoute = null;
+            let worstRoute = null;
+
+            dayRoutes.forEach(route => {
+                const km = route.stats ? route.stats.distance : 0;
+                const hm = route.stats ? route.stats.elevationGain : 0;
+                route.score = parseNumber(km) + parseNumber(hm); // enkel måte å sammenligne totalt "verdi"
+                console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
+            });
+
+            // Finn best og worst basert på score
+            bestRoute = dayRoutes.reduce((max, route) => (route.score > max.score ? route : max), dayRoutes[0]);
+            worstRoute = dayRoutes.reduce((min, route) => (route.score < min.score ? route : min), dayRoutes[0]);
+
+
             dayRoutes.forEach(route => {
                 const isSelected = days[currentDay].routes.includes(route.id);
                 const div = document.createElement('div');
@@ -592,11 +638,20 @@ routes.forEach(route => {
                 const km = route.stats ? route.stats.distance : '?';
                 const hm = route.stats ? route.stats.elevationGain : '?';
                 
+                const isBest = route === bestRoute;
+                const isWorst = route === worstRoute;
+
+                const badgeHTML = isBest ? `<span class="route-badge best">Best Value!</span>` :
+                                isWorst ? `<span class="route-badge worst">Most Beers!</span>` : '';
+
+
+
                 div.innerHTML = `
                     <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
                     <label for="route-${route.id}">
                         <div class="route-name">${name}</div>
                         <div class="route-details">${km} km | ⬆️ ${hm} m</div>
+                        ${badgeHTML}
                     </label>
                 `;
                 div.onclick = (e) => {
