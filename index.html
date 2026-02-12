@@ -2286,18 +2286,49 @@
         const smoothE = smoothElevs(elevations,7);
         
         function findPeaks(elev, dist) {
-            let maxIdx = 0;
-            let maxVal = elev[0];
+            const W = 4;            // hvor mange punkter vi ser på hver side
+            const MIN_DISTANCE = 8000; // meter mellom topper (unngå samme fjell)
+            const MAX_PEAKS = 5;    // antall topper du vil ha
 
-            for (let i = 1; i < elev.length; i++) {
-                if (elev[i] > maxVal) {
-                    maxVal = elev[i];
-                    maxIdx = i;
+            let candidates = [];
+
+            // 1️⃣ Finn alle lokale maks
+            for (let i = W; i < elev.length - W; i++) {
+                const current = elev[i];
+                const before = Math.max(...elev.slice(i - W, i));
+                const after  = Math.max(...elev.slice(i + 1, i + W + 1));
+
+                if (current >= before && current >= after) {
+                    candidates.push({
+                        index: i,
+                        elevation: current,
+                        distance: dist[i]
+                    });
                 }
             }
 
-            return [maxIdx]; // returnerer en array med bare den høyeste toppen
+            // 2️⃣ Sorter etter høyde (høyest først)
+            candidates.sort((a, b) => b.elevation - a.elevation);
+
+            // 3️⃣ Fjern topper som ligger for tett (samme fjell)
+            const selected = [];
+
+            for (let peak of candidates) {
+                const tooClose = selected.some(s =>
+                    Math.abs(s.distance - peak.distance) < MIN_DISTANCE
+                );
+
+                if (!tooClose) {
+                    selected.push(peak);
+                }
+
+                if (selected.length >= MAX_PEAKS) break;
+            }
+
+            // 4️⃣ Returner bare indeksene
+            return selected.map(p => p.index);
         }
+
 
         /* --- Finn topper ---
         function findPeaks(elev, dist){
