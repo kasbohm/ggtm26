@@ -526,7 +526,7 @@
             position: fixed;
             bottom: 10px;
             right: 250px;
-            width: 600px;
+            width: 740px;
             height: 200px;
             background: rgba(20, 20, 40, 0.95);
             border: 2px solid #00f5ff;
@@ -569,6 +569,22 @@
             height: 160px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="rgba(0,245,255,0.3)" stroke="%2300f5ff" stroke-width="2"/><text x="16" y="24" font-size="20" text-anchor="middle" transform="scale(-1,1) translate(-32,0)">🚴</text></svg>') 16 16, auto;
+        }
+
+        .elevation-tooltip {
+            position: fixed;
+            background: rgba(0, 245, 255, 0.95);
+            color: #0a0a0a;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 10001;
         }
 
         @keyframes pulse {
@@ -1299,6 +1315,32 @@
             };
         }
 
+        // Parse route name til lesbar tittel (fra mobile.html)
+        function parseRouteName(fileName) {
+            const parts = fileName.replace('.gpx', '').split('_');
+            
+            let levelIndex = parts.findIndex(p => p.match(/^D\d+$/)) + 1;
+            const locationParts = [];
+            
+            for (let j = levelIndex + 1; j < parts.length; j++) {
+                if (parts[j].match(/^\d+km$/) || parts[j].match(/^\d+hm$/)) break;
+                locationParts.push(parts[j]);
+            }
+            
+            let fromTo = locationParts.join(' ');
+            const heliosIndex = locationParts.indexOf('Helios');
+            
+            if (heliosIndex !== -1) {
+                if (heliosIndex === 0) {
+                    fromTo = `Helios → ${locationParts.slice(1).join(' ')}`;
+                } else {
+                    fromTo = `${locationParts.slice(0, heliosIndex).join(' ')} → Helios`;
+                }
+            }
+            
+            return fromTo;
+        }
+
         function calculateOverlap() {
             const routesInDays = new Set(days.flatMap(d => d.routes));
             const statsRoutes = routesInDays.size > 0 
@@ -1548,9 +1590,9 @@
                 let overlapHtml = '';
                 if (userRoutesInDays.length >= 2) {
                     const overlapData = calculateOverlap();
-                    overlapHtml = `<br><br><strong>Overlapp:</strong><br>
-                    ${overlapData.overlapPercentage}% overlapp<br>
-                    ${overlapData.commonPercentage}% felles segment`;
+                    overlapHtml = `<br><br><strong>Ruteanalyse:</strong><br>
+                    ${overlapData.overlapPercentage}% samme retning<br>
+                    ${overlapData.commonPercentage}% delt vei (turr.)`;
                 }
                 
                 let html = `
@@ -1571,6 +1613,7 @@
                 const availableUserRoutes = sortedUserRoutes.filter(r => !routesInDays.has(r.id));
                 
                 availableUserRoutes.forEach(route => {
+                    const displayName = parseRouteName(route.fileName);
                     html += `
                         <div class="route-item" 
                              style="border-left-color: ${route.color}; ${!route.visible ? 'opacity: 0.5;' : ''}"
@@ -1581,7 +1624,7 @@
                                        class="route-toggle" 
                                        ${route.visible ? 'checked' : ''} 
                                        onchange="toggleRoute(${route.id})">
-                                <div class="route-name">${route.fileName}</div>
+                                <div class="route-name">${displayName}</div>
                                 <span class="remove-route" onclick="removeRoute(${route.id}); event.stopPropagation();" title="Fjern rute">✕</span>
                             </div>
                             ${route.stats ? `
@@ -1634,9 +1677,9 @@
                 }
                 
                 if (statsRoutes.length >= 2) {
-                    statsHtml += ` | Overlapp: <strong>${overlapData.overlapPercentage}%</strong>`;
+                    statsHtml += ` | Samme retning: <strong>${overlapData.overlapPercentage}%</strong>`;
                     if (overlapData.commonPercentage > 0) {
-                        statsHtml += ` <span style="color: #e67e22;">(Felles: ${overlapData.commonPercentage}%)</span>`;
+                        statsHtml += ` <span style="color: #e67e22;">(Delt vei: ${overlapData.commonPercentage}%)</span>`;
                     }
                 }
             }
@@ -1652,12 +1695,27 @@
                 if (!contentDiv) return;
                 
                 const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
+                
+                // Sorter rutene: Helios_ (ut) først, _Helios (hjem) sist
+                const sortedDayRoutes = [...dayRoutes].sort((a, b) => {
+                    const aIsUt = a.fileName.includes('Helios_');
+                    const aIsHjem = a.fileName.includes('_Helios') && !aIsUt;
+                    const bIsUt = b.fileName.includes('Helios_');
+                    const bIsHjem = b.fileName.includes('_Helios') && !bIsUt;
+                    
+                    if (aIsUt && !bIsUt) return -1;
+                    if (!aIsUt && bIsUt) return 1;
+                    if (aIsHjem && !bIsHjem) return 1;
+                    if (!aIsHjem && bIsHjem) return -1;
+                    return 0;
+                });
+                
                 let dayDistance = 0;
                 let dayElevationGain = 0;
                 let dayMinEle = Infinity;
                 let dayMaxEle = -Infinity;
                 
-                dayRoutes.forEach(route => {
+                sortedDayRoutes.forEach(route => {
                     if (route.stats) {
                         dayDistance += parseFloat(route.stats.distance);
                         dayElevationGain += route.stats.elevationGain || 0;
@@ -1669,7 +1727,7 @@
                 });
                 
                 if (statsDiv) {
-                    if (dayRoutes.length > 0) {
+                    if (sortedDayRoutes.length > 0) {
                         let statsText = `${dayDistance.toFixed(1)} km`;
                         if (dayElevationGain > 0) {
                             statsText += ` | ⬆️ ${dayElevationGain} m`;
@@ -1679,8 +1737,8 @@
                         }
                         
                         // Calculate overlap for this day if 2 routes
-                        if (dayRoutes.length === 2) {
-                            const dayRouteCoords = dayRoutes.map(route => {
+                        if (sortedDayRoutes.length === 2) {
+                            const dayRouteCoords = sortedDayRoutes.map(route => {
                                 return route.polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
                             });
                             
@@ -1715,7 +1773,7 @@
                             
                             const overlapPercentage = totalComparisons > 0 ? (overlapPoints / totalComparisons * 100) : 0;
                             if (overlapPercentage > 0) {
-                                statsText += ` | 🔗 ${overlapPercentage.toFixed(1)}%`;
+                                statsText += ` | 🔗 ${overlapPercentage.toFixed(1)}% samme vei`;
                             }
                         }
                         
@@ -1738,12 +1796,13 @@
                 
                 let html = '';
                 
-                dayRoutes.forEach(route => {
+                sortedDayRoutes.forEach(route => {
+                    const displayName = parseRouteName(route.fileName);
                     html += `
                         <div class="day-route-item" 
                              style="border-left-color: ${route.color};">
                             <span class="remove-from-day" onclick="removeFromDay(${route.id}, ${day.id})">✕</span>
-                            <div class="day-route-name">${route.fileName}</div>
+                            <div class="day-route-name">${displayName}</div>
                             <div class="day-route-stats">
                                 ${route.stats ? route.stats.distance + ' km' : ''}
                                 ${route.stats && route.stats.elevationGain ? ' | ⬆️ ' + route.stats.elevationGain + ' m' : ''}
@@ -2129,6 +2188,7 @@
                     const hjemRoute = dayARoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
                     
                     if (utRoute && hjemRoute) {
+                        // VIKTIG: Legg til UT først, deretter HJEM
                         day.routes.push(utRoute.id, hjemRoute.id);
                     } else {
                         dayARoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
@@ -2148,29 +2208,42 @@
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
+                // Finn pure B ruter (ikke B1/B2)
                 const dayBRoutes = routes.filter(r => {
                     if (!r.isBundled) return false;
                     const match = r.fileName.match(/GGTM26_D(\d+)_B_/);
                     if (!match || parseInt(match[1]) !== dayNum) return false;
-                    const afterB = r.fileName.split('_B_')[1];
-                    return afterB && !afterB.match(/^[12]/);
+                    // Sjekk at det ikke er B1 eller B2
+                    const afterD = r.fileName.split(`GGTM26_D${dayNum}_`)[1];
+                    return afterD && afterD.startsWith('B_') && !afterD.match(/^B[12]_/);
                 });
                 
                 if (dayBRoutes.length >= 2) {
+                    // Finn UT og HJEM ruter
                     const utRoute = dayBRoutes.find(r => r.fileName.includes('Helios_'));
                     const hjemRoute = dayBRoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
                     
                     if (utRoute && hjemRoute) {
+                        // VIKTIG: Legg til UT først, deretter HJEM
                         day.routes.push(utRoute.id, hjemRoute.id);
                     } else {
                         dayBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                     }
                 } else {
-                    const b1Route = routes.find(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
-                    const b2Route = routes.find(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
+                    // Fallback: prøv B1 og B2 ruter
+                    const b1Routes = routes.filter(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
+                    const b2Routes = routes.filter(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
                     
-                    if (b1Route && b2Route) {
-                        day.routes.push(b1Route.id, b2Route.id);
+                    // Finn UT og HJEM for B1/B2
+                    const utRoute = [...b1Routes, ...b2Routes].find(r => r.fileName.includes('Helios_'));
+                    const hjemRoute = [...b1Routes, ...b2Routes].find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                    
+                    if (utRoute && hjemRoute) {
+                        // VIKTIG: Legg til UT først, deretter HJEM
+                        day.routes.push(utRoute.id, hjemRoute.id);
+                    } else if (b1Routes.length > 0 && b2Routes.length > 0) {
+                        // Fallback: første av hver
+                        day.routes.push(b1Routes[0].id, b2Routes[0].id);
                     }
                 }
             }
@@ -2195,6 +2268,7 @@
             <span class="elevation-profile-close" onclick="closeElevationProfile()">✕</span>
         </div>
         <canvas id="profileCanvas" class="elevation-profile-canvas"></canvas>
+        <div id="elevationTooltip" class="elevation-tooltip"></div>
     </div>
     
     <script>
@@ -2229,215 +2303,279 @@
     
    window.showElevationProfile = function(dayId) {
     const profile = document.getElementById('elevationProfile');
-    const canvas = document.getElementById('profileCanvas');
-    const ctx = canvas.getContext('2d');
+    let canvas = document.getElementById('profileCanvas');
+    let ctx = canvas.getContext('2d');
     const title = document.getElementById('profileTitle');
 
+    // Vis boksen først
     profile.classList.add('visible');
 
+    // Vent til browser har rendret layout
     requestAnimationFrame(() => {
+
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
 
         const day = days.find(d => d.id === dayId);
-        if (!day || day.routes.length === 0) return;
-
-        const dayRoutes = day.routes
-            .map(id => routes.find(r => r.id === id))
-            .filter(r => r && r.gpxPoints);
-        if (dayRoutes.length === 0) return;
-
-        let allPoints = [];
-        dayRoutes.forEach(r => allPoints = allPoints.concat(r.gpxPoints));
-        const points = allPoints.filter(p => typeof p.ele === 'number');
-        if (points.length < 2) return;
-
-        // --- Kumulativ distanse ---
-        let cumulativeDistance = [0];
-        for (let i = 1; i < points.length; i++) {
-            const p1 = points[i-1], p2 = points[i];
-            const R = 6371000;
-            const φ1 = p1.lat*Math.PI/180;
-            const φ2 = p2.lat*Math.PI/180;
-            const Δφ = (p2.lat-p1.lat)*Math.PI/180;
-            const Δλ = (p2.lon-p1.lon)*Math.PI/180;
-            const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-            const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            cumulativeDistance.push(cumulativeDistance[i-1] + R*c);
+        if (!day || day.routes.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f5ff';
+            ctx.font = '14px Courier New';
+            ctx.fillText('Ingen ruter valgt for denne dagen.', 10, 30);
+            return;
         }
 
-        const totalDistance = cumulativeDistance[cumulativeDistance.length-1];
-        const elevations = points.map(p => p.ele);
+        const dayRoutes = day.routes
+            .map(routeId => routes.find(r => r.id === routeId))
+            .filter(r => r && r.gpxPoints);
+
+        if (dayRoutes.length === 0) return;
+
+        // ---- Slå sammen alle punkter ----
+        let allPoints = [];
+        dayRoutes.forEach(route => allPoints = allPoints.concat(route.gpxPoints));
+        const pointsWithEle = allPoints.filter(p => p.ele !== null);
+        if (pointsWithEle.length < 2) return;
+
+        // ---- Kumulativ distanse ----
+        let cumulativeDistance = [0];
+        for (let i = 1; i < pointsWithEle.length; i++) {
+            const p1 = pointsWithEle[i - 1];
+            const p2 = pointsWithEle[i];
+            const R = 6371000;
+            const φ1 = p1.lat * Math.PI / 180;
+            const φ2 = p2.lat * Math.PI / 180;
+            const Δφ = (p2.lat - p1.lat) * Math.PI / 180;
+            const Δλ = (p2.lon - p1.lon) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) ** 2 +
+                      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c / 1000;
+            cumulativeDistance.push(cumulativeDistance[i - 1] + distance);
+        }
+
+        const totalDistance = cumulativeDistance[cumulativeDistance.length - 1];
+        const elevations = pointsWithEle.map(p => p.ele);
         const minEle = Math.min(...elevations);
         const maxEle = Math.max(...elevations);
 
-        const dayNames = ['Port de Soller','Cap de Formentor','Sa Calobra','Puig Major'];
-        const dayName = dayNames[dayId-1]||'';
-        title.textContent = `Løypeprofil - Dag ${dayId}${dayName ? ` (${dayName})` : ''}`;
+        const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+        title.textContent = `Løypeprofil - Dag ${dayId} (${dayNames[dayId - 1]})`;
 
-        // --- Smooth kurve ---
-        function smoothElevs(arr, windowSize=7){
-            return arr.map((v,i)=>{
-                const start = Math.max(0,i-Math.floor(windowSize/2));
-                const end = Math.min(arr.length,i+Math.floor(windowSize/2)+1);
-                return arr.slice(start,end).reduce((a,b)=>a+b,0)/(end-start);
-            });
+        // ---- Beregn akkumulert høydemeter for tooltip ----
+        let accumulatedGain = [0];
+        for (let i = 1; i < pointsWithEle.length; i++) {
+            const eleDiff = pointsWithEle[i].ele - pointsWithEle[i - 1].ele;
+            accumulatedGain.push(accumulatedGain[i - 1] + (eleDiff > 0 ? eleDiff : 0));
         }
-        const smoothE = smoothElevs(elevations,7);
+
+        // ---- Sett opp hover tooltip event listeners ----
+        const tooltip = document.getElementById('elevationTooltip');
         
+        // Fjern gamle event listeners
+        const oldCanvas = canvas;
+        const newCanvas = oldCanvas.cloneNode(true);
+        oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+        
+        // Oppdater referanser til ny canvas
+        canvas = document.getElementById('profileCanvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            
+            // Find closest point on profile
+            const normalizedX = mouseX / canvas.width;
+            const distanceAtMouse = normalizedX * totalDistance;
+            
+            // Find closest index
+            let closestIdx = 0;
+            let minDiff = Infinity;
+            for (let i = 0; i < cumulativeDistance.length; i++) {
+                const diff = Math.abs(cumulativeDistance[i] - distanceAtMouse);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIdx = i;
+                }
+            }
+            
+            const distance = cumulativeDistance[closestIdx];
+            const elevation = pointsWithEle[closestIdx].ele;
+            const gain = accumulatedGain[closestIdx];
+            
+            // Show tooltip
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY - 40) + 'px';
+            tooltip.innerHTML = `
+                📍 ${distance.toFixed(1)} km<br>
+                🏔️ ${elevation.toFixed(0)} moh<br>
+                ⬆️ ${gain.toFixed(0)} m akkumulert
+            `;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+
+        // ---- Tegn bakgrunn og grid ----
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(0,245,255,0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = (canvas.height / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        drawBackground();
+
+        // ---- Finn toppene ----
         function findPeaks(elev, dist) {
-            const W = 4;            // hvor mange punkter vi ser på hver side
-            const MIN_DISTANCE = 8000; // meter mellom topper (unngå samme fjell)
-            const MAX_PEAKS = 5;    // antall topper du vil ha
-
+            const W = 4;
+            const MAX_PEAKS = 6;
+            const MIN_DROP = 200; // i meter, juster etter behov
+            const MIN_DISTANCE = 4000; // i meter, juster etter behov
             let candidates = [];
-
-            // 1️⃣ Finn alle lokale maks
             for (let i = W; i < elev.length - W; i++) {
                 const current = elev[i];
                 const before = Math.max(...elev.slice(i - W, i));
                 const after  = Math.max(...elev.slice(i + 1, i + W + 1));
-
                 if (current >= before && current >= after) {
-                    candidates.push({
-                        index: i,
-                        elevation: current,
-                        distance: dist[i]
-                    });
+                    candidates.push({ index: i, elevation: current, distance: dist[i] });
                 }
             }
-
-            // 2️⃣ Sorter etter høyde (høyest først)
             candidates.sort((a, b) => b.elevation - a.elevation);
-
-            // 3️⃣ Fjern topper som ligger for tett (samme fjell)
             const selected = [];
-
             for (let peak of candidates) {
-                const tooClose = selected.some(s =>
-                    Math.abs(s.distance - peak.distance) < MIN_DISTANCE
-                );
-
-                if (!tooClose) {
+                if (selected.length === 0) {
                     selected.push(peak);
+                    continue;
                 }
-
+                let tooClose = false;
+                for (let prev of selected) {
+                    const distDiff = Math.abs(peak.distance - prev.distance);
+                    const startIdx = Math.min(prev.index, peak.index);
+                    const endIdx = Math.max(prev.index, peak.index);
+                    const minBetween = Math.min(...elev.slice(startIdx, endIdx + 1));
+                    const drop = prev.elevation - minBetween;
+                    if (distDiff < MIN_DISTANCE && drop < MIN_DROP) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                if (!tooClose) selected.push(peak);
                 if (selected.length >= MAX_PEAKS) break;
             }
-
-            // 4️⃣ Returner bare indeksene
             return selected.map(p => p.index);
         }
 
+        const peakIndexes = findPeaks(elevations, cumulativeDistance);
 
-        /* --- Finn topper ---
-        function findPeaks(elev, dist){
-            const peaks = [];
-            const MIN_H=12, MIN_D=250, W=3;
-            let lastDist=-Infinity;
-            for(let i=W;i<elev.length-W;i++){
-                const c=elev[i];
-                const b=Math.max(...elev.slice(i-W,i));
-                const a=Math.max(...elev.slice(i+1,i+W+1));
-                if(c>b && c>a && (c-Math.min(b,a))>MIN_H && (dist[i]-lastDist)>MIN_D){
-                    peaks.push(i);
-                    lastDist=dist[i];
+        // ---- Finn møtet mellom ruter ----
+        let meetIdx = dayRoutes[0].gpxPoints.length - 1;
+        const meetX = cumulativeDistance[meetIdx] / totalDistance * canvas.width;
+        const meetY = canvas.height - ((pointsWithEle[meetIdx].ele - minEle)/(maxEle - minEle))*(canvas.height-20);
+
+        // ---- Animer kurven og stjerner ----
+        let progress = 0;
+        const animationDuration = 1200;
+        let startTime = null;
+        const peaks = [];
+
+        function animateProfile(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            progress = Math.min(elapsed / animationDuration, 1);
+
+            // --- Tegn bakgrunn og grid ---
+            drawBackground();
+
+            // --- Tegn kurve ---
+            const maxIndex = Math.floor(progress * (pointsWithEle.length - 1));
+            ctx.beginPath();
+            ctx.strokeStyle = '#00f5ff';
+            ctx.lineWidth = 2;
+            for (let i = 0; i <= maxIndex; i++) {
+                const x = cumulativeDistance[i] / totalDistance * canvas.width;
+                const y = canvas.height - ((elevations[i] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+
+                // --- push stjerner EN gang når vi når toppen ---
+                if (peakIndexes.includes(i) && !peaks.some(p => p.index === i)) {
+                    peaks.push({ x, y, life: 0, index: i });
                 }
-            }
-            return peaks;
-        }
-       function findPeaks(elev, dist) {
-    const peaks = [];
-    const W = 3; // window for å sjekke lokal maks
-
-    for (let i = W; i < elev.length - W; i++) {
-        const current = elev[i];
-        const before = Math.max(...elev.slice(i - W, i));
-        const after  = Math.max(...elev.slice(i + 1, i + W + 1));
-
-        if (current >= before && current >= after) {
-            peaks.push(i);
-        }
-    }
-
-    return peaks;
-}*/
-
-
-        const peakIdx = findPeaks(smoothE, cumulativeDistance);
-
-        // --- Peak koordinater med trigger ---
-        const peaks = peakIdx.map(i=>({
-            x: cumulativeDistance[i]/totalDistance*canvas.width,
-            y: canvas.height - ((smoothE[i]-minEle)/(maxEle-minEle))*(canvas.height-20),
-            life:0,
-            triggered:false
-        }));
-
-        // Lyd
-        const starSound = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
-
-        let start=null;
-        const animDur=1200;
-
-        function animate(ts){
-            if(!start) start=ts;
-            const elapsed = ts-start;
-            const progress = Math.min(elapsed/animDur,1);
-            const maxX = progress*canvas.width;
-
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-
-            // --- Bakgrunn og grid ---
-            ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.strokeStyle='rgba(0,245,255,0.2)';ctx.lineWidth=1;
-            for(let i=0;i<=5;i++){const y=(canvas.height/5)*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
-
-            // --- Smooth Bezier kurve ---
-            ctx.beginPath();ctx.strokeStyle='#00f5ff';ctx.lineWidth=2;
-            let x0 = cumulativeDistance[0]/totalDistance*canvas.width;
-            let y0 = canvas.height - ((smoothE[0]-minEle)/(maxEle-minEle))*(canvas.height-20);
-            ctx.moveTo(x0,y0);
-            for(let i=1;i<smoothE.length;i++){
-                const x1 = cumulativeDistance[i]/totalDistance*canvas.width;
-                const y1 = canvas.height - ((smoothE[i]-minEle)/(maxEle-minEle))*(canvas.height-20);
-                if(x1>maxX) break;
-                const cx=(x0+x1)/2, cy=(y0+y1)/2;
-                ctx.quadraticCurveTo(x0,y0,cx,cy);
-                x0=x1; y0=y1;
             }
             ctx.stroke();
 
-            // --- Stjerner ---
-            for(let i=peaks.length-1;i>=0;i--){
-                const s=peaks[i];
-                if(!s.triggered && maxX>=s.x){
-                    s.triggered=true;
-                    starSound.play().catch(()=>{});
-                }
-                if(s.triggered){
-                    s.life+=0.02;
-                    const rise = s.life*40;
-                    const op = 1-s.life;
-                    if(op<=0){peaks.splice(i,1); continue;}
-                    ctx.save(); ctx.globalAlpha = op;
-                    drawStar(ctx, s.x, s.y - rise, 5, 8, 4); // <-- din eksisterende funksjon
-                    ctx.restore();
-                }
+            // --- Tegn stjerner (bare under animasjon) ---
+            if (progress < 1 || peaks.length > 0) {
+                drawStars();
             }
 
-            // --- Labels ---
-            ctx.fillStyle='#00f5ff';ctx.font='11px Courier New';
-            ctx.fillText(`${minEle.toFixed(0)}m`,5,canvas.height-5);
-            ctx.fillText(`${maxEle.toFixed(0)}m`,5,15);
-            ctx.fillText(`${(totalDistance/1000).toFixed(1)}km`,canvas.width-60,canvas.height-5);
-
-            if(progress<1 || peaks.length>0) requestAnimationFrame(animate);
+            // --- Tegn midtpunkt øl ---
+            if (progress >= 1 && meetX && meetY) {
+                ctx.save();
+                ctx.imageSmoothingEnabled = false;
+                // Bruk en mye større font for skarpere emoji
+                ctx.font = '32px Arial'; // Fast størrelse, Arial rendrer emojis bedre
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🍺', meetX, meetY - 16); // -16 for å plassere over punktet
+                ctx.restore();
+            }
+            // --- Fortsett animasjon ---
+            if (progress < 1) {
+                requestAnimationFrame(animateProfile);
+            } else if (peaks.length > 0) {
+                // Fortsett bare for å animere ut eksisterende stjerner
+                requestAnimationFrame(animateProfile);
+            }
+            // Når progress === 1 OG peaks.length === 0, stopper animasjonen
         }
 
-        requestAnimationFrame(animate);
+        function drawStars() {
+            for (let i = peaks.length - 1; i >= 0; i--) {
+                const star = peaks[i];
+                star.life += 0.02;
+                const rise = star.life * 40;
+                const opacity = 1 - star.life;
+                if (opacity <= 0) {
+                    peaks.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.globalAlpha = opacity;
+                drawStar(ctx, star.x, star.y - rise, 5, 8, 4);
+                ctx.restore();
+            }
+        }
+
+        // Start animasjon
+        requestAnimationFrame(animateProfile);
+
+        // ---- Tegn statiske labels ETTER animasjon (kun én gang) ----
+        setTimeout(() => {
+            ctx.fillStyle = '#00f5ff';
+            ctx.font = '11px Courier New';
+            ctx.fillText(`${minEle.toFixed(0)}m`, 5, canvas.height - 5);
+            ctx.fillText(`${maxEle.toFixed(0)}m`, 5, 15);
+            ctx.fillText(`${totalDistance.toFixed(1)}km`, canvas.width - 60, canvas.height - 5);
+        }, animationDuration + 100);
+
     });
 };
+
 
 
 
@@ -2503,9 +2641,6 @@
             setTimeout(() => container.removeChild(confetti), 1500);
         }
     }
-
-
-
 
 
     </script>
