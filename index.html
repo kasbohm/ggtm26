@@ -1696,17 +1696,15 @@
                 
                 const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
                 
-                // Sorter rutene: Helios_ (ut) først, _Helios (hjem) sist
+                // Sorter rutene: Helios som FØRSTE lokasjon øverst (UT fra Helios)
                 const sortedDayRoutes = [...dayRoutes].sort((a, b) => {
-                    const aIsUt = a.fileName.includes('Helios_');
-                    const aIsHjem = a.fileName.includes('_Helios') && !aIsUt;
-                    const bIsUt = b.fileName.includes('Helios_');
-                    const bIsHjem = b.fileName.includes('_Helios') && !bIsUt;
+                    // Sjekk om Helios er FØRSTE lokasjon (kommer rett etter A_ eller B_)
+                    const aHeliosFirst = a.fileName.match(/_[AB]_Helios_/) !== null;
+                    const bHeliosFirst = b.fileName.match(/_[AB]_Helios_/) !== null;
                     
-                    if (aIsUt && !bIsUt) return -1;
-                    if (!aIsUt && bIsUt) return 1;
-                    if (aIsHjem && !bIsHjem) return 1;
-                    if (!aIsHjem && bIsHjem) return -1;
+                    // Helios først kommer øverst
+                    if (aHeliosFirst && !bHeliosFirst) return -1;
+                    if (!aHeliosFirst && bHeliosFirst) return 1;
                     return 0;
                 });
                 
@@ -2184,11 +2182,13 @@
                 });
                 
                 if (dayARoutes.length >= 2) {
-                    const utRoute = dayARoutes.find(r => r.fileName.includes('Helios_'));
-                    const hjemRoute = dayARoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                    // Finn UT (Helios som FØRSTE lokasjon)
+                    const utRoute = dayARoutes.find(r => r.fileName.match(/_A_Helios_/));
+                    // Finn HJEM (Helios som SISTE lokasjon, men IKKE første)
+                    const hjemRoute = dayARoutes.find(r => r.fileName.includes('_Helios') && !r.fileName.match(/_A_Helios_/));
                     
                     if (utRoute && hjemRoute) {
-                        // VIKTIG: Legg til UT først, deretter HJEM
+                        // VIKTIG: Legg til UT først (Helios øverst)
                         day.routes.push(utRoute.id, hjemRoute.id);
                     } else {
                         dayARoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
@@ -2208,42 +2208,34 @@
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
-                // Finn pure B ruter (ikke B1/B2)
-                const dayBRoutes = routes.filter(r => {
+                // Samle ALLE B-relaterte ruter for denne dagen
+                const allBRoutes = routes.filter(r => {
                     if (!r.isBundled) return false;
-                    const match = r.fileName.match(/GGTM26_D(\d+)_B_/);
-                    if (!match || parseInt(match[1]) !== dayNum) return false;
-                    // Sjekk at det ikke er B1 eller B2
-                    const afterD = r.fileName.split(`GGTM26_D${dayNum}_`)[1];
-                    return afterD && afterD.startsWith('B_') && !afterD.match(/^B[12]_/);
+                    // Match B, B1, eller B2
+                    return r.fileName.match(new RegExp(`GGTM26_D${dayNum}_B[12]?_`));
                 });
                 
-                if (dayBRoutes.length >= 2) {
-                    // Finn UT og HJEM ruter
-                    const utRoute = dayBRoutes.find(r => r.fileName.includes('Helios_'));
-                    const hjemRoute = dayBRoutes.find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
+                console.log(`Dag ${dayNum} B-ruter:`, allBRoutes.map(r => r.fileName));
+                
+                if (allBRoutes.length >= 2) {
+                    // Finn UT (Helios som FØRSTE lokasjon)
+                    const utRoute = allBRoutes.find(r => r.fileName.match(/_B[12]?_Helios_/));
+                    
+                    // Finn HJEM (Helios som SISTE lokasjon, men IKKE første)
+                    const hjemRoute = allBRoutes.find(r => 
+                        r.fileName.includes('_Helios') && 
+                        !r.fileName.match(/_B[12]?_Helios_/)
+                    );
+                    
+                    console.log(`Dag ${dayNum} - UT:`, utRoute?.fileName, 'HJEM:', hjemRoute?.fileName);
                     
                     if (utRoute && hjemRoute) {
-                        // VIKTIG: Legg til UT først, deretter HJEM
+                        // VIKTIG: Legg til UT først (Helios øverst)
                         day.routes.push(utRoute.id, hjemRoute.id);
-                    } else {
-                        dayBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
-                    }
-                } else {
-                    // Fallback: prøv B1 og B2 ruter
-                    const b1Routes = routes.filter(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B1_`));
-                    const b2Routes = routes.filter(r => r.isBundled && r.fileName.includes(`GGTM26_D${dayNum}_B2_`));
-                    
-                    // Finn UT og HJEM for B1/B2
-                    const utRoute = [...b1Routes, ...b2Routes].find(r => r.fileName.includes('Helios_'));
-                    const hjemRoute = [...b1Routes, ...b2Routes].find(r => !r.fileName.includes('Helios_') && r.fileName.includes('_Helios'));
-                    
-                    if (utRoute && hjemRoute) {
-                        // VIKTIG: Legg til UT først, deretter HJEM
-                        day.routes.push(utRoute.id, hjemRoute.id);
-                    } else if (b1Routes.length > 0 && b2Routes.length > 0) {
-                        // Fallback: første av hver
-                        day.routes.push(b1Routes[0].id, b2Routes[0].id);
+                    } else if (allBRoutes.length >= 2) {
+                        // Fallback: første 2 ruter
+                        console.warn(`Dag ${dayNum} - Kunne ikke finne UT/HJEM, bruker første 2`);
+                        allBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                     }
                 }
             }
@@ -2641,6 +2633,9 @@
             setTimeout(() => container.removeChild(confetti), 1500);
         }
     }
+
+
+
 
 
     </script>
