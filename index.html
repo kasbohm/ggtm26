@@ -1094,8 +1094,6 @@
             routes.forEach(route => {
                 route.visible = false;
                 route.polyline.remove();
-                route.startMarker.remove();
-                route.endMarker.remove();
             });
             
             // Show only routes in VISIBLE days
@@ -1106,8 +1104,6 @@
                         if (route) {
                             route.visible = true;
                             route.polyline.addTo(map);
-                            route.startMarker.addTo(map);
-                            route.endMarker.addTo(map);
                         }
                     });
                 }
@@ -1319,6 +1315,13 @@
         function parseRouteName(fileName) {
             const parts = fileName.replace('.gpx', '').split('_');
             
+            // Finn variant (A, B, B1, B2)
+            let variant = '';
+            const variantMatch = fileName.match(/_([AB][12]?)_/);
+            if (variantMatch) {
+                variant = ` (${variantMatch[1]})`;
+            }
+            
             let levelIndex = parts.findIndex(p => p.match(/^D\d+$/)) + 1;
             const locationParts = [];
             
@@ -1338,7 +1341,7 @@
                 }
             }
             
-            return fromTo;
+            return fromTo + variant;
         }
 
         function calculateOverlap() {
@@ -1433,26 +1436,6 @@
                 opacity: 0.7
             }).addTo(map);
             
-            const startMarker = L.circleMarker(latLngs[0], {
-                radius: 8,
-                fillColor: '#2ecc71',
-                color: '#27ae60',
-                weight: 2,
-                opacity: 0.9,
-                fillOpacity: 0.8
-            }).addTo(map);
-            startMarker.bindTooltip(`${fileName}<br><strong>Start</strong>`, { permanent: false });
-            
-            const endMarker = L.circleMarker(latLngs[latLngs.length - 1], {
-                radius: 8,
-                fillColor: '#e74c3c',
-                color: '#c0392b',
-                weight: 2,
-                opacity: 0.9,
-                fillOpacity: 0.8
-            }).addTo(map);
-            endMarker.bindTooltip(`${fileName}<br><strong>Slutt</strong>`, { permanent: false });
-            
             const stats = calculateStats(points);
             
             const route = {
@@ -1460,8 +1443,9 @@
                 fileName,
                 gpxPoints: points,
                 polyline,
-                startMarker,
-                endMarker,
+                startMarker: null,
+                endMarker: null,
+                meetMarker: null,
                 originalColor: color,
                 color,
                 visible: true,
@@ -1482,6 +1466,7 @@
         }
 
         function updateRouteColors() {
+            // Oppdater farger
             days.forEach(day => {
                 day.routes.forEach(routeId => {
                     const route = routes.find(r => r.id === routeId);
@@ -1499,6 +1484,79 @@
                     route.polyline.setStyle({ color: route.originalColor });
                 }
             });
+            
+            // Fjern alle eksisterende markers først
+            routes.forEach(route => {
+                if (route.startMarker) route.startMarker.remove();
+                if (route.endMarker) route.endMarker.remove();
+                if (route.meetMarker) route.meetMarker.remove();
+            });
+            
+            // Legg til nye markers per dag
+            days.forEach(day => {
+                const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+                
+                if (dayRoutes.length === 2 && day.visible) {
+                    const route1 = dayRoutes[0];
+                    const route2 = dayRoutes[1];
+                    
+                    // Start marker for rute 1 (solbriller emoji - klar for tur!)
+                    const start1 = route1.polyline.getLatLngs()[0];
+                    route1.startMarker = L.marker(start1, {
+                        icon: L.divIcon({
+                            html: '<div style="font-size: 28px; margin-left:-14px; text-shadow: 0 0 3px white, 0 0 5px white;">😎</div>',
+                            className: 'custom-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28]
+                        })
+                    }).addTo(map);
+                    
+                    // Møtepunkt (øl) - slutten av rute 1 / start av rute 2
+                    const meet = route1.polyline.getLatLngs()[route1.polyline.getLatLngs().length - 1];
+                    route1.meetMarker = L.marker(meet, {
+                        icon: L.divIcon({
+                            html: '<div style="font-size: 28px; text-shadow: 0 0 3px white, 0 0 5px white;">🍺</div>',
+                            className: 'custom-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28]
+                        })
+                    }).addTo(map);
+                    
+                    // Slutt marker for rute 2 (checkered flag)
+                    const end2 = route2.polyline.getLatLngs()[route2.polyline.getLatLngs().length - 1];
+                    route2.endMarker = L.marker(end2, {
+                        icon: L.divIcon({
+                            html: '<div style="font-size: 28px; margin-left:14px; text-shadow: 0 0 3px white, 0 0 5px white;">🏁</div>',
+                            className: 'custom-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28]
+                        })
+                    }).addTo(map);
+                    
+                } else if (dayRoutes.length === 1 && day.visible) {
+                    // Bare én rute - vis start (solbriller) og slutt (checkered flag)
+                    const route = dayRoutes[0];
+                    const latlngs = route.polyline.getLatLngs();
+                    
+                    route.startMarker = L.marker(latlngs[0], {
+                        icon: L.divIcon({
+                            html: '<div style="font-size: 28px;margin-left:-14px; text-shadow: 0 0 3px white, 0 0 5px white;">😎</div>',
+                            className: 'custom-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28]
+                        })
+                    }).addTo(map);
+                    
+                    route.endMarker = L.marker(latlngs[latlngs.length - 1], {
+                        icon: L.divIcon({
+                            html: '<div style="font-size: 28px; margin-left:14px; text-shadow: 0 0 3px white, 0 0 5px white;">🏁</div>',
+                            className: 'custom-marker',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28]
+                        })
+                    }).addTo(map);
+                }
+            });
         }
 
         function toggleRoute(routeId) {
@@ -1507,14 +1565,12 @@
             
             if (route.visible) {
                 route.polyline.addTo(map);
-                route.startMarker.addTo(map);
-                route.endMarker.addTo(map);
             } else {
                 route.polyline.remove();
-                route.startMarker.remove();
-                route.endMarker.remove();
             }
             
+            // updateRouteColors vil håndtere markers
+            updateRouteColors();
             updateSidebar();
         }
 
@@ -1963,16 +2019,13 @@
                     route.visible = day.visible;
                     if (day.visible) {
                         route.polyline.addTo(map);
-                        route.startMarker.addTo(map);
-                        route.endMarker.addTo(map);
                     } else {
                         route.polyline.remove();
-                        route.startMarker.remove();
-                        route.endMarker.remove();
                     }
                 }
             });
             
+            updateRouteColors();
             updateSidebar();
         };
 
@@ -1986,8 +2039,9 @@
             if (confirm('Er du sikker på at du vil fjerne alle ruter?')) {
                 routes.forEach(route => {
                     route.polyline.remove();
-                    route.startMarker.remove();
-                    route.endMarker.remove();
+                    if (route.startMarker) route.startMarker.remove();
+                    if (route.endMarker) route.endMarker.remove();
+                    if (route.meetMarker) route.meetMarker.remove();
                 });
                 
                 routes.length = 0;
@@ -2010,8 +2064,9 @@
             
             if (confirm(`Fjerne "${route.fileName}"?`)) {
                 route.polyline.remove();
-                route.startMarker.remove();
-                route.endMarker.remove();
+                if (route.startMarker) route.startMarker.remove();
+                if (route.endMarker) route.endMarker.remove();
+                if (route.meetMarker) route.meetMarker.remove();
                 
                 days.forEach(day => {
                     day.routes = day.routes.filter(id => id !== routeId);
@@ -2075,8 +2130,6 @@
                 routes.forEach(route => {
                     route.visible = false;
                     route.polyline.remove();
-                    route.startMarker.remove();
-                    route.endMarker.remove();
                 });
                 
                 // Show only routes in VISIBLE days
@@ -2087,8 +2140,6 @@
                             if (route) {
                                 route.visible = true;
                                 route.polyline.addTo(map);
-                                route.startMarker.addTo(map);
-                                route.endMarker.addTo(map);
                             }
                         });
                     }
