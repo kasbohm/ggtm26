@@ -569,7 +569,7 @@
             height: 160px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="rgba(0,245,255,0.3)" stroke="%2300f5ff" stroke-width="2"/><text x="16" y="24" font-size="20" text-anchor="middle" transform="scale(-1,1) translate(-32,0)">🚴</text></svg>') 16 16, auto;
+            cursor: none; /* Skjul cursor */
         }
 
         .elevation-tooltip {
@@ -584,7 +584,24 @@
             white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
             display: none;
+            z-index: 10002;
+        }
+
+        .elevation-cyclist {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 245, 255, 0.3);
+            border: 2px solid #00f5ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            pointer-events: none;
             z-index: 10001;
+            display: none;
+            transform: scaleX(-1); /* Snu syklisten horisontalt */
         }
 
         @keyframes pulse {
@@ -807,7 +824,7 @@
             height: 100%;
             pointer-events: none;
             overflow: visible;
-            z-index: 9999;
+            z-index: 10005; /* Høyere enn elevation-profile (10000) */
         }
 
         .confetti {
@@ -816,7 +833,7 @@
             height: 10px;
             opacity: 0.9;
             border-radius: 2px;
-            animation: explode 1.5s forwards;
+            animation: explode 3s forwards; /* Enda tregere: 3s */
         }
 
         @keyframes explode {
@@ -2314,6 +2331,9 @@
         <div id="elevationTooltip" class="elevation-tooltip"></div>
     </div>
     
+    <!-- Sykkel-cursor som følger løypa -->
+    <div id="elevationCyclist" class="elevation-cyclist">🚴</div>
+    
     <script>
     // SoundCloud Player - Direct iframe (no oEmbed to avoid CORS)
     (function() {
@@ -2345,6 +2365,16 @@
     };
     
    window.showElevationProfile = function(dayId) {
+    // Reset flags
+    window.champagneShown = false;
+    window.beerShown = false;
+    
+    // Tøm confetti container
+    const confettiContainer = document.getElementById('confetti-container');
+    if (confettiContainer) {
+        confettiContainer.innerHTML = '';
+    }
+    
     const profile = document.getElementById('elevationProfile');
     let canvas = document.getElementById('profileCanvas');
     let ctx = canvas.getContext('2d');
@@ -2449,19 +2479,38 @@
             const elevation = pointsWithEle[closestIdx].ele;
             const gain = accumulatedGain[closestIdx];
             
-            // Show tooltip
-            tooltip.style.display = 'block';
-            tooltip.style.left = (e.clientX + 15) + 'px';
-            tooltip.style.top = (e.clientY - 40) + 'px';
+            // Beregn Y-posisjon på løypa
+            const profileY = canvas.height - ((elevation - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+            const screenX = rect.left + (cumulativeDistance[closestIdx] / totalDistance) * canvas.width;
+            const screenY = rect.top + profileY;
+            
+            // Vis og flytt sykkel-markør (følger løypa i høyde, mus i lengde)
+            const cyclist = document.getElementById('elevationCyclist');
+            cyclist.style.display = 'flex';
+            cyclist.style.left = (screenX - 20) + 'px'; // Sentrert på sykkel (20px = halv bredde)
+            cyclist.style.top = (screenY - 20) + 'px'; // Sentrert på sykkel (20px = halv høyde)
+            
+            // Oppdater tooltip HTML først for å få riktig bredde
             tooltip.innerHTML = `
                 📍 ${distance.toFixed(1)} km<br>
                 🏔️ ${elevation.toFixed(0)} moh<br>
                 ⬆️ ${gain.toFixed(0)} m akkumulert
             `;
+            
+            // Vis tooltip SENTRERT over syklisten
+            tooltip.style.display = 'block';
+            
+            // Vent til neste frame for å få riktig offsetWidth
+            requestAnimationFrame(() => {
+                const tooltipWidth = tooltip.offsetWidth;
+                tooltip.style.left = (screenX - tooltipWidth / 2) + 'px'; // Sentrert horisontalt
+                tooltip.style.top = (screenY - 90) + 'px'; // 90px over syklisten (litt mer opp)
+            });
         });
         
         canvas.addEventListener('mouseleave', () => {
             tooltip.style.display = 'none';
+            document.getElementById('elevationCyclist').style.display = 'none';
         });
 
         // ---- Tegn bakgrunn og grid ----
@@ -2469,14 +2518,30 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Tegn grid-linjer med høyde-labels
             ctx.strokeStyle = 'rgba(0,245,255,0.2)';
             ctx.lineWidth = 1;
+            ctx.fillStyle = '#00f5ff';
+            ctx.font = '10px Courier New';
+            ctx.textAlign = 'right';
+            
             for (let i = 0; i <= 5; i++) {
                 const y = (canvas.height / 5) * i;
+                
+                // Beregn høyden for denne linjen
+                const elevationAtLine = maxEle - ((maxEle - minEle) / 5) * i;
+                
+                // Tegn linje
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
+                
+                // Tegn høyde-label (unntatt på topp og bunn - de har allerede labels)
+                if (i > 0 && i < 5) {
+                    ctx.fillText(`${elevationAtLine.toFixed(0)}m`, canvas.width - 5, y - 3);
+                }
             }
         }
 
@@ -2486,8 +2551,8 @@
         function findPeaks(elev, dist) {
             const W = 4;
             const MAX_PEAKS = 6;
-            const MIN_DROP = 200; // i meter, juster etter behov
-            const MIN_DISTANCE = 4000; // i meter, juster etter behov
+            const MIN_DROP = 250; // i meter (økt fra 200)
+            const MIN_DISTANCE = 7000; // i meter (økt fra 6000)
             let candidates = [];
             for (let i = W; i < elev.length - W; i++) {
                 const current = elev[i];
@@ -2506,12 +2571,13 @@
                 }
                 let tooClose = false;
                 for (let prev of selected) {
-                    const distDiff = Math.abs(peak.distance - prev.distance);
+                    const distDiff = Math.abs(peak.distance - prev.distance) * 1000; // Konverter til meter
                     const startIdx = Math.min(prev.index, peak.index);
                     const endIdx = Math.max(prev.index, peak.index);
                     const minBetween = Math.min(...elev.slice(startIdx, endIdx + 1));
                     const drop = prev.elevation - minBetween;
-                    if (distDiff < MIN_DISTANCE && drop < MIN_DROP) {
+                    // Begge conditions må være oppfylt
+                    if (distDiff < MIN_DISTANCE || drop < MIN_DROP) {
                         tooClose = true;
                         break;
                     }
@@ -2526,6 +2592,8 @@
 
         // ---- Finn møtet mellom ruter ----
         let meetIdx = dayRoutes[0].gpxPoints.length - 1;
+        let endPoint = dayRoutes[1].gpxPoints.length - 1;
+        
         const meetX = cumulativeDistance[meetIdx] / totalDistance * canvas.width;
         const meetY = canvas.height - ((pointsWithEle[meetIdx].ele - minEle)/(maxEle - minEle))*(canvas.height-20);
 
@@ -2534,6 +2602,7 @@
         const animationDuration = 1200;
         let startTime = null;
         const peaks = [];
+        const shownPeaks = new Set(); // Track hvilke peaks som allerede er vist
 
         function animateProfile(timestamp) {
             if (!startTime) startTime = timestamp;
@@ -2555,36 +2624,55 @@
                 else ctx.lineTo(x, y);
 
                 // --- push stjerner EN gang når vi når toppen ---
-                if (peakIndexes.includes(i) && !peaks.some(p => p.index === i)) {
+                if (peakIndexes.includes(i) && !shownPeaks.has(i)) {
                     peaks.push({ x, y, life: 0, index: i });
+                    shownPeaks.add(i); // Marker som vist
                 }
             }
             ctx.stroke();
 
-            // --- Tegn stjerner (bare under animasjon) ---
-            if (progress < 1 || peaks.length > 0) {
-                drawStars();
-            }
-
-            // --- Tegn midtpunkt øl ---
-            if (progress >= 1 && meetX && meetY) {
+            // --- Tegn stjerner ---
+            drawStars();
+            
+            // --- Tegn øl når animasjonen når midtpunktet (dag 1-3) ---
+            if (dayId !== 4 && maxIndex >= meetIdx) {
                 ctx.save();
                 ctx.imageSmoothingEnabled = false;
-                // Bruk en mye større font for skarpere emoji
-                ctx.font = '32px Arial'; // Fast størrelse, Arial rendrer emojis bedre
+                ctx.font = '32px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('🍺', meetX, meetY - 16); // -16 for å plassere over punktet
+                ctx.fillText('🍺', meetX, meetY - 16);
                 ctx.restore();
             }
+            
+            // --- Tegn champagne når animasjonen er ferdig (dag 4) ---
+            if (dayId === 4 && progress >= 1) {
+                const lastIdx = pointsWithEle.length - 1;
+                const endX = (cumulativeDistance[lastIdx] / totalDistance) * canvas.width;
+                const endY = canvas.height - ((elevations[lastIdx] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                
+                // Trigger confetti kun én gang
+                if (!window.champagneShown) {
+                    window.champagneShown = true;
+                    const rect = canvas.getBoundingClientRect();
+                    triggerConfettiAt(rect.left + endX - 15, rect.top + endY - 30); // Lenger til venstre (-15) og opp (-30)
+                }
+                
+                ctx.save();
+                ctx.imageSmoothingEnabled = false;
+                ctx.font = '32px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🥂', endX - 15, endY - 30); // Lenger til venstre (-15) og opp (-30)
+                ctx.restore();
+            }
+            
             // --- Fortsett animasjon ---
             if (progress < 1) {
                 requestAnimationFrame(animateProfile);
             } else if (peaks.length > 0) {
-                // Fortsett bare for å animere ut eksisterende stjerner
                 requestAnimationFrame(animateProfile);
             }
-            // Når progress === 1 OG peaks.length === 0, stopper animasjonen
         }
 
         function drawStars() {
@@ -2650,6 +2738,31 @@
         ctx.fillStyle = '#ffd700';
         ctx.fill();
     };
+    function triggerConfettiAt(x, y) {
+        const container = document.getElementById('confetti-container');
+        if (!container) return;
+
+        for (let i = 0; i < 40; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = 80 + Math.random() * 80;
+
+            confetti.style.left = `${x}px`;
+            confetti.style.top = `${y}px`;
+
+            confetti.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+            confetti.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 60%)`;
+
+            container.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 3000); // 3000ms
+        }
+    }
+
     // Konfetti-funksjon
     function triggerConfetti() {
         const container = document.getElementById('confetti-container');
