@@ -60,6 +60,8 @@
         .day-title { font-weight: 700; font-size: 1.2rem; color: #00f5ff; text-shadow: 0 0 10px rgba(0,245,255,0.8); }
         .day-stats { font-size: 0.95rem; color: #ffaa00; text-shadow: 0 0 5px rgba(255,170,0,0.6); }
         .day-select-btn { background: linear-gradient(135deg, #ffaa00, #ff8800); border: 2px solid #ffaa00; color: #0a0a0a; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,170,0,0.4); }
+        .day-buttons { display: flex; gap: 5px; }
+        .profile-btn { background: linear-gradient(135deg, #00f5ff, #0080ff); border: 2px solid #00f5ff; color: #0a0a0a; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(0,245,255,0.4); }
         .day-routes { display: flex; gap: 8px; overflow-x: auto; flex: 1; margin-top: 8px; }
         /* Route timeline (Legs) */
 .route-timeline {
@@ -107,9 +109,9 @@
 }
 
         .route-chip { padding: 10px 14px; background: linear-gradient(135deg, rgba(48,43,99,0.8), rgba(36,36,62,0.8)); border-radius: 20px; font-size: 0.8rem; white-space: nowrap; border-left: 3px solid; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        .day-dots { display: flex; justify-content: center; gap: 10px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 10; }
-        .dot { width: 10px; height: 10px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 2px solid #00f5ff; cursor: pointer; transition: all 0.3s; }
-        .dot.active { background: #00f5ff; box-shadow: 0 0 10px rgba(0,245,255,0.8); transform: scale(1.2); }
+        .day-dots { display: flex; justify-content: center; gap: 8px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .dot { width: 24px; height: 24px; background: rgba(189,195,199,0.3); border-radius: 50%; border: 2px solid #00f5ff; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-weight: 700; }
+        .dot.active { background: #00f5ff; box-shadow: 0 0 10px rgba(0,245,255,0.8); transform: scale(1.2); color: #0a0a0a; }
         
         /* FAB */
         .fab-group { position: fixed; bottom: 280px; right: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 2001; }
@@ -191,6 +193,23 @@
             }
         }
 
+        /* Elevation Profile Modal */
+        .elevation-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3001; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .elevation-modal.active { display: flex; }
+        .elevation-content { background: linear-gradient(180deg, #1a1a2e, #16213e); border: 2px solid #00f5ff; border-radius: 12px; width: 100%; max-width: 500px; padding: 15px; box-shadow: 0 0 40px rgba(0,245,255,0.5); }
+        .elevation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .elevation-title { color: #00f5ff; font-size: 1.1rem; font-weight: 700; }
+        .elevation-close { background: #ff0080; border: none; color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+        .elevation-canvas { width: 100%; height: 200px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 10px; }
+
+        /* Summary slide */
+        .summary-card { padding: 20px; display: flex; flex-direction: column; justify-content: center; gap: 15px; }
+        .summary-title { font-size: 1.5rem; font-weight: 700; color: #00f5ff; text-align: center; text-shadow: 0 0 15px rgba(0,245,255,0.8); }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .summary-stat { background: rgba(48,43,99,0.5); border: 2px solid #00f5ff; border-radius: 10px; padding: 12px; text-align: center; }
+        .summary-stat-value { font-size: 1.8rem; font-weight: 900; color: #ffaa00; text-shadow: 0 0 10px rgba(255,170,0,0.6); }
+        .summary-stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 5px; }
+
     </style>
 </head>
 <body>
@@ -231,52 +250,107 @@
             </div>
         </div>
     </div>
+
+    <!-- Elevation Profile Modal -->
+    <div class="elevation-modal" id="elevationModal">
+        <div class="elevation-content">
+            <div class="elevation-header">
+                <span class="elevation-title" id="elevationTitle">Høydeprofil</span>
+                <button class="elevation-close" onclick="closeElevationProfile()">✕</button>
+            </div>
+            <canvas id="elevationCanvas" class="elevation-canvas"></canvas>
+        </div>
+    </div>
     
     <!-- Day Swiper -->
     <div class="day-swiper">
         <div class="day-cards" id="dayCards">
+            <!-- Summary Slide -->
+            <div class="day-card summary-card" style="border-top: 4px solid #ff00ff;">
+                <div class="summary-title">📊 Sammendrag</div>
+                <div class="summary-grid" id="summaryGrid">
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="totalDays">0</div>
+                        <div class="summary-stat-label">Dager valgt</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="totalRoutes">0</div>
+                        <div class="summary-stat-label">Ruter</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="totalKm">0</div>
+                        <div class="summary-stat-label">Totalt km</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="totalHm">0</div>
+                        <div class="summary-stat-label">Totalt hm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dag 1 -->
             <div class="day-card" style="border-top: 4px solid #e74c3c;">
                 <div class="day-header">
                     <span class="day-title">Dag 1 - Port de Soller</span>
-                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                    <div class="day-buttons">
+                        <button class="profile-btn" onclick="showElevationProfile(0)">📈</button>
+                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
+                    </div>
                 </div>
                 <div class="day-stats" id="day1stats"></div>
                 <div class="day-routes" id="day1routes"></div>
             </div>
+            <!-- Dag 2 -->
             <div class="day-card" style="border-top: 4px solid #3498db;">
                 <div class="day-header">
                     <span class="day-title">Dag 2 - Cap de Formentor</span>
-                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                    <div class="day-buttons">
+                        <button class="profile-btn" onclick="showElevationProfile(1)">📈</button>
+                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
+                    </div>
                 </div>
                 <div class="day-stats" id="day2stats"></div>
                 <div class="day-routes" id="day2routes"></div>
             </div>
+
+            <!-- Dag 3 -->
             <div class="day-card" style="border-top: 4px solid #2ecc71;">
                 <div class="day-header">
                     <span class="day-title">Dag 3 - Sa Calobra</span>
-                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                    <div class="day-buttons">
+                        <button class="profile-btn" onclick="showElevationProfile(2)">📈</button>
+                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
+                    </div>
                 </div>
                 <div class="day-stats" id="day3stats"></div>
                 <div class="day-routes" id="day3routes"></div>
             </div>
+
+            <!-- Dag 4 -->
             <div class="day-card" style="border-top: 4px solid #f39c12;">
                 <div class="day-header">
                     <span class="day-title">Dag 4 - Puig Major</span>
-                    <button class="day-select-btn" onclick="openRouteSelector()">Velg ruter</button>
+                    <div class="day-buttons">
+                        <button class="profile-btn" onclick="showElevationProfile(3)">📈</button>
+                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
+                    </div>
                 </div>
                 <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
             </div>
         </div>
         <div class="day-dots" id="dayDots">
-            <div class="dot active" onclick="goToDay(0)"></div>
-            <div class="dot" onclick="goToDay(1)"></div>
-            <div class="dot" onclick="goToDay(2)"></div>
-            <div class="dot" onclick="goToDay(3)"></div>
+            <div class="dot active" onclick="goToDay(0)">📊</div>
+            <div class="dot" onclick="goToDay(1)">1</div>
+            <div class="dot" onclick="goToDay(2)">2</div>
+            <div class="dot" onclick="goToDay(3)">3</div>
+            <div class="dot" onclick="goToDay(4)">4</div>
         </div>
     </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+    <script src="js/climb-classifier.js"></script>
     <script>
         let highlightedRouteId = null;
 
@@ -527,7 +601,7 @@
                 return;
             }
             
-            if (diff > 0 && currentDay < 3) {
+            if (diff > 0 && currentDay < 4) {
                 currentDay++;
                 console.log('➡️ Next day:', currentDay);
             } else if (diff < 0 && currentDay > 0) {
@@ -560,31 +634,47 @@
         }
         
         function updateMapVisibility() {
-            const day = days[currentDay];
+            // Summary slide (currentDay === 0) has no routes
+            if (currentDay === 0) {
+                routes.forEach(route => {
+                    route.polyline.setStyle({ opacity: 0 });
+                    if (route.decorator) route.decorator.setStyle({ opacity: 0 });
+                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                });
+                return;
+            }
+
+            const dayIndex = currentDay - 1; // Dag 1 = index 0
+            const day = days[dayIndex];
             const selectedRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
-            
+
             const isHighlighted = highlightedRouteId !== null;
 
             routes.forEach(route => {
-            const isSelected = selectedRoutes.some(r => r.id === route.id);
-            const isActive =
-                isHighlighted ? route.id === highlightedRouteId : isSelected;
+                const isSelected = selectedRoutes.some(r => r.id === route.id);
+                const isActive = isHighlighted ? route.id === highlightedRouteId : isSelected;
 
-            route.polyline.setStyle({
-                opacity: isActive ? 0.9 : 0,
-                weight: isActive ? 5 : 3
+                route.polyline.setStyle({
+                    opacity: isActive ? 0.9 : 0,
+                    weight: isActive ? 5 : 3
+                });
+
+                if (route.decorator) {
+                    route.decorator.setStyle({
+                        opacity: isActive ? 1.0 : 0
+                    });
+                }
+
+                if (isActive) {
+                    route.startMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+                    route.endMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
+                } else {
+                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                }
             });
 
-            if (isActive) {
-                route.startMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
-                route.endMarker.setStyle({ fillOpacity: 0.9, opacity: 1 });
-            } else {
-                route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-                route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-            }
-            });
-
-            
             if (selectedRoutes.length > 0) {
                 const bounds = L.featureGroup(selectedRoutes.map(r => r.polyline)).getBounds();
                 map.fitBounds(bounds, { padding: [20, 20] });
@@ -592,11 +682,13 @@
         }
         
         function openRouteSelector() {
+            if (currentDay === 0) return; // No selection on summary slide
+
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNum = currentDay + 1;
+            const dayNum = currentDay; // currentDay 1-4 = dag 1-4
             document.getElementById('modalDayTitle').textContent = `Dag ${dayNum}`;
-            
+
             // Filter routes for current day only
             const dayRoutes = routes.filter(r => {
                 const match = r.fileName.match(/GGTM26_D(\d+)_/);
@@ -625,10 +717,11 @@
 
 
             dayRoutes.forEach(route => {
-                const isSelected = days[currentDay].routes.includes(route.id);
+                const dayIndex = currentDay - 1; // currentDay 1-4 = days[0-3]
+                const isSelected = days[dayIndex].routes.includes(route.id);
                 const div = document.createElement('div');
                 div.className = `route-option ${isSelected ? 'selected' : ''}`;
-                
+
                 // Parse: GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx
                 const parts = route.fileName.replace('.gpx', '').split('_');
                 
@@ -725,8 +818,9 @@
         function saveRouteSelection() {
             const selected = Array.from(document.querySelectorAll('.route-option input:checked'))
                 .map(cb => parseInt(cb.id.split('-')[1]));
-            
-            days[currentDay].routes = selected;
+
+            const dayIndex = currentDay - 1;
+            days[dayIndex].routes = selected;
             updateUI();
             updateMapVisibility();
             closeRouteSelector();
@@ -735,14 +829,36 @@
         function addRoute(fileName, points, color) {
             const latLngs = points.map(p => [p.lat, p.lon]);
             const polyline = L.polyline(latLngs, { color, weight: 3, opacity: 0.7 }).addTo(map);
+
+            // Legg til piler for å vise retning
+            const decorator = L.polylineDecorator(polyline, {
+                patterns: [{
+                    offset: '10%',
+                    repeat: '15%',
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 15,
+                        polygon: true,
+                        pathOptions: {
+                            stroke: true,
+                            weight: 3,
+                            color: color,
+                            fillColor: color,
+                            fillOpacity: 1.0,
+                            opacity: 1.0
+                        }
+                    })
+                }]
+            }).addTo(map);
+
             const startMarker = L.circleMarker(latLngs[0], { radius: 6, fillColor: '#2ecc71', color: '#27ae60', weight: 2, fillOpacity: 0.8 }).addTo(map);
             const endMarker = L.circleMarker(latLngs[latLngs.length-1], { radius: 6, fillColor: '#e74c3c', color: '#c0392b', weight: 2, fillOpacity: 0.8 }).addTo(map);
-            
+
             routes.push({
                 id: routes.length,
                 fileName,
                 gpxPoints: points,
                 polyline,
+                decorator,
                 startMarker,
                 endMarker,
                 color,
@@ -750,7 +866,7 @@
                 stats: calculateStats(points),
                 visible: true
             });
-            
+
             if (routes.length === 1) map.fitBounds(polyline.getBounds());
             updateUI();
         }
@@ -768,14 +884,32 @@
 }
 
         function updateUI() {
+            let totalKm = 0, totalHm = 0, totalDaysWithRoutes = 0, totalRoutesCount = 0;
+
             days.forEach((day, idx) => {
                 const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
                 let km = 0, hm = 0;
                 dayRoutes.forEach(r => { if(r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain; } });
-                
-                document.getElementById(`day${idx+1}stats`).textContent = dayRoutes.length ? `${km.toFixed(1)} km | ⬆️ ${hm} m` : '';
-                
-                
+
+                if (dayRoutes.length > 0) {
+                    totalDaysWithRoutes++;
+                    totalRoutesCount += dayRoutes.length;
+                    totalKm += km;
+                    totalHm += hm;
+                }
+
+                let statsText = dayRoutes.length ? `${km.toFixed(1)} km | ⬆️ ${hm} m` : '';
+
+                // Add overlap percentage if 2 routes
+                if (dayRoutes.length === 2) {
+                    const overlap = calculateDayOverlap(dayRoutes);
+                    if (overlap > 0) {
+                        statsText += ` | 🔗 ${overlap}% samme vei`;
+                    }
+                }
+
+                document.getElementById(`day${idx+1}stats`).textContent = statsText;
+
                 const routesContainer = document.getElementById(`day${idx+1}routes`);
 
 if (!dayRoutes.length) {
@@ -829,9 +963,38 @@ routesContainer.innerHTML = `
 
 
                 
-                // Update route colors
-                dayRoutes.forEach(r => r.polyline.setStyle({ color: day.color }));
+                // Update route colors and decorator colors
+                dayRoutes.forEach(r => {
+                    r.polyline.setStyle({ color: day.color });
+                    if (r.decorator) {
+                        r.decorator.remove();
+                        r.decorator = L.polylineDecorator(r.polyline, {
+                            patterns: [{
+                                offset: '10%',
+                                repeat: '15%',
+                                symbol: L.Symbol.arrowHead({
+                                    pixelSize: 15,
+                                    polygon: true,
+                                    pathOptions: {
+                                        stroke: true,
+                                        weight: 3,
+                                        color: day.color,
+                                        fillColor: day.color,
+                                        fillOpacity: 1.0,
+                                        opacity: 1.0
+                                    }
+                                })
+                            }]
+                        }).addTo(map);
+                    }
+                });
             });
+
+            // Update summary slide
+            document.getElementById('totalDays').textContent = totalDaysWithRoutes;
+            document.getElementById('totalRoutes').textContent = totalRoutesCount;
+            document.getElementById('totalKm').textContent = totalKm.toFixed(0);
+            document.getElementById('totalHm').textContent = Math.round(totalHm);
         }
         
         async function loadBundledRoutes() {
@@ -891,10 +1054,454 @@ routesContainer.innerHTML = `
         };
         
         function clearAll() {
-            routes.forEach(r => { r.polyline.remove(); r.startMarker.remove(); r.endMarker.remove(); });
+            routes.forEach(r => {
+                r.polyline.remove();
+                if (r.decorator) r.decorator.remove();
+                r.startMarker.remove();
+                r.endMarker.remove();
+            });
             routes.length = 0;
             days.forEach(d => d.routes = []);
             updateUI();
+        }
+
+        // Calculate overlap percentage for a day with 2 routes
+        function calculateDayOverlap(dayRoutes) {
+            if (dayRoutes.length !== 2) return 0;
+
+            const coords1 = dayRoutes[0].polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
+            const coords2 = dayRoutes[1].polyline.getLatLngs().map(ll => ({ lat: ll.lat, lng: ll.lng }));
+
+            const tolerance = 0.0005;
+            let overlapPoints = 0;
+            const totalComparisons = coords1.length;
+
+            for (let i = 0; i < coords1.length - 1; i++) {
+                const seg1Start = coords1[i];
+                const seg1End = coords1[i + 1];
+
+                for (let j = 0; j < coords2.length - 1; j++) {
+                    const seg2Start = coords2[j];
+                    const seg2End = coords2[j + 1];
+
+                    const dist = Math.sqrt(Math.pow(seg1Start.lat - seg2Start.lat, 2) + Math.pow(seg1Start.lng - seg2Start.lng, 2));
+                    if (dist < tolerance) {
+                        const dir1 = { lat: seg1End.lat - seg1Start.lat, lng: seg1End.lng - seg1Start.lng };
+                        const dir2 = { lat: seg2End.lat - seg2Start.lat, lng: seg2End.lng - seg2Start.lng };
+                        const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
+                        if (dotProduct > 0) {
+                            overlapPoints++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return totalComparisons > 0 ? (overlapPoints / totalComparisons * 100).toFixed(1) : 0;
+        }
+
+        // Show elevation profile for a day (FULL DESKTOP VERSION)
+        function showElevationProfile(dayIndex) {
+            const day = days[dayIndex];
+            if (!day || day.routes.length === 0) {
+                alert('Ingen ruter valgt for denne dagen!');
+                return;
+            }
+
+            const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+            const pointsWithEle = [];
+            dayRoutes.forEach(route => {
+                if (route.gpxPoints) pointsWithEle.push(...route.gpxPoints);
+            });
+
+            if (pointsWithEle.length === 0 || !pointsWithEle.some(p => p.ele !== null)) {
+                alert('Ingen høydedata tilgjengelig!');
+                return;
+            }
+
+            window.champagneShown = false;
+            const dayId = dayIndex + 1;
+            document.getElementById('elevationModal').classList.add('active');
+
+            const canvas = document.getElementById('elevationCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const elevations = pointsWithEle.map(p => p.ele || 0);
+            const minEle = Math.min(...elevations);
+            const maxEle = Math.max(...elevations);
+
+            // Calculate cumulative distances
+            const cumulativeDistance = [0];
+            for (let i = 1; i < pointsWithEle.length; i++) {
+                const p1 = pointsWithEle[i - 1];
+                const p2 = pointsWithEle[i];
+                const R = 6371;
+                const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+                const dLon = (p2.lon - p1.lon) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
+                          Math.sin(dLon/2) * Math.sin(dLon/2);
+                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                cumulativeDistance.push(cumulativeDistance[i-1] + dist);
+            }
+            const totalDistance = cumulativeDistance[cumulativeDistance.length - 1];
+
+            function drawBackground() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(0,245,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.fillStyle = '#00f5ff';
+                ctx.font = '9px Courier New';
+                ctx.textAlign = 'left';
+
+                for (let i = 0; i <= 5; i++) {
+                    const elevationAtLine = maxEle - ((maxEle - minEle) / 5) * i;
+                    const y = canvas.height - ((elevationAtLine - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                    ctx.fillText(`${elevationAtLine.toFixed(0)}m`, 5, y + 10);
+                }
+            }
+
+            const peakIndexes = findPeaks(elevations, cumulativeDistance, dayId);
+            let totalClimbingPoints = 0;
+            peakIndexes.forEach(peak => totalClimbingPoints += peak.score);
+
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+            document.getElementById('elevationTitle').textContent =
+                `Dag ${dayId} (${dayNames[dayId - 1]}) - ${totalClimbingPoints}p`;
+
+            let meetIdx = dayRoutes.length > 1 ? dayRoutes[0].gpxPoints.length - 1 : Math.floor(pointsWithEle.length / 2);
+            const meetX = cumulativeDistance[meetIdx] / totalDistance * canvas.width;
+            const meetY = canvas.height - ((pointsWithEle[meetIdx].ele - minEle)/(maxEle - minEle))*(canvas.height-20);
+
+            let progress = 0;
+            const animationDuration = 1200;
+            let startTime = null;
+            const peaks = [];
+            const shownPeaks = new Set();
+
+            function animateProfile(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                progress = Math.min(elapsed / animationDuration, 1);
+
+                drawBackground();
+
+                peakIndexes.forEach(peak => {
+                    if (peak.category) {
+                        let color;
+                        switch(peak.category) {
+                            case 'HC': color = 'rgba(255, 100, 100, 1)'; break;
+                            case '1': color = 'rgba(255, 0, 255, 1)'; break;
+                            case '2': color = 'rgba(160, 100, 255, 1)'; break;
+                            case '3': color = 'rgba(0, 180, 255, 1)'; break;
+                            case '4': color = 'rgba(0, 245, 255, 1)'; break;
+                        }
+
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        const startX = cumulativeDistance[peak.startIndex] / totalDistance * canvas.width;
+                        ctx.moveTo(startX, canvas.height);
+
+                        for (let i = peak.startIndex; i <= peak.index; i++) {
+                            const x = cumulativeDistance[i] / totalDistance * canvas.width;
+                            const y = canvas.height - ((elevations[i] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                            ctx.lineTo(x, y);
+                        }
+
+                        const endX = cumulativeDistance[peak.index] / totalDistance * canvas.width;
+                        ctx.lineTo(endX, canvas.height);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                });
+
+                const maxIndex = Math.floor(progress * (pointsWithEle.length - 1));
+                ctx.beginPath();
+                ctx.strokeStyle = '#00f5ff';
+                ctx.lineWidth = 2;
+                for (let i = 0; i <= maxIndex; i++) {
+                    const x = cumulativeDistance[i] / totalDistance * canvas.width;
+                    const y = canvas.height - ((elevations[i] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+
+                    for (let peak of peakIndexes) {
+                        if (i === peak.index && !shownPeaks.has(peak.index)) {
+                            peaks.push({ x, y, life: 0, index: peak.index, category: peak.category, midIndex: peak.midIndex });
+                            shownPeaks.add(peak.index);
+                        }
+                    }
+                }
+                ctx.stroke();
+
+                for (let i = peaks.length - 1; i >= 0; i--) {
+                    const star = peaks[i];
+                    star.life += 0.02;
+                    const rise = star.life * 40;
+                    const opacity = 1 - star.life;
+                    if (opacity <= 0) {
+                        peaks.splice(i, 1);
+                        continue;
+                    }
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    drawStar(ctx, star.x, star.y - rise, 5, 8, 4);
+                    ctx.restore();
+                }
+
+                if (progress >= 1) {
+                    peakIndexes.forEach(peak => {
+                        if (peak.category) {
+                            const midX = cumulativeDistance[peak.midIndex] / totalDistance * canvas.width;
+                            const midY = canvas.height - ((elevations[peak.midIndex] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+
+                            ctx.beginPath();
+                            ctx.arc(midX, midY, 14, 0, 2 * Math.PI);
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.fill();
+                            ctx.strokeStyle = '#fff';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+
+                            ctx.fillStyle = '#fff';
+                            ctx.font = 'bold 11px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(peak.category, midX, midY);
+                        }
+                    });
+                }
+
+                if (dayId !== 4 && maxIndex >= meetIdx) {
+                    ctx.save();
+                    ctx.font = '28px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🍺', meetX, meetY - 14);
+                    ctx.restore();
+                }
+
+                if (dayId === 4 && progress >= 1) {
+                    const lastIdx = pointsWithEle.length - 1;
+                    const endX = (cumulativeDistance[lastIdx] / totalDistance) * canvas.width;
+                    const endY = canvas.height - ((elevations[lastIdx] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+
+                    if (!window.champagneShown) {
+                        window.champagneShown = true;
+                        const rect = canvas.getBoundingClientRect();
+                        triggerConfettiAt(rect.left + endX - 15, rect.top + endY - 30);
+                    }
+
+                    ctx.save();
+                    ctx.font = '28px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🥂', endX - 15, endY - 30);
+                    ctx.restore();
+                }
+
+                if (progress < 1 || peaks.length > 0) {
+                    requestAnimationFrame(animateProfile);
+                }
+            }
+
+            requestAnimationFrame(animateProfile);
+
+            setTimeout(() => {
+                ctx.fillStyle = '#00f5ff';
+                ctx.font = '10px Courier New';
+                ctx.fillText(`${totalDistance.toFixed(1)}km`, canvas.width - 50, canvas.height - 5);
+            }, animationDuration + 100);
+        }
+
+        // Find peaks with climb classification
+        function findPeaks(elev, dist, dayId) {
+            const W = 6;
+            const MAX_PEAKS = 9;
+            const MIN_PROMINENCE = 100;
+            const MIN_DISTANCE_KM = 2.5;
+            const MIN_ELEVATION = 300;
+
+            let candidates = [];
+            for (let i = W; i < elev.length - W; i++) {
+                const current = elev[i];
+                if (current < MIN_ELEVATION) continue;
+
+                const before = Math.max(...elev.slice(i - W, i));
+                const after = Math.max(...elev.slice(i + 1, i + W + 1));
+
+                if (current >= before && current >= after) {
+                    candidates.push({ index: i, elevation: current, distance: dist[i] });
+                }
+            }
+
+            candidates.sort((a, b) => b.elevation - a.elevation);
+
+            const selected = [];
+            for (let peak of candidates) {
+                if (selected.length === 0) {
+                    selected.push(peak);
+                    continue;
+                }
+
+                let tooClose = false;
+                for (let prev of selected) {
+                    const distDiff = Math.abs(peak.distance - prev.distance);
+
+                    if (distDiff < MIN_DISTANCE_KM) {
+                        tooClose = true;
+                        break;
+                    }
+
+                    const startIdx = Math.min(prev.index, peak.index);
+                    const endIdx = Math.max(prev.index, peak.index);
+                    const minBetween = Math.min(...elev.slice(startIdx, endIdx + 1));
+                    const lowerPeak = Math.min(prev.elevation, peak.elevation);
+                    const prominence = lowerPeak - minBetween;
+
+                    if (prominence < MIN_PROMINENCE) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+
+                if (!tooClose) {
+                    selected.push(peak);
+                }
+
+                if (selected.length >= MAX_PEAKS) break;
+            }
+
+            const peaksWithCategory = selected.map(peak => {
+                let searchStart = 0;
+                for (let i = 0; i < selected.length; i++) {
+                    if (selected[i].index < peak.index && selected[i].index > searchStart) {
+                        searchStart = selected[i].index;
+                    }
+                }
+
+                let valleyIndex = searchStart;
+                let lowestEle = elev[searchStart];
+                for (let i = searchStart; i < peak.index; i++) {
+                    if (elev[i] < lowestEle) {
+                        lowestEle = elev[i];
+                        valleyIndex = i;
+                    }
+                }
+
+                let climbStart = valleyIndex;
+                let climbDistanceKm = dist[peak.index] - dist[climbStart];
+                let climbGain = elev[peak.index] - elev[climbStart];
+                let avgGradient = climbDistanceKm > 0 ? (climbGain / (climbDistanceKm * 1000)) * 100 : 0;
+
+                if (avgGradient < CLIMB_CONFIG.minGradient && climbDistanceKm > CLIMB_CONFIG.minLength) {
+                    let bestStart = climbStart;
+                    let bestGradient = avgGradient;
+
+                    for (let i = climbStart + 1; i < peak.index; i++) {
+                        const testDistKm = dist[peak.index] - dist[i];
+                        const testGain = elev[peak.index] - elev[i];
+                        const testGradient = testDistKm > 0 ? (testGain / (testDistKm * 1000)) * 100 : 0;
+
+                        if (testDistKm >= CLIMB_CONFIG.minLength &&
+                            testGain >= CLIMB_CONFIG.minElevation &&
+                            testGradient >= CLIMB_CONFIG.minGradient) {
+                            bestStart = i;
+                            bestGradient = testGradient;
+                            break;
+                        }
+                    }
+
+                    if (bestStart !== climbStart) {
+                        climbStart = bestStart;
+                        climbDistanceKm = dist[peak.index] - dist[climbStart];
+                        climbGain = elev[peak.index] - elev[climbStart];
+                        avgGradient = bestGradient;
+                    }
+                }
+
+                const classification = classifyClimb(climbGain, climbDistanceKm);
+                const category = classification ? classification.category : null;
+                const score = classification ? classification.points : 0;
+                const midIndex = Math.floor((climbStart + peak.index) / 2);
+
+                return {
+                    index: peak.index,
+                    startIndex: climbStart,
+                    midIndex: midIndex,
+                    category: category,
+                    score: score
+                };
+            });
+
+            return peaksWithCategory;
+        }
+
+        // Draw star function
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+
+            ctx.fillStyle = '#ffd700';
+            ctx.fill();
+        }
+
+        // Trigger confetti at position
+        function triggerConfettiAt(x, y) {
+            const container = document.getElementById('confetti-container');
+            if (!container) return;
+
+            for (let i = 0; i < 40; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = 80 + Math.random() * 80;
+
+                confetti.style.left = `${x}px`;
+                confetti.style.top = `${y}px`;
+
+                confetti.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                confetti.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 60%)`;
+
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function closeElevationProfile() {
+            document.getElementById('elevationModal').classList.remove('active');
         }
         
         function downloadCurrentDay() {
