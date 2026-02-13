@@ -972,6 +972,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/climb-classifier.js"></script>
     <script>
         let currentSelectingDay = 1;
 
@@ -2482,23 +2483,39 @@
             const distance = cumulativeDistance[closestIdx];
             const elevation = pointsWithEle[closestIdx].ele;
             const gain = accumulatedGain[closestIdx];
-            
+
+            // Beregn gradient (stigningsprosent) over et vindu
+            const GRADIENT_WINDOW = 5; // antall punkter før og etter
+            let gradient = 0;
+            if (closestIdx >= GRADIENT_WINDOW && closestIdx < elevations.length - GRADIENT_WINDOW) {
+                const startIdx = closestIdx - GRADIENT_WINDOW;
+                const endIdx = closestIdx + GRADIENT_WINDOW;
+                const distanceWindow = (cumulativeDistance[endIdx] - cumulativeDistance[startIdx]) * 1000; // meter
+                const eleChange = elevations[endIdx] - elevations[startIdx]; // meter
+                if (distanceWindow > 0) {
+                    gradient = (eleChange / distanceWindow) * 100; // prosent
+                }
+            }
+
             // Beregn Y-posisjon på løypa
             const profileY = canvas.height - ((elevation - minEle) / (maxEle - minEle)) * (canvas.height - 20);
             const screenX = rect.left + (cumulativeDistance[closestIdx] / totalDistance) * canvas.width;
             const screenY = rect.top + profileY;
-            
+
             // Vis og flytt sykkel-markør (følger løypa i høyde, mus i lengde)
             const cyclist = document.getElementById('elevationCyclist');
             cyclist.style.display = 'flex';
             cyclist.style.left = (screenX - 20) + 'px'; // Sentrert på sykkel (20px = halv bredde)
             cyclist.style.top = (screenY - 20) + 'px'; // Sentrert på sykkel (20px = halv høyde)
-            
+
             // Oppdater tooltip HTML først for å få riktig bredde
+            const gradientIcon = gradient > 0 ? '📈' : (gradient < 0 ? '📉' : '➡️');
+            const gradientSign = gradient > 0 ? '+' : '';
             tooltip.innerHTML = `
                 📍 ${distance.toFixed(1)} km<br>
                 🏔️ ${elevation.toFixed(0)} moh<br>
-                ⬆️ ${gain.toFixed(0)} m akkumulert
+                ⬆️ ${gain.toFixed(0)} m akkumulert<br>
+                ${gradientIcon} ${gradientSign}${gradient.toFixed(1)}%
             `;
             
             // Vis tooltip SENTRERT over syklisten
@@ -2553,7 +2570,7 @@
         // ---- Finn toppene (lokale maxima med kategorisering) ----
         function findPeaks(elev, dist, dayId) {
             const W = 6;
-            const MAX_PEAKS = dayId === 4 ? 9 : 6;
+            const MAX_PEAKS = dayId === 4 ? 9 : 9;
             const MIN_PROMINENCE = 100;
             const MIN_DISTANCE_KM = 2.5;
             const MIN_ELEVATION = 300;
@@ -2614,44 +2631,131 @@
                 if (selected.length >= MAX_PEAKS) break;
             }
             
-            // Beregn kategori for hver topp (finn stigningen som førte til toppen)
+            // ENKLERE TILNÆRMING: Finn høyeste og laveste punkter, beregn statistikk
             const peaksWithCategory = selected.map(peak => {
-                // Finn start av stigningen (gå bakover til vi finner bunnen)
-                let climbStart = peak.index;
-                for (let i = peak.index - 1; i >= 0; i--) {
-                    if (elev[i] < elev[i + 1]) {
-                        climbStart = i;
-                    } else {
-                        break; // Slutt å lete når vi finner en nedstigning
+                // Finn laveste punkt (dal) før denne toppen
+                // Se bakover til forrige topp eller starten
+                let searchStart = 0;
+                for (let i = 0; i < selected.length; i++) {
+                    if (selected[i].index < peak.index && selected[i].index > searchStart) {
+                        searchStart = selected[i].index;
                     }
                 }
-                
-                const climbDistance = (dist[peak.index] - dist[climbStart]) * 1000; // km til meter
-                const climbGain = elev[peak.index] - elev[climbStart];
-                
-                // Beregn kategori med poeng-metoden
-                const score = (climbGain * climbGain) / (climbDistance / 100);
-                
-                let category;
-                if (score > 80) category = 'HC';
-                else if (score > 60) category = '1';
-                else if (score > 40) category = '2';
-                else if (score > 20) category = '3';
-                else category = '4';
-                
+
+                // Finn laveste punkt mellom searchStart og peak
+                let valleyIndex = searchStart;
+                let lowestEle = elev[searchStart];
+                for (let i = searchStart; i < peak.index; i++) {
+                    if (elev[i] < lowestEle) {
+                        lowestEle = elev[i];
+                        valleyIndex = i;
+                    }
+                }
+
+                // Beregn statistikk fra dal til topp
+                let climbStart = valleyIndex;
+                let climbDistanceKm = dist[peak.index] - dist[climbStart]; // km
+                let climbGain = elev[peak.index] - elev[climbStart]; // meter
+                let avgGradient = climbDistanceKm > 0 ? (climbGain / (climbDistanceKm * 1000)) * 100 : 0;
+
+                // OPTIMALISERING: Hvis gradienten er for lav, prøv å korte inn fra starten
+                // til vi finner en kortere seksjon som oppfyller kravene
+                if (avgGradient < CLIMB_CONFIG.minGradient && climbDistanceKm > CLIMB_CONFIG.minLength) {
+                    // Prøv å flytte startpunktet nærmere toppen
+                    let bestStart = climbStart;
+                    let bestGradient = avgGradient;
+
+                    for (let i = climbStart + 1; i < peak.index; i++) {
+                        const testDistKm = dist[peak.index] - dist[i];
+                        const testGain = elev[peak.index] - elev[i];
+                        const testGradient = testDistKm > 0 ? (testGain / (testDistKm * 1000)) * 100 : 0;
+
+                        // Sjekk om denne seksjonen oppfyller minimumskrav
+                        if (testDistKm >= CLIMB_CONFIG.minLength &&
+                            testGain >= CLIMB_CONFIG.minElevation &&
+                            testGradient >= CLIMB_CONFIG.minGradient) {
+                            // Denne seksjonen er bedre!
+                            bestStart = i;
+                            bestGradient = testGradient;
+                            break; // Bruk første gyldige seksjon (lengste som kvalifiserer)
+                        }
+                    }
+
+                    // Oppdater hvis vi fant en bedre start
+                    if (bestStart !== climbStart) {
+                        climbStart = bestStart;
+                        climbDistanceKm = dist[peak.index] - dist[climbStart];
+                        climbGain = elev[peak.index] - elev[climbStart];
+                        avgGradient = bestGradient;
+                    }
+                }
+
+                // Bruk shared classification fra climb-classifier.js
+                const classification = classifyClimb(climbGain, climbDistanceKm);
+
+                // Hvis klatringen ikke oppfyller minimumskrav, vis kun stjerne uten kategori
+                const category = classification ? classification.category : null;
+                const score = classification ? classification.points : 0;
+
                 // Finn midtpunkt av stigningen for plassering av merke
                 const midIndex = Math.floor((climbStart + peak.index) / 2);
-                
+
+                // Sjekk hvorfor den ikke fikk kategori
+                let reason = null;
+                if (!classification) {
+                    if (climbDistanceKm < CLIMB_CONFIG.minLength) {
+                        reason = `For kort (${climbDistanceKm.toFixed(2)}km < ${CLIMB_CONFIG.minLength}km)`;
+                    } else if (climbGain < CLIMB_CONFIG.minElevation) {
+                        reason = `For lite stigning (${Math.round(climbGain)}m < ${CLIMB_CONFIG.minElevation}m)`;
+                    } else if (avgGradient < CLIMB_CONFIG.minGradient) {
+                        reason = `For slak (${avgGradient.toFixed(1)}% < ${CLIMB_CONFIG.minGradient}%)`;
+                    } else {
+                        // Oppfyller minimumskrav, men ikke nok poeng for kategori
+                        const points = (climbGain * avgGradient) / 10;
+                        reason = `For få poeng (${Math.round(points)}p < 30p minimum for Kat 4)`;
+                    }
+                }
+
                 return {
                     index: peak.index,
                     midIndex: midIndex,
                     category: category,
-                    score: Math.round(score),
+                    score: score,
                     climbGain: Math.round(climbGain),
-                    climbDistance: Math.round(climbDistance)
+                    climbDistance: Math.round(climbDistanceKm * 1000), // lagre som meter for visning
+                    avgGradient: avgGradient,
+                    reason: reason,
+                    startDistance: dist[climbStart] // km - hvor langt ut i løypa bakken starter
                 };
             });
-            
+
+            // --- DETALJERT ANALYSE: Alle høyeste punkter med tilhørende laveste punkter ---
+            console.log(`\n=== DAG ${dayId} - DETALJERT BAKKEANALYSE ===`);
+            console.log(`Analyserer ${peaksWithCategory.length} topper (fra høyeste til laveste):\n`);
+            console.log('Format: DAL → TOPP | Distanse | Stigning | Gradient | Status\n');
+
+            peaksWithCategory.forEach((peak, idx) => {
+                const valleyKm = peak.startDistance;
+                const peakKm = dist[peak.index];
+                const valleyEle = elev[peak.index] - peak.climbGain;
+                const peakEle = elev[peak.index];
+
+                const status = peak.category
+                    ? `✅ ${peak.category} (${peak.score}p)`
+                    : `❌ ${peak.reason}`;
+
+                console.log(
+                    `${String(idx + 1).padStart(2)}. ` +
+                    `${valleyKm.toFixed(1)}km (${Math.round(valleyEle)}m) → ` +
+                    `${peakKm.toFixed(1)}km (${Math.round(peakEle)}m) | ` +
+                    `${(peak.climbDistance/1000).toFixed(2)}km | ` +
+                    `${peak.climbGain}m ↑ | ` +
+                    `${peak.avgGradient.toFixed(1)}% | ` +
+                    `${status}`
+                );
+            });
+            console.log('\n💡 Se visuelt på profilen og sammenlign med listen over.');
+
             return peaksWithCategory;
         }
 
@@ -2723,24 +2827,27 @@
             // --- Tegn kategori-badges på midten av stigninger ---
             if (progress >= 1) {
                 peakIndexes.forEach(peak => {
-                    const midX = cumulativeDistance[peak.midIndex] / totalDistance * canvas.width;
-                    const midY = canvas.height - ((elevations[peak.midIndex] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
-                    
-                    // Rød sirkel
-                    ctx.beginPath();
-                    ctx.arc(midX, midY, 16, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fill();
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    
-                    // Hvit tekst
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 13px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(peak.category, midX, midY);
+                    // Kun vis badge hvis klatringen har en gyldig kategori
+                    if (peak.category) {
+                        const midX = cumulativeDistance[peak.midIndex] / totalDistance * canvas.width;
+                        const midY = canvas.height - ((elevations[peak.midIndex] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+
+                        // Rød sirkel
+                        ctx.beginPath();
+                        ctx.arc(midX, midY, 16, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#e74c3c';
+                        ctx.fill();
+                        ctx.strokeStyle = '#fff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        // Hvit tekst
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 13px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(peak.category, midX, midY);
+                    }
                 });
             }
             

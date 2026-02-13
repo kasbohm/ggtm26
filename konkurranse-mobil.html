@@ -13,6 +13,71 @@
     <meta property="og:image" content="https://kasbohm.github.io/ggtm26/logo.png">
 
     <link rel="stylesheet" href="konkurranse-mobil.css">
+    <style>
+        .strava-section {
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #fc4c02;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(252, 76, 2, 0.3);
+        }
+        .strava-btn {
+            background: #fc4c02;
+            color: white;
+            border: none;
+            padding: 0.8rem 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 10px rgba(252, 76, 2, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .strava-btn:active {
+            transform: scale(0.98);
+        }
+        .athlete-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .athlete-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #fc4c02;
+        }
+        .athlete-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fc4c02;
+        }
+        .sync-status {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.2rem;
+        }
+        .btn-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-small {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+    </style>
+    <script src="js/climb-classifier.js"></script>
+    <script src="js/strava-config.js"></script>
+    <script src="js/strava-api.js"></script>
 </head>
 <body>
     <div class="header">
@@ -25,6 +90,38 @@
     </div>
 
     <div class="container">
+        <!-- STRAVA INTEGRATION -->
+        <div class="strava-section" id="stravaSection">
+            <div id="stravaNotConnected">
+                <h3 style="margin-bottom: 0.3rem; font-size: 1rem;">📊 Automatisk synkronisering</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin-bottom: 0.5rem;">
+                    Koble til Strava for å automatisk hente dine aktiviteter
+                </p>
+                <button class="strava-btn" onclick="connectStrava()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                    </svg>
+                    Koble til Strava
+                </button>
+            </div>
+            <div id="stravaConnected" style="display: none;">
+                <div class="athlete-info">
+                    <img id="athleteAvatar" class="athlete-avatar" src="" alt="">
+                    <div style="flex: 1;">
+                        <div class="athlete-name" id="athleteName"></div>
+                        <div class="sync-status" id="syncStatus">Ikke synkronisert ennå</div>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="strava-btn btn-small" onclick="syncStravaActivities()">
+                        🔄 Synkroniser
+                    </button>
+                    <button class="strava-btn btn-small" onclick="disconnectStrava()">
+                        Koble fra
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- KLARTEPOENG (Mountain Points) -->
         <div class="competition-section klarte">
             <div class="section-header">
@@ -232,8 +329,136 @@
             return `${h}t ${m}m`;
         }
 
-        // Initialize on load
-        init();
+        // STRAVA INTEGRATION FUNCTIONS (same as desktop)
+
+        function updateStravaUI() {
+            const connected = stravaAPI.isAuthenticated();
+            document.getElementById('stravaNotConnected').style.display = connected ? 'none' : 'block';
+            document.getElementById('stravaConnected').style.display = connected ? 'block' : 'none';
+
+            if (connected) {
+                const athlete = stravaAPI.getAthlete();
+                if (athlete) {
+                    document.getElementById('athleteName').textContent = athlete.firstname + ' ' + athlete.lastname;
+                    document.getElementById('athleteAvatar').src = athlete.profile;
+
+                    const lastSync = localStorage.getItem('last_strava_sync');
+                    if (lastSync) {
+                        const syncDate = new Date(parseInt(lastSync));
+                        document.getElementById('syncStatus').textContent =
+                            'Sist: ' + syncDate.toLocaleString('no-NO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    }
+                }
+            }
+        }
+
+        function connectStrava() {
+            if (STRAVA_CONFIG.clientId === 'YOUR_CLIENT_ID_HERE') {
+                alert('⚠️ Strava API er ikke konfigurert ennå!\n\n' +
+                      '1. Gå til https://www.strava.com/settings/api\n' +
+                      '2. Opprett en ny app\n' +
+                      '3. Oppdater strava-config.js');
+                return;
+            }
+            stravaAPI.authorize();
+        }
+
+        function disconnectStrava() {
+            if (confirm('Koble fra Strava?')) {
+                stravaAPI.disconnect();
+                updateStravaUI();
+            }
+        }
+
+        async function syncStravaActivities() {
+            const syncBtn = event.target;
+            syncBtn.disabled = true;
+            syncBtn.textContent = '⏳ Synker...';
+
+            try {
+                const activities = await stravaAPI.getCompetitionActivities();
+
+                if (activities.length === 0) {
+                    alert('Ingen aktiviteter funnet for:\n' +
+                          COMPETITION_DATES.start + ' - ' + COMPETITION_DATES.end);
+                    return;
+                }
+
+                const points = stravaAPI.calculatePoints(activities);
+                const athlete = stravaAPI.getAthlete();
+                const name = athlete.firstname + ' ' + athlete.lastname;
+
+                // Update all categories
+                const klarteIndex = competitions.klarte.findIndex(r => r.name === name);
+                if (klarteIndex >= 0) {
+                    competitions.klarte[klarteIndex].points = Math.round(points.climbing);
+                } else {
+                    competitions.klarte.push({ name, points: Math.round(points.climbing) });
+                }
+
+                const spurtIndex = competitions.spurt.findIndex(r => r.name === name);
+                if (spurtIndex >= 0) {
+                    competitions.spurt[spurtIndex].points = Math.round(points.sprint);
+                } else {
+                    competitions.spurt.push({ name, points: Math.round(points.sprint) });
+                }
+
+                const snittfartIndex = competitions.snittfart.findIndex(r => r.name === name);
+                if (snittfartIndex >= 0) {
+                    competitions.snittfart[snittfartIndex] = {
+                        name,
+                        km: points.totalDistance,
+                        hours: points.totalTime,
+                        avgSpeed: points.avgSpeed
+                    };
+                } else {
+                    competitions.snittfart.push({
+                        name,
+                        km: points.totalDistance,
+                        hours: points.totalTime,
+                        avgSpeed: points.avgSpeed
+                    });
+                }
+
+                localStorage.setItem('klarteResults', JSON.stringify(competitions.klarte));
+                localStorage.setItem('spurtResults', JSON.stringify(competitions.spurt));
+                localStorage.setItem('snittfartResults', JSON.stringify(competitions.snittfart));
+                localStorage.setItem('last_strava_sync', Date.now().toString());
+
+                updateLeaderboard('klarte');
+                updateLeaderboard('spurt');
+                updateLeaderboard('snittfart');
+                updateStravaUI();
+
+                alert(`✅ Synkronisert!\n\n` +
+                      `${activities.length} aktiviteter\n` +
+                      `Klatre: ${Math.round(points.climbing)}p\n` +
+                      `Spurt: ${Math.round(points.sprint)}p\n` +
+                      `Snitt: ${points.avgSpeed.toFixed(1)} km/t`);
+
+            } catch (error) {
+                console.error('Sync error:', error);
+                alert('❌ Feil: ' + error.message);
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🔄 Synkroniser';
+            }
+        }
+
+        async function initPage() {
+            const hasCode = window.location.search.includes('code=');
+            if (hasCode) {
+                const success = await stravaAPI.handleCallback();
+                if (success) {
+                    alert('✅ Koblet til Strava!');
+                }
+            }
+
+            updateStravaUI();
+            init();
+        }
+
+        initPage();
     </script>
 </body>
 </html>

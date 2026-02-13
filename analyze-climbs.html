@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klatreanalyse - Mallorca Ruter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #fff;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+        }
+        .controls {
+            background: rgba(20, 20, 40, 0.95);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 2px solid #ff00ff;
+        }
+        .file-input {
+            margin-bottom: 1rem;
+        }
+        button {
+            background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 100%);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            margin-right: 0.5rem;
+        }
+        button:hover { transform: translateY(-2px); }
+        .route-section {
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #00f5ff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .route-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #00f5ff;
+        }
+        .route-stats {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .climb {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 5px;
+        }
+        .climb.hc { border-color: #e74c3c; }
+        .climb.\\31 { border-color: #e67e22; } /* Category 1 */
+        .climb.\\32 { border-color: #f39c12; } /* Category 2 */
+        .climb.\\33 { border-color: #f1c40f; } /* Category 3 */
+        .climb.\\34 { border-color: #95a5a6; } /* Category 4 */
+        .climb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .climb-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .climb-category {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .hc .climb-category { background: #e74c3c; }
+        .\\31 .climb-category { background: #e67e22; } /* Category 1 */
+        .\\32 .climb-category { background: #f39c12; } /* Category 2 */
+        .\\33 .climb-category { background: #f1c40f; color: #333; } /* Category 3 */
+        .\\34 .climb-category { background: #95a5a6; } /* Category 4 */
+        .climb-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.2rem;
+        }
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        #results { margin-top: 2rem; }
+        .summary {
+            background: linear-gradient(135deg, #302b63, #24243e);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 2px solid #ffaa00;
+        }
+        .summary h2 {
+            margin-bottom: 1rem;
+            color: #ffaa00;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #00f5ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏔️ Klatreanalyse - Mallorca Ruter</h1>
+
+        <div class="controls">
+            <div class="file-input">
+                <label for="gpxFiles">Velg GPX-filer:</label><br>
+                <input type="file" id="gpxFiles" accept=".gpx" multiple>
+            </div>
+            <button onclick="analyzeRoutes()">Analyser Klatringer</button>
+            <button onclick="loadAllRoutes()">Last alle ruter fra /routes/</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="js/climb-classifier.js"></script>
+    <script>
+        // Use shared classification from climb-classifier.js
+
+        // Calculate distance between two GPS points (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Parse GPX and find climbs
+        function parseGPX(xml, filename) {
+            const parser = new DOMParser();
+            const gpxDoc = parser.parseFromString(xml, 'text/xml');
+
+            const trackpoints = gpxDoc.getElementsByTagName('trkpt');
+            const points = [];
+
+            // Extract all points with elevation
+            for (let i = 0; i < trackpoints.length; i++) {
+                const lat = parseFloat(trackpoints[i].getAttribute('lat'));
+                const lon = parseFloat(trackpoints[i].getAttribute('lon'));
+                const eleElement = trackpoints[i].getElementsByTagName('ele')[0];
+                const ele = eleElement ? parseFloat(eleElement.textContent) : 0;
+
+                points.push({ lat, lon, ele });
+            }
+
+            // Find climbs following proper logic:
+            // - Start when slope % exceeds threshold
+            // - Continue to peak (highest point)
+            // - End when descent of X meters from peak occurs
+            const climbs = [];
+            let climbStart = null;
+            let climbPeakIndex = null;
+            let climbPeakEle = null;
+            let totalClimbDistance = 0;
+
+            const SLOPE_THRESHOLD = CLIMB_CONFIG.minGradient; // % - threshold to start climb
+            const DESCENT_END_THRESHOLD = 40; // meters - end climb if we descend this much from peak
+            const WINDOW_SIZE = 10; // points to calculate slope over (smooth GPS noise)
+
+            for (let i = WINDOW_SIZE; i < points.length; i++) {
+                const windowStart = i - WINDOW_SIZE;
+                const windowDistance = calculateDistance(
+                    points[windowStart].lat, points[windowStart].lon,
+                    points[i].lat, points[i].lon
+                ) * 1000; // meters
+
+                const windowEleGain = points[i].ele - points[windowStart].ele;
+                const windowGradient = windowDistance > 0 ? (windowEleGain / windowDistance) * 100 : 0;
+
+                if (climbStart === null) {
+                    // Not in a climb - check if we should start one
+                    if (windowGradient >= SLOPE_THRESHOLD) {
+                        climbStart = windowStart;
+                        climbPeakIndex = i;
+                        climbPeakEle = points[i].ele;
+                        totalClimbDistance = 0;
+                    }
+                } else {
+                    // Already in a climb
+                    const segmentDist = calculateDistance(
+                        points[i - 1].lat, points[i - 1].lon,
+                        points[i].lat, points[i].lon
+                    );
+                    totalClimbDistance += segmentDist;
+
+                    // Update peak if current point is higher
+                    if (points[i].ele > climbPeakEle) {
+                        climbPeakIndex = i;
+                        climbPeakEle = points[i].ele;
+                    }
+
+                    // Check if we've descended enough from peak to end climb
+                    const descentFromPeak = climbPeakEle - points[i].ele;
+
+                    if (descentFromPeak >= DESCENT_END_THRESHOLD || i === points.length - 1) {
+                        // End the climb at the peak
+                        const climbGain = points[climbPeakIndex].ele - points[climbStart].ele;
+                        const climbDistanceKm = totalClimbDistance;
+                        const avgGradient = (climbGain / (climbDistanceKm * 1000)) * 100;
+
+                        // Classify the climb
+                        const classification = classifyClimb(climbGain, climbDistanceKm);
+
+                        if (classification) {
+                            climbs.push({
+                                startIndex: climbStart,
+                                endIndex: climbPeakIndex,
+                                distance: climbDistanceKm,
+                                elevation: climbGain,
+                                avgGradient: avgGradient,
+                                startEle: points[climbStart].ele,
+                                endEle: points[climbPeakIndex].ele,
+                                ...classification
+                            });
+                        }
+
+                        // Reset for next climb
+                        climbStart = null;
+                        climbPeakIndex = null;
+                        climbPeakEle = null;
+                        totalClimbDistance = 0;
+                    }
+                }
+            }
+
+            // Calculate total stats
+            let totalDistance = 0;
+            let totalElevation = 0;
+            for (let i = 1; i < points.length; i++) {
+                totalDistance += calculateDistance(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
+                const eleChange = points[i].ele - points[i-1].ele;
+                if (eleChange > 0) totalElevation += eleChange;
+            }
+
+            return {
+                filename,
+                totalDistance,
+                totalElevation,
+                climbs
+            };
+        }
+
+        // Render results
+        function renderResults(routes) {
+            const resultsDiv = document.getElementById('results');
+
+            // Calculate summary
+            let totalClimbs = 0;
+            let climbsByCategory = { 'HC': 0, '1': 0, '2': 0, '3': 0, '4': 0 };
+            let totalPoints = 0;
+
+            routes.forEach(route => {
+                totalClimbs += route.climbs.length;
+                route.climbs.forEach(climb => {
+                    climbsByCategory[climb.category]++;
+                    totalPoints += climb.points;
+                });
+            });
+
+            let html = `
+                <div class="summary">
+                    <h2>📊 Sammendrag</h2>
+                    <div class="summary-grid">
+                        <div class="stat">
+                            <div class="stat-label">Totalt klatringer</div>
+                            <div class="stat-value">${totalClimbs}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">HC</div>
+                            <div class="stat-value">${climbsByCategory['HC']}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Kat 1</div>
+                            <div class="stat-value">${climbsByCategory['1']}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Kat 2</div>
+                            <div class="stat-value">${climbsByCategory['2']}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Kat 3</div>
+                            <div class="stat-value">${climbsByCategory['3']}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Kat 4</div>
+                            <div class="stat-value">${climbsByCategory['4']}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Totale poeng</div>
+                            <div class="stat-value">${totalPoints}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Render each route
+            routes.forEach(route => {
+                const catClass = route.climbs.length > 0 ? route.climbs[0].category.toLowerCase().replace(' ', '') : '';
+
+                html += `
+                    <div class="route-section">
+                        <div class="route-header">
+                            <div class="route-name">${route.filename}</div>
+                            <div class="route-stats">
+                                ${route.totalDistance.toFixed(1)} km • ${Math.round(route.totalElevation)} hm • ${route.climbs.length} klatringer
+                            </div>
+                        </div>
+                `;
+
+                if (route.climbs.length === 0) {
+                    html += '<p style="color: rgba(255,255,255,0.5);">Ingen klassifiserte klatringer funnet</p>';
+                } else {
+                    route.climbs.forEach((climb, idx) => {
+                        const catClass = climb.category.toLowerCase().replace(' ', '');
+                        html += `
+                            <div class="climb ${catClass}">
+                                <div class="climb-header">
+                                    <div class="climb-name">Klatring ${idx + 1}</div>
+                                    <div class="climb-category">${climb.categoryName} (${climb.points}p)</div>
+                                </div>
+                                <div class="climb-stats">
+                                    <div class="stat">
+                                        <div class="stat-label">Lengde</div>
+                                        <div class="stat-value">${climb.distance.toFixed(2)} km</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-label">Høydemeter</div>
+                                        <div class="stat-value">${Math.round(climb.elevation)} m</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-label">Snitt stigning</div>
+                                        <div class="stat-value">${climb.avgGradient.toFixed(1)}%</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-label">Høyde</div>
+                                        <div class="stat-value">${Math.round(climb.startEle)}m → ${Math.round(climb.endEle)}m</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += '</div>';
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Analyze selected files
+        async function analyzeRoutes() {
+            const fileInput = document.getElementById('gpxFiles');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('Velg GPX-filer først!');
+                return;
+            }
+
+            document.getElementById('results').innerHTML = '<div class="loading">Analyserer ruter...</div>';
+
+            const routes = [];
+
+            for (let file of files) {
+                const text = await file.text();
+                const route = parseGPX(text, file.name);
+                routes.push(route);
+            }
+
+            renderResults(routes);
+        }
+
+        // Load all routes from /routes/ directory (requires server)
+        async function loadAllRoutes() {
+            alert('For å laste alle ruter, må du kjøre en lokal webserver.\n\n' +
+                  'Alternativer:\n' +
+                  '1. Bruk "Velg GPX-filer" og velg alle .gpx filer manuelt\n' +
+                  '2. Kjør: python -m http.server 8000\n' +
+                  '   og oppdater denne funksjonen til å hente filene');
+        }
+    </script>
+</body>
+</html>
