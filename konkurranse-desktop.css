@@ -1,0 +1,221 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    color: #fff;
+    padding: 2rem;
+}
+
+.header {
+    background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 50%, #ffaa00 100%);
+    color: #0a0a0a;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(255, 0, 255, 0.5), 0 0 40px rgba(0, 245, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 0, 255, 0.1) 2px,
+        rgba(255, 0, 255, 0.1) 4px
+    );
+    animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(50px); }
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.8), 0 0 20px rgba(255, 0, 255, 0.6);
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.header p {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.nav-links {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.nav-links a {
+    color: #00f5ff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid #00f5ff;
+    border-radius: 5px;
+    display: inline-block;
+    transition: all 0.3s;
+}
+
+.nav-links a:hover {
+    background: #00f5ff;
+    color: #0a0a0a;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.8);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.competition-section {
+    background: rgba(20, 20, 40, 0.95);
+    border: 2px solid;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.competition-section.klarte {
+    border-color: #e74c3c;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
+}
+
+.competition-section.spurt {
+    border-color: #2ecc71;
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.3);
+}
+
+.competition-section.snittfart {
+    border-color: #f39c12;
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.3);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.section-icon {
+    font-size: 3rem;
+}
+
+.section-title {
+    flex: 1;
+}
+
+.section-title h2 {
+    font-size: 2rem;
+    margin-bottom: 0.3rem;
+}
+
+.section-title p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.leaderboard {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard thead {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.leaderboard td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.position {
+    font-size: 1.5rem;
+    font-weight: 700;
+    width: 60px;
+    text-align: center;
+}
+
+.position-1 { color: #FFD700; }
+.position-2 { color: #C0C0C0; }
+.position-3 { color: #CD7F32; }
+
+.rider-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.points {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+.klarte .points { color: #e74c3c; }
+.spurt .points { color: #2ecc71; }
+.snittfart .points { color: #f39c12; }
+
+.add-result-btn {
+    background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 100%);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 4px 10px rgba(255, 0, 255, 0.3);
+    transition: all 0.3s;
+}
+
+.add-result-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 255, 0.5);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.1rem;
+}

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mallorca Konkurranse 2026 - Mobile</title>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kasbohm.github.io/ggtm26/konkurranse-mobil.html">
+    <meta property="og:title" content="Mallorca Konkurranse 2026">
+    <meta property="og:description" content="Følg med på klartepoeng, spurtpoeng og snittfartkonkurransen!">
+    <meta property="og:image" content="https://kasbohm.github.io/ggtm26/logo.png">
+
+    <link rel="stylesheet" href="konkurranse-mobil.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 Gåping goes to Mallorca 2026</h1>
+        <p>Konkurranse</p>
+    </div>
+
+    <div class="nav-links">
+        <a href="mobile.html">← Tilbake til ruteplanner</a>
+    </div>
+
+    <div class="container">
+        <!-- KLARTEPOENG (Mountain Points) -->
+        <div class="competition-section klarte">
+            <div class="section-header">
+                <div class="section-icon">⛰️</div>
+                <div class="section-title">
+                    <h2>KLARTEPOENG</h2>
+                    <p>Klatrernes klassifisering</p>
+                </div>
+            </div>
+
+            <table class="leaderboard">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Rytter</th>
+                        <th style="text-align: right;">Poeng</th>
+                    </tr>
+                </thead>
+                <tbody id="klarteLeaderboard">
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            Ingen resultater ennå
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="add-result-btn" onclick="addResult('klarte')">+ Legg til resultat</button>
+        </div>
+
+        <!-- SPURTPOENG (Sprint Points) -->
+        <div class="competition-section spurt">
+            <div class="section-header">
+                <div class="section-icon">⚡</div>
+                <div class="section-title">
+                    <h2>SPURTPOENG</h2>
+                    <p>Spurterenes klassifisering</p>
+                </div>
+            </div>
+
+            <table class="leaderboard">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Rytter</th>
+                        <th style="text-align: right;">Poeng</th>
+                    </tr>
+                </thead>
+                <tbody id="spurtLeaderboard">
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            Ingen resultater ennå
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="add-result-btn" onclick="addResult('spurt')">+ Legg til resultat</button>
+        </div>
+
+        <!-- SNITTFARTPRIS (Average Speed) -->
+        <div class="competition-section snittfart">
+            <div class="section-header">
+                <div class="section-icon">🚴</div>
+                <div class="section-title">
+                    <h2>SNITTFARTPRIS</h2>
+                    <p>Beste gjennomsnittsfart</p>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="leaderboard">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Rytter</th>
+                            <th style="text-align: right;">Km</th>
+                            <th style="text-align: right;">Tid</th>
+                            <th style="text-align: right;">Snitt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="snittfartLeaderboard">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                Ingen resultater ennå
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="add-result-btn" onclick="addResult('snittfart')">+ Legg til resultat</button>
+        </div>
+    </div>
+
+    <script>
+        // Data storage - shared with desktop version via localStorage
+        let competitions = {
+            klarte: JSON.parse(localStorage.getItem('klarteResults') || '[]'),
+            spurt: JSON.parse(localStorage.getItem('spurtResults') || '[]'),
+            snittfart: JSON.parse(localStorage.getItem('snittfartResults') || '[]')
+        };
+
+        // Initialize display
+        function init() {
+            updateLeaderboard('klarte');
+            updateLeaderboard('spurt');
+            updateLeaderboard('snittfart');
+        }
+
+        // Add result
+        function addResult(type) {
+            if (type === 'snittfart') {
+                const name = prompt('Navn på rytter:');
+                if (!name) return;
+
+                const km = parseFloat(prompt('Antall kilometer:'));
+                if (isNaN(km)) return;
+
+                const hours = parseFloat(prompt('Tid i timer (f.eks. 2.5 for 2t 30min):'));
+                if (isNaN(hours)) return;
+
+                const avgSpeed = km / hours;
+
+                competitions.snittfart.push({
+                    name,
+                    km,
+                    hours,
+                    avgSpeed
+                });
+
+                localStorage.setItem('snittfartResults', JSON.stringify(competitions.snittfart));
+            } else {
+                const name = prompt('Navn på rytter:');
+                if (!name) return;
+
+                const points = parseInt(prompt('Antall poeng:'));
+                if (isNaN(points)) return;
+
+                // Check if rider already exists
+                const existingIndex = competitions[type].findIndex(r => r.name === name);
+                if (existingIndex >= 0) {
+                    competitions[type][existingIndex].points += points;
+                } else {
+                    competitions[type].push({ name, points });
+                }
+
+                localStorage.setItem(type + 'Results', JSON.stringify(competitions[type]));
+            }
+
+            updateLeaderboard(type);
+        }
+
+        // Update leaderboard display
+        function updateLeaderboard(type) {
+            const tbody = document.getElementById(type + 'Leaderboard');
+
+            if (competitions[type].length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="${type === 'snittfart' ? 5 : 3}" class="empty-state">
+                            Ingen resultater ennå
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort results
+            if (type === 'snittfart') {
+                competitions[type].sort((a, b) => b.avgSpeed - a.avgSpeed);
+            } else {
+                competitions[type].sort((a, b) => b.points - a.points);
+            }
+
+            // Generate HTML
+            tbody.innerHTML = competitions[type].map((result, index) => {
+                const position = index + 1;
+                const posClass = position <= 3 ? `position-${position}` : '';
+
+                if (type === 'snittfart') {
+                    const timeStr = formatTime(result.hours);
+                    return `
+                        <tr>
+                            <td class="position ${posClass}">${position}</td>
+                            <td class="rider-name">${result.name}</td>
+                            <td style="text-align: right;">${result.km.toFixed(1)}</td>
+                            <td style="text-align: right;">${timeStr}</td>
+                            <td class="points">${result.avgSpeed.toFixed(1)}</td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr>
+                            <td class="position ${posClass}">${position}</td>
+                            <td class="rider-name">${result.name}</td>
+                            <td class="points">${result.points}</td>
+                        </tr>
+                    `;
+                }
+            }).join('');
+        }
+
+        // Format time in hours to HH:MM
+        function formatTime(hours) {
+            const h = Math.floor(hours);
+            const m = Math.round((hours - h) * 60);
+            return `${h}t ${m}m`;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
