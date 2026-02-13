@@ -972,6 +972,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
     <script>
         let currentSelectingDay = 1;
@@ -1453,20 +1454,43 @@
 
         function addRoute(fileName, points, color, isBundled = false) {
             const latLngs = points.map(p => [p.lat, p.lon]);
-            
+
             const polyline = L.polyline(latLngs, {
                 color: color,
                 weight: 3,
                 opacity: 0.7
             }).addTo(map);
-            
+
+            // Legg til piler for å vise retning
+            const decorator = L.polylineDecorator(polyline, {
+                patterns: [
+                    {
+                        offset: '10%',
+                        repeat: '15%',
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 15,
+                            polygon: true,
+                            pathOptions: {
+                                stroke: true,
+                                weight: 3,
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: 1.0,
+                                opacity: 1.0
+                            }
+                        })
+                    }
+                ]
+            }).addTo(map);
+
             const stats = calculateStats(points);
-            
+
             const route = {
                 id: routes.length,
                 fileName,
                 gpxPoints: points,
                 polyline,
+                decorator,
                 startMarker: null,
                 endMarker: null,
                 meetMarker: null,
@@ -1497,15 +1521,63 @@
                     if (route) {
                         route.color = day.color;
                         route.polyline.setStyle({ color: day.color });
+
+                        // Oppdater decorator-farge ved å gjenskape den
+                        if (route.decorator) {
+                            route.decorator.remove();
+                            route.decorator = L.polylineDecorator(route.polyline, {
+                                patterns: [{
+                                    offset: '10%',
+                                    repeat: '15%',
+                                    symbol: L.Symbol.arrowHead({
+                                        pixelSize: 15,
+                                        polygon: true,
+                                        pathOptions: {
+                                            stroke: true,
+                                            weight: 3,
+                                            color: day.color,
+                                            fillColor: day.color,
+                                            fillOpacity: 1.0,
+                                            opacity: 1.0
+                                        }
+                                    })
+                                }]
+                            });
+                            if (route.visible) route.decorator.addTo(map);
+                        }
                     }
                 });
             });
-            
+
             const routesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
                 if (!routesInDays.has(route.id)) {
                     route.color = route.originalColor;
                     route.polyline.setStyle({ color: route.originalColor });
+
+                    // Oppdater decorator-farge til original
+                    if (route.decorator) {
+                        route.decorator.remove();
+                        route.decorator = L.polylineDecorator(route.polyline, {
+                            patterns: [{
+                                offset: '10%',
+                                repeat: '15%',
+                                symbol: L.Symbol.arrowHead({
+                                    pixelSize: 15,
+                                    polygon: true,
+                                    pathOptions: {
+                                        stroke: true,
+                                        weight: 3,
+                                        color: route.originalColor,
+                                        fillColor: route.originalColor,
+                                        fillOpacity: 1.0,
+                                        opacity: 1.0
+                                    }
+                                })
+                            }]
+                        });
+                        if (route.visible) route.decorator.addTo(map);
+                    }
                 }
             });
             
@@ -1586,13 +1658,15 @@
         function toggleRoute(routeId) {
             const route = routes[routeId];
             route.visible = !route.visible;
-            
+
             if (route.visible) {
                 route.polyline.addTo(map);
+                if (route.decorator) route.decorator.addTo(map);
             } else {
                 route.polyline.remove();
+                if (route.decorator) route.decorator.remove();
             }
-            
+
             // updateRouteColors vil håndtere markers
             updateRouteColors();
             updateSidebar();
@@ -1622,8 +1696,9 @@
                 if (route.visible) {
                     route.visible = false;
                     route.polyline.remove();
-                    route.startMarker.remove();
-                    route.endMarker.remove();
+                    if (route.decorator) route.decorator.remove();
+                    if (route.startMarker) route.startMarker.remove();
+                    if (route.endMarker) route.endMarker.remove();
                 }
             });
             updateSidebar();
@@ -1634,8 +1709,9 @@
                 if (!route.visible) {
                     route.visible = true;
                     route.polyline.addTo(map);
-                    route.startMarker.addTo(map);
-                    route.endMarker.addTo(map);
+                    if (route.decorator) route.decorator.addTo(map);
+                    if (route.startMarker) route.startMarker.addTo(map);
+                    if (route.endMarker) route.endMarker.addTo(map);
                 }
             });
             updateSidebar();
@@ -2034,22 +2110,48 @@
         window.toggleDayVisibility = function(dayId) {
             const day = days.find(d => d.id === dayId);
             if (!day) return;
-            
+
             day.visible = !day.visible;
-            
+
             day.routes.forEach(routeId => {
                 const route = routes.find(r => r.id === routeId);
                 if (route) {
                     route.visible = day.visible;
                     if (day.visible) {
                         route.polyline.addTo(map);
+                        if (route.decorator) route.decorator.addTo(map);
                     } else {
                         route.polyline.remove();
+                        if (route.decorator) route.decorator.remove();
                     }
                 }
             });
-            
-            updateRouteColors();
+
+            // Performance fix: Kun oppdater markers for denne dagen, ikke alle
+            const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+
+            if (day.visible) {
+                // Vis markers for denne dagen
+                if (dayRoutes.length === 2) {
+                    const route1 = dayRoutes[0];
+                    const route2 = dayRoutes[1];
+                    if (route1.startMarker) route1.startMarker.addTo(map);
+                    if (route1.meetMarker) route1.meetMarker.addTo(map);
+                    if (route2.endMarker) route2.endMarker.addTo(map);
+                } else if (dayRoutes.length === 1) {
+                    const route = dayRoutes[0];
+                    if (route.startMarker) route.startMarker.addTo(map);
+                    if (route.endMarker) route.endMarker.addTo(map);
+                }
+            } else {
+                // Skjul markers for denne dagen
+                dayRoutes.forEach(route => {
+                    if (route.startMarker) route.startMarker.remove();
+                    if (route.endMarker) route.endMarker.remove();
+                    if (route.meetMarker) route.meetMarker.remove();
+                });
+            }
+
             updateSidebar();
         };
 
@@ -2059,15 +2161,16 @@
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             if (routes.length === 0) return;
-            
+
             if (confirm('Er du sikker på at du vil fjerne alle ruter?')) {
                 routes.forEach(route => {
                     route.polyline.remove();
+                    if (route.decorator) route.decorator.remove();
                     if (route.startMarker) route.startMarker.remove();
                     if (route.endMarker) route.endMarker.remove();
                     if (route.meetMarker) route.meetMarker.remove();
                 });
-                
+
                 routes.length = 0;
                 
                 days.forEach(day => {
@@ -2270,7 +2373,17 @@
                     }
                 }
             }
-            
+
+            // Skjul alle ruter som ikke er i noen dager
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            routes.forEach(route => {
+                if (!routesInDays.has(route.id) && route.visible) {
+                    route.visible = false;
+                    route.polyline.remove();
+                    if (route.decorator) route.decorator.remove();
+                }
+            });
+
             updateRouteColors();
             updateSidebar();
             alert('✅ Elite (A) ruter lastet for alle 4 dager!');
@@ -2314,7 +2427,17 @@
                     }
                 }
             }
-            
+
+            // Skjul alle ruter som ikke er i noen dager
+            const routesInDays = new Set(days.flatMap(d => d.routes));
+            routes.forEach(route => {
+                if (!routesInDays.has(route.id) && route.visible) {
+                    route.visible = false;
+                    route.polyline.remove();
+                    if (route.decorator) route.decorator.remove();
+                }
+            });
+
             updateRouteColors();
             updateSidebar();
             alert('✅ Mosjonist (B) ruter lastet for alle 4 dager!');
@@ -2718,6 +2841,7 @@
 
                 return {
                     index: peak.index,
+                    startIndex: climbStart, // indeks hvor bakken starter
                     midIndex: midIndex,
                     category: category,
                     score: score,
@@ -2792,6 +2916,54 @@
 
             // --- Tegn bakgrunn og grid ---
             drawBackground();
+
+            // --- Tegn fargede soner for klassifiserte bakker (kun under profilen) ---
+            peakIndexes.forEach(peak => {
+                if (peak.category) { // Kun vis for klassifiserte bakker
+                    // Velg farge basert på kategori - gradient fra cyan til magenta til rød
+                    let color;
+                    switch(peak.category) {
+                        case 'HC':
+                            color = 'rgba(255, 100, 100, 1)'; // Rød/rosa (vanskeligst)
+                            break;
+                        case '1':
+                            color = 'rgba(255, 0, 255, 1)'; // Magenta
+                            break;
+                        case '2':
+                            color = 'rgba(160, 100, 255, 1)'; // Lilla
+                            break;
+                        case '3':
+                            color = 'rgba(0, 180, 255, 1)'; // Cyan/blå
+                            break;
+                        case '4':
+                            color = 'rgba(0, 245, 255, 1)'; // Lys cyan (letteste)
+                            break;
+                        default:
+                            color = 'rgba(100, 100, 150, 1)'; // Grå/blå
+                    }
+
+                    // Tegn farge-sone som følger profilen (kun under kurven)
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+
+                    // Start nederst til venstre
+                    const startX = cumulativeDistance[peak.startIndex] / totalDistance * canvas.width;
+                    ctx.moveTo(startX, canvas.height);
+
+                    // Gå opp til profilen og følg den fra start til slutt
+                    for (let i = peak.startIndex; i <= peak.index; i++) {
+                        const x = cumulativeDistance[i] / totalDistance * canvas.width;
+                        const y = canvas.height - ((elevations[i] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                        ctx.lineTo(x, y);
+                    }
+
+                    // Gå ned til bunnen høyre og lukk
+                    const endX = cumulativeDistance[peak.index] / totalDistance * canvas.width;
+                    ctx.lineTo(endX, canvas.height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            });
 
             // --- Tegn kurve ---
             const maxIndex = Math.floor(progress * (pointsWithEle.length - 1));
