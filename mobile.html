@@ -235,7 +235,7 @@
     <div id="map"></div>
     
     <!-- FAB Buttons -->
-    <div class="fab-group">
+    <div class="fab-group" id="fabGroup">
         <button class="fab download" onclick="downloadCurrentDay()">⬇️</button>
     </div>
     
@@ -534,7 +534,7 @@
 
         function downloadDayGPX(dayId) {
             const day = days.find(d => d.id === dayId);
-            if (!day || day.routes.length === 0) { alert('Ingen ruter valgt!'); return; }
+            if (!day || day.routes.length === 0) { alert('Ingen ruter valgt! Dette er ikke en hviledag - VELG RUTER!'); return; }
             const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
             if (!dayRoutes[0] || !dayRoutes[0].gpxPoints) { alert('GPX-punkter mangler.'); return; }
             let allPoints = [];
@@ -629,6 +629,12 @@
             });
             highlightedRouteId = null;
 
+            // Hide FAB on summary slide
+            const fabGroup = document.getElementById('fabGroup');
+            if (fabGroup) {
+                fabGroup.style.display = currentDay === 0 ? 'none' : 'flex';
+            }
+
             updateMapVisibility();
             console.log('✅ updateSwiper complete');
         }
@@ -638,7 +644,7 @@
             if (currentDay === 0) {
                 routes.forEach(route => {
                     route.polyline.setStyle({ opacity: 0 });
-                    if (route.decorator) route.decorator.setStyle({ opacity: 0 });
+                    if (route.decorator) route.decorator.remove();
                     route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
                     route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
                 });
@@ -660,10 +666,13 @@
                     weight: isActive ? 5 : 3
                 });
 
+                // Remove/add decorator instead of setting opacity
                 if (route.decorator) {
-                    route.decorator.setStyle({
-                        opacity: isActive ? 1.0 : 0
-                    });
+                    if (isActive) {
+                        route.decorator.addTo(map);
+                    } else {
+                        route.decorator.remove();
+                    }
                 }
 
                 if (isActive) {
@@ -1104,7 +1113,7 @@ routesContainer.innerHTML = `
         function showElevationProfile(dayIndex) {
             const day = days[dayIndex];
             if (!day || day.routes.length === 0) {
-                alert('Ingen ruter valgt for denne dagen!');
+                alert('Ingen ruter valgt for denne dagen! Dette er ikke en hviledag - VELG RUTER!');
                 return;
             }
 
@@ -1505,7 +1514,9 @@ routesContainer.innerHTML = `
         }
         
         function downloadCurrentDay() {
-            downloadDayGPX(currentDay + 1);
+            // currentDay 0 = summary, currentDay 1-4 = dag 1-4
+            if (currentDay === 0) return; // Should not happen as FAB is hidden
+            downloadDayGPX(currentDay);
         }
         
         loadBundledRoutes();
