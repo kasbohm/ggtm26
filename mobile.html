@@ -1203,8 +1203,11 @@ routesContainer.innerHTML = `
 
                 drawBackground();
 
+                const maxIndex = Math.floor(progress * (pointsWithEle.length - 1));
+
+                // Draw zones progressively - only up to current animation position
                 peakIndexes.forEach(peak => {
-                    if (peak.category) {
+                    if (peak.category && maxIndex >= peak.startIndex) {
                         let color;
                         switch(peak.category) {
                             case 'HC': color = 'rgba(255, 100, 100, 1)'; break;
@@ -1219,20 +1222,22 @@ routesContainer.innerHTML = `
                         const startX = cumulativeDistance[peak.startIndex] / totalDistance * canvas.width;
                         ctx.moveTo(startX, canvas.height);
 
-                        for (let i = peak.startIndex; i <= peak.index; i++) {
+                        // Only draw zone up to current animation position
+                        const endDrawIndex = Math.min(peak.index, maxIndex);
+                        for (let i = peak.startIndex; i <= endDrawIndex; i++) {
                             const x = cumulativeDistance[i] / totalDistance * canvas.width;
                             const y = canvas.height - ((elevations[i] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
                             ctx.lineTo(x, y);
                         }
 
-                        const endX = cumulativeDistance[peak.index] / totalDistance * canvas.width;
+                        const endX = cumulativeDistance[endDrawIndex] / totalDistance * canvas.width;
                         ctx.lineTo(endX, canvas.height);
                         ctx.closePath();
                         ctx.fill();
                     }
                 });
 
-                const maxIndex = Math.floor(progress * (pointsWithEle.length - 1));
+                // Draw the line
                 ctx.beginPath();
                 ctx.strokeStyle = '#00f5ff';
                 ctx.lineWidth = 2;
