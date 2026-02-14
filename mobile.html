@@ -1044,20 +1044,45 @@ routesContainer.innerHTML = `
         document.getElementById('gpxInput').onchange = async (e) => {
             const files = Array.from(e.target.files);
             if (!files.length) return;
-            
+
             document.getElementById('splash').classList.remove('hidden');
             const splashFill = document.getElementById('splashFill');
             const splashText = document.getElementById('splashText');
-            
+
+            const newRouteIds = []; // Track newly added routes for auto-assignment
+
             for (let i = 0; i < files.length; i++) {
-                splashText.textContent = `${i+1} av ${files.length} - ${files[i].name}`;
+                const fileName = files[i].name;
+
+                // Check for duplicate filename
+                if (routes.some(r => r.fileName === fileName)) {
+                    alert(`⚠️ "${fileName}" er allerede lastet opp! Hopper over...`);
+                    continue;
+                }
+
+                splashText.textContent = `${i+1} av ${files.length} - ${fileName}`;
                 const content = await files[i].text();
                 const points = parseGPX(content);
                 if (!points.some(p => p.ele !== null)) await enrichWithElevation(points);
-                addRoute(files[i].name, points, colors[routes.length % colors.length]);
+                const routeId = routes.length;
+                addRoute(fileName, points, colors[routes.length % colors.length]);
+                newRouteIds.push(routeId);
                 splashFill.style.width = `${((i+1) / files.length) * 100}%`;
             }
-            
+
+            // Auto-assign newly uploaded routes to current day (if not on summary slide)
+            if (newRouteIds.length > 0 && currentDay > 0) {
+                const dayIndex = currentDay - 1;
+                const day = days[dayIndex];
+                newRouteIds.forEach(routeId => {
+                    if (!day.routes.includes(routeId)) {
+                        day.routes.push(routeId);
+                    }
+                });
+                updateUI();
+                updateMapVisibility();
+            }
+
             setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
             e.target.value = '';
         };
@@ -1112,12 +1137,22 @@ routesContainer.innerHTML = `
         // Show elevation profile for a day (FULL DESKTOP VERSION)
         function showElevationProfile(dayIndex) {
             const day = days[dayIndex];
-            if (!day || day.routes.length === 0) {
-                alert('Ingen ruter valgt for denne dagen! Dette er ikke en hviledag - VELG RUTER!');
+            let dayRoutes;
+            let profileTitle = '';
+
+            // If day has routes, use those. Otherwise, use all loaded routes
+            if (day && day.routes.length > 0) {
+                dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+                profileTitle = `Dag ${dayIndex + 1}`;
+            } else if (routes.length > 0) {
+                // Fallback: show all routes if no routes selected for this day
+                dayRoutes = routes;
+                profileTitle = 'Alle ruter';
+            } else {
+                alert('Ingen ruter lastet! Last opp GPX-filer eller velg ruter først.');
                 return;
             }
 
-            const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
             const pointsWithEle = [];
             dayRoutes.forEach(route => {
                 if (route.gpxPoints) pointsWithEle.push(...route.gpxPoints);
@@ -1183,8 +1218,11 @@ routesContainer.innerHTML = `
             peakIndexes.forEach(peak => totalClimbingPoints += peak.score);
 
             const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
-            document.getElementById('elevationTitle').textContent =
-                `Dag ${dayId} (${dayNames[dayId - 1]}) - ${totalClimbingPoints}p`;
+            let title = profileTitle;
+            if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
+                title = `Dag ${dayId} (${dayNames[dayId - 1]})`;
+            }
+            document.getElementById('elevationTitle').textContent = `${title} - ${totalClimbingPoints}p`;
 
             let meetIdx = dayRoutes.length > 1 ? dayRoutes[0].gpxPoints.length - 1 : Math.floor(pointsWithEle.length / 2);
             const meetX = cumulativeDistance[meetIdx] / totalDistance * canvas.width;

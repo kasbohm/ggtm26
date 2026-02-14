@@ -1992,6 +1992,15 @@
 
         async function addRouteFromGpxContent(fileName, gpxContent, index, total, progressText, progressFill, showAlerts = true, isBundled = false) {
             try {
+                // Check for duplicate filename
+                if (routes.some(r => r.fileName === fileName)) {
+                    if (showAlerts) {
+                        alert(`⚠️ "${fileName}" er allerede lastet opp! Hopper over...`);
+                    }
+                    progressFill.style.width = `${((index + 1) / total) * 100}%`;
+                    return;
+                }
+
                 const points = parseGPX(gpxContent);
                 if (points.length === 0) {
                     if (showAlerts) {
@@ -2520,18 +2529,27 @@
         canvas.height = canvas.offsetHeight;
 
         const day = days.find(d => d.id === dayId);
-        if (!day || day.routes.length === 0) {
+        let dayRoutes;
+        let profileTitle = '';
+
+        // If day has routes, use those. Otherwise, use all loaded routes
+        if (day && day.routes.length > 0) {
+            dayRoutes = day.routes
+                .map(routeId => routes.find(r => r.id === routeId))
+                .filter(r => r && r.gpxPoints);
+            profileTitle = `Dag ${dayId}`;
+        } else if (routes.length > 0) {
+            // Fallback: show all routes if no routes selected for this day
+            dayRoutes = routes.filter(r => r && r.gpxPoints);
+            profileTitle = 'Alle ruter';
+        } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#00f5ff';
             ctx.font = '14px Courier New';
-            ctx.fillText('Ingen ruter valgt for denne dagen.', 10, 30);
-            ctx.fillText('Dette er ikke en hviledag - VELG RUTER!', 10, 50);
+            ctx.fillText('Ingen ruter lastet!', 10, 30);
+            ctx.fillText('Last opp GPX-filer eller velg ruter først.', 10, 50);
             return;
         }
-
-        const dayRoutes = day.routes
-            .map(routeId => routes.find(r => r.id === routeId))
-            .filter(r => r && r.gpxPoints);
 
         if (dayRoutes.length === 0) return;
 
@@ -2893,11 +2911,15 @@
         
         // Sett tittel med klatrepoeng
         const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
-        title.textContent = `Løypeprofil - Dag ${dayId} (${dayNames[dayId - 1]}) - ${totalClimbingPoints} klatrepoeng`;
+        let titleText = profileTitle;
+        if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
+            titleText = `Dag ${dayId} (${dayNames[dayId - 1]})`;
+        }
+        title.textContent = `Løypeprofil - ${titleText} - ${totalClimbingPoints} klatrepoeng`;
 
         // ---- Finn møtet mellom ruter ----
-        let meetIdx = dayRoutes[0].gpxPoints.length - 1;
-        let endPoint = dayRoutes[1].gpxPoints.length - 1;
+        let meetIdx = dayRoutes.length > 1 ? dayRoutes[0].gpxPoints.length - 1 : Math.floor(pointsWithEle.length / 2);
+        let endPoint = dayRoutes.length > 1 ? dayRoutes[1].gpxPoints.length - 1 : pointsWithEle.length - 1;
         
         const meetX = cumulativeDistance[meetIdx] / totalDistance * canvas.width;
         const meetY = canvas.height - ((pointsWithEle[meetIdx].ele - minEle)/(maxEle - minEle))*(canvas.height-20);
