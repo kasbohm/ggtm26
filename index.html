@@ -8,29 +8,28 @@
             window.location.replace('mobile.html');
         }
     </script>
-    <title>Gåpings Mallorca Getaway - Semi-Automatic Configurator</title>
+    <title>Team Gåpings Mallorca Getaway - Semi-Automatic Configurator</title>
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kasbohm.github.io/ggtm26/">
-    <meta property="og:title" content="Gåpings Mallorca Getaway 2026">
+    <meta property="og:title" content="Team Gåpings Mallorca Getaway 2026">
     <meta property="og:description" content="Velg dine ruter, planlegg dagene og gjør deg klar for en episk Gåpingtur på Mallorca i 2026! Elite eller mosjonist, eller kombiner!">
     <meta property="og:image" content="https://kasbohm.github.io/ggtm26/logo.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Gåpings Mallorca Getaway Logo">
+    <meta property="og:image:alt" content="Team Gåpings Mallorca Getaway Logo">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://kasbohm.github.io/ggtm26/">
-    <meta property="twitter:title" content="Gåpings Mallorca Getaway 2026">
+    <meta property="twitter:title" content="Team Gåpings Mallorca Getaway 2026">
     <meta property="twitter:description" content="Velg dine ruter, planlegg dagene og gjør deg klar for en episk Gåpingtur på Mallorca i 2026! Elite eller mosjonist, eller kombiner!">
     <meta property="twitter:image" content="https://kasbohm.github.io/ggtm26/logo.png">
     
     <!-- General Meta -->
     <meta name="description" content="Velg dine ruter, planlegg dagene og gjør deg klar for en episk Gåpingtur på Mallorca i 2026! Elite eller mosjonist, eller kombiner!">
-    <meta name="keywords" content="Mallorca, sykkel, sykkelferie, GPS, GPX, ruter, planlegging, Gåping">
-    <meta name="author" content="Gåping">
+    <meta name="author" content="Team Gåping">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -854,7 +853,7 @@
     
     <!-- Splash Screen -->
     <div class="splash-screen" id="splashScreen">
-        <img src="logo.png" alt="Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
+        <img src="logo.png" alt="Team Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
         <div class="splash-progress">
             <div class="splash-progress-bar">
                 <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
@@ -864,7 +863,7 @@
     </div>
 
     <div class="header">
-        <h1>🌴 Gåpings Mallorca Getaway Semi-Automatic Configurator for Desktop Computers</h1>
+        <h1>🌴 Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for Desktop Computers</h1>
     </div>
 
     <div class="controls">
@@ -1133,7 +1132,7 @@
                     });
                 }
             });
-            
+            saveToLocalStorage(); // 🔥 LEGG TIL DENNE
             updateRouteColors();
             updateSidebar();
             closeRouteSelector();
@@ -1190,6 +1189,32 @@
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
             { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
         ];
+        const STORAGE_KEY = 'ggtm26_selected_routes';
+
+        function saveToLocalStorage() {
+            const data = days.map(day => ({
+                id: day.id,
+                routes: day.routes
+            }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+
+            try {
+                const parsed = JSON.parse(saved);
+                parsed.forEach(savedDay => {
+                    const day = days.find(d => d.id === savedDay.id);
+                    if (day) {
+                        day.routes = savedDay.routes || [];
+                    }
+                });
+            } catch (e) {
+                console.warn('Kunne ikke laste lagrede ruter:', e);
+            }
+        }
 
         const bundledRouteFiles = [
             'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx',

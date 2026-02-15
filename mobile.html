@@ -365,6 +365,32 @@
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
             { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
         ];
+        const STORAGE_KEY = 'ggtm26_selected_routes';
+
+        function saveToLocalStorage() {
+            const data = days.map(day => ({
+                id: day.id,
+                routes: day.routes
+            }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+
+            try {
+                const parsed = JSON.parse(saved);
+                parsed.forEach(savedDay => {
+                    const day = days.find(d => d.id === savedDay.id);
+                    if (day) {
+                        day.routes = savedDay.routes || [];
+                    }
+                });
+            } catch (e) {
+                console.warn('Kunne ikke laste lagrede ruter:', e);
+            }
+        }
 
         const bundledRouteFiles = [
             'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx',
@@ -479,6 +505,7 @@
                     else dayARoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                 }
             }
+            saveToLocalStorage();
             updateUI();
             updateMapVisibility();
             closeMenu();
@@ -526,6 +553,7 @@
                     b1b2.slice(0, 2).forEach(route => day.routes.push(route.id));
                 }
             }
+            saveToLocalStorage();
             updateUI();
             updateMapVisibility();
             closeMenu();
@@ -830,6 +858,9 @@
 
             const dayIndex = currentDay - 1;
             days[dayIndex].routes = selected;
+
+            saveToLocalStorage(); // 🔥 LEGG TIL DENNE
+
             updateUI();
             updateMapVisibility();
             closeRouteSelector();
@@ -1036,7 +1067,7 @@ routesContainer.innerHTML = `
                 
                 splashFill.style.width = `${((i+1) / bundledRouteFiles.length) * 100}%`;
             }
-            
+            loadFromLocalStorage();
             splashText.textContent = 'Ferdig!';
             setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
         }
