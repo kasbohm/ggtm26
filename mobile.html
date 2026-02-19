@@ -399,7 +399,7 @@
             'GGTM26_D1_B_Helios_Port_de_Soller_66km_1000hm.gpx',
             'GGTM26_D1_B1_Port_de_Soller_Helios_40km_500hm.gpx',
             'GGTM26_D1_B2_Port_de_Soller_Helios_60km_1100hm.gpx',
-            'GGTM26_D2_A_Cap_de_Formentor_Helios_125km_1300hm.gpx',
+            'GGTM26_D2_A_Cap_de_Formentor_Helios_108km_1100hm.gpx',
             'GGTM26_D2_A_Helios_Cap_de_Formentor_108km_1930hm.gpx',
             'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx',
             'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
@@ -727,12 +727,20 @@
             const dayNum = currentDay; // currentDay 1-4 = dag 1-4
             document.getElementById('modalDayTitle').textContent = `Dag ${dayNum}`;
 
-            // Filter routes for current day only
+            // Filter routes for current day only, sorted by level then ut before hjem
             const dayRoutes = routes.filter(r => {
                 const match = r.fileName.match(/GGTM26_D(\d+)_/);
                 return match && parseInt(match[1]) === dayNum;
+            }).sort((a, b) => {
+                // Primary: sort by level (A, B, B1, B2, etc.)
+                const levelA = a.fileName.match(/GGTM26_D\d+_([^_]+)_/)?.[1] ?? '';
+                const levelB = b.fileName.match(/GGTM26_D\d+_([^_]+)_/)?.[1] ?? '';
+                if (levelA !== levelB) return levelA.localeCompare(levelB);
+                // Secondary: ut (Helios_) before hjem (_Helios)
+                const dirScore = r => r.fileName.includes('Helios_') ? 0 : 1;
+                return dirScore(a) - dirScore(b);
             });
-            
+
             selector.innerHTML = '';
 
                 // Før du løkker gjennom dayRoutes
@@ -1174,7 +1182,7 @@ routesContainer.innerHTML = `
 
             // If day has routes, use those. Otherwise, use all loaded routes
             if (day && day.routes.length > 0) {
-                dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+                dayRoutes = sortRoutesUtHjem(day.routes.map(id => routes.find(r => r.id === id)).filter(r => r));
                 profileTitle = `Dag ${dayIndex + 1}`;
             } else if (routes.length > 0) {
                 // Fallback: show all routes if no routes selected for this day

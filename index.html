@@ -1223,7 +1223,7 @@
             'GGTM26_D1_B_Helios_Port_de_Soller_66km_1000hm.gpx',
             'GGTM26_D1_B1_Port_de_Soller_Helios_40km_500hm.gpx',
             'GGTM26_D1_B2_Port_de_Soller_Helios_60km_1100hm.gpx',
-            'GGTM26_D2_A_Cap_de_Formentor_Helios_125km_1300hm.gpx',
+            'GGTM26_D2_A_Cap_de_Formentor_Helios_108km_1100hm.gpx',
             'GGTM26_D2_A_Helios_Cap_de_Formentor_108km_1930hm.gpx',
             'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx',
             'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
@@ -1476,6 +1476,16 @@
                 overlapPercentage: overlapPercentage.toFixed(1),
                 commonPercentage: route1.length > 0 ? (commonPoints / route1.length * 100).toFixed(1) : 0
             };
+        }
+
+        function sortRoutesUtHjem(dayRoutes) {
+            if (dayRoutes.length !== 2) return dayRoutes;
+            const score = (r) => {
+                if (r.fileName.includes('Helios_')) return 0; // UT
+                if (r.fileName.includes('_Helios')) return 1; // HJEM
+                return 2;
+            };
+            return [...dayRoutes].sort((a, b) => score(a) - score(b));
         }
 
         function addRoute(fileName, points, color, isBundled = false) {
@@ -2560,9 +2570,9 @@
 
         // If day has routes, use those. Otherwise, use all loaded routes
         if (day && day.routes.length > 0) {
-            dayRoutes = day.routes
+            dayRoutes = sortRoutesUtHjem(day.routes
                 .map(routeId => routes.find(r => r.id === routeId))
-                .filter(r => r && r.gpxPoints);
+                .filter(r => r && r.gpxPoints));
             profileTitle = `Dag ${dayId}`;
         } else if (routes.length > 0) {
             // Fallback: show all routes if no routes selected for this day
