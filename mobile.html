@@ -329,7 +329,7 @@
             <!-- Dag 4 -->
             <div class="day-card" style="border-top: 4px solid #f39c12;">
                 <div class="day-header">
-                    <span class="day-title">Dag 4 - Puig Major</span>
+                    <span class="day-title">Dag 4 - Sant Salvador</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(3)">📈</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
@@ -409,10 +409,10 @@
             'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
             'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
             'GGTM26_D3_B2_Sa_Calobra__Helios_90km_1500hm.gpx',
-            'GGTM26_D4_A_Helios_Puig_Major__72km_2400hm.gpx',
-            'GGTM26_D4_A_Puig_Major_Helios_100km_1700hm.gpx',
-            'GGTM26_D4_B_Helios_Puig_Major__62km_1700hm.gpx',
-            'GGTM26_D4_B_Puig_Major_Helios_76km_850hm.gpx'
+            'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx',
+            'GGTM26_D4_A_Sant_Salvador_Helios_85km_600hm.gpx',
+            'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
+            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -1257,7 +1257,7 @@ routesContainer.innerHTML = `
             let totalClimbingPoints = 0;
             peakIndexes.forEach(peak => totalClimbingPoints += peak.score);
 
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
             let title = profileTitle;
             if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
                 title = `Dag ${dayId} (${dayNames[dayId - 1]})`;
@@ -1372,7 +1372,7 @@ routesContainer.innerHTML = `
                     });
                 }
 
-                if (dayId !== 4 && maxIndex >= meetIdx) {
+                if (dayId !== 4 && dayRoutes.length > 1 && maxIndex >= meetIdx) {
                     ctx.save();
                     ctx.font = '28px Arial';
                     ctx.textAlign = 'center';

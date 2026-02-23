@@ -933,7 +933,7 @@
 
                     <div class="day-box" data-day-id="4" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
                         <div class="day-box-header">
-                            <div class="day-title">Dag 4 - Puig Major</div>
+                            <div class="day-title">Dag 4 - Sant Salvador</div>
                             <div class="day-stats-compact" id="day-4-stats"></div>
                             <div class="day-controls">
                                 <button class="day-select-btn" onclick="openRouteSelector(4)">Velg ruter</button>
@@ -986,7 +986,7 @@
             
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
             document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
             
             // Filter routes for current day from BUNDLED routes only
@@ -1233,10 +1233,10 @@
             'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
             'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
             'GGTM26_D3_B2_Sa_Calobra__Helios_90km_1500hm.gpx',
-            'GGTM26_D4_A_Helios_Puig_Major__72km_2400hm.gpx',
-            'GGTM26_D4_A_Puig_Major_Helios_100km_1700hm.gpx',
-            'GGTM26_D4_B_Helios_Puig_Major__62km_1700hm.gpx',
-            'GGTM26_D4_B_Puig_Major_Helios_76km_850hm.gpx'
+            'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx',
+            'GGTM26_D4_A_Sant_Salvador_Helios_85km_600hm.gpx',
+            'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
+            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -2946,7 +2946,7 @@
         });
         
         // Sett tittel med klatrepoeng
-        const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Puig Major'];
+        const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
         let titleText = profileTitle;
         if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
             titleText = `Dag ${dayId} (${dayNames[dayId - 1]})`;
@@ -3083,8 +3083,8 @@
                 });
             }
             
-            // --- Tegn øl når animasjonen når midtpunktet (dag 1-3) ---
-            if (dayId !== 4 && maxIndex >= meetIdx) {
+            // --- Tegn øl når animasjonen når midtpunktet (dag 1-3, kun for 2-ruters dager) ---
+            if (dayId !== 4 && dayRoutes.length > 1 && maxIndex >= meetIdx) {
                 ctx.save();
                 ctx.imageSmoothingEnabled = false;
                 ctx.font = '32px Arial';
