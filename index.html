@@ -2419,10 +2419,15 @@
                 }
             }
 
-            // Skjul alle ruter som ikke er i noen dager
+            // Vis ruter som nå er i dager, skjul de som ikke er det
             const routesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                if (!routesInDays.has(route.id) && route.visible) {
+                if (routesInDays.has(route.id)) {
+                    if (!route.visible) {
+                        route.visible = true;
+                        route.polyline.addTo(map);
+                    }
+                } else if (route.visible) {
                     route.visible = false;
                     route.polyline.remove();
                     if (route.decorator) route.decorator.remove();
@@ -2473,10 +2478,15 @@
                 }
             }
 
-            // Skjul alle ruter som ikke er i noen dager
+            // Vis ruter som nå er i dager, skjul de som ikke er det
             const routesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                if (!routesInDays.has(route.id) && route.visible) {
+                if (routesInDays.has(route.id)) {
+                    if (!route.visible) {
+                        route.visible = true;
+                        route.polyline.addTo(map);
+                    }
+                } else if (route.visible) {
                     route.visible = false;
                     route.polyline.remove();
                     if (route.decorator) route.decorator.remove();
