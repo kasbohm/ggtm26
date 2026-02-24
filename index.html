@@ -1453,7 +1453,7 @@
                             const seg2Start = coords2[j];
                             const seg2End = coords2[j + 1];
                             const dist = Math.sqrt(
-                                Math.pow(seg1Start.lat - seg2Start.lat, 2) + 
+                                Math.pow(seg1Start.lat - seg2Start.lat, 2) +
                                 Math.pow(seg1Start.lng - seg2Start.lng, 2)
                             );
                             if (dist < tolerance) {
@@ -1461,8 +1461,8 @@
                                 const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
                                 if (dotProduct > 0) {
                                     overlapPoints++;
-                                    break;
                                 }
+                                break; // Alltid stopp ved første nærliggende punkt
                             }
                         }
                     }
@@ -2198,6 +2198,16 @@
             }
 
             updateSidebar();
+
+            // Zoom til alle synlige ruter
+            const visiblePolylines = days
+                .filter(d => d.visible)
+                .flatMap(d => d.routes.map(id => routes.find(r => r.id === id)).filter(r => r))
+                .map(r => r.polyline);
+
+            if (visiblePolylines.length > 0) {
+                map.fitBounds(L.featureGroup(visiblePolylines).getBounds(), { padding: [40, 40] });
+            }
         };
 
         document.getElementById('toggleMapBtn').addEventListener('click', toggleMapBackground);

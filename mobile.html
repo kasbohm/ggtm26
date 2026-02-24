@@ -32,9 +32,9 @@
         }
         
         /* Splash */
-        .splash { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; padding: 20px; }
+        .splash { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; padding: 8px; }
         .splash.hidden { opacity: 0; pointer-events: none; }
-        .splash img { width: 95%; max-width: 600px; height: auto; }
+        .splash img { width: 100%; max-width: none; height: auto; }
         .splash-bar { width: 85%; max-width: 500px; height: 12px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-top: 3rem; overflow: hidden; }
         .splash-fill { height: 100%; background: linear-gradient(90deg, #00f5ff, #ff00ff, #ffaa00); background-size: 200%; animation: shimmer 2s linear infinite; transition: width 0.3s; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -286,6 +286,7 @@
                         <div class="summary-stat-label">Totalt hm</div>
                     </div>
                 </div>
+                <div id="summaryRouteList" style="margin-top: 10px; overflow-y: auto; flex: 1;"></div>
             </div>
 
             <!-- Dag 1 -->
@@ -669,14 +670,28 @@
         }
         
         function updateMapVisibility() {
-            // Summary slide (currentDay === 0) has no routes
+            // Summary slide (currentDay === 0): vis alle valgte ruter
             if (currentDay === 0) {
+                const allSelectedIds = new Set(days.flatMap(d => d.routes));
                 routes.forEach(route => {
-                    route.polyline.setStyle({ opacity: 0 });
-                    if (route.decorator) route.decorator.remove();
-                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
-                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    const isSelected = allSelectedIds.has(route.id);
+                    route.polyline.setStyle({ opacity: isSelected ? 0.8 : 0, weight: isSelected ? 4 : 3 });
+                    if (route.decorator) {
+                        if (isSelected) route.decorator.addTo(map);
+                        else route.decorator.remove();
+                    }
+                    if (isSelected) {
+                        route.startMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
+                        route.endMarker.setStyle({ fillOpacity: 0.8, opacity: 1 });
+                    } else {
+                        route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                        route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    }
                 });
+                if (allSelectedIds.size > 0) {
+                    const selectedPolylines = routes.filter(r => allSelectedIds.has(r.id)).map(r => r.polyline);
+                    map.fitBounds(L.featureGroup(selectedPolylines).getBounds(), { padding: [20, 20] });
+                }
                 return;
             }
 
@@ -885,15 +900,14 @@
                     offset: '10%',
                     repeat: '15%',
                     symbol: L.Symbol.arrowHead({
-                        pixelSize: 15,
-                        polygon: true,
+                        pixelSize: 8,
+                        polygon: false,
                         pathOptions: {
                             stroke: true,
-                            weight: 3,
+                            weight: 2,
                             color: color,
-                            fillColor: color,
-                            fillOpacity: 1.0,
-                            opacity: 1.0
+                            fillOpacity: 0,
+                            opacity: 0.8
                         }
                     })
                 }]
@@ -1022,15 +1036,14 @@ routesContainer.innerHTML = `
                                 offset: '10%',
                                 repeat: '15%',
                                 symbol: L.Symbol.arrowHead({
-                                    pixelSize: 15,
-                                    polygon: true,
+                                    pixelSize: 8,
+                                    polygon: false,
                                     pathOptions: {
                                         stroke: true,
-                                        weight: 3,
+                                        weight: 2,
                                         color: day.color,
-                                        fillColor: day.color,
-                                        fillOpacity: 1.0,
-                                        opacity: 1.0
+                                        fillOpacity: 0,
+                                        opacity: 0.8
                                     }
                                 })
                             }]
@@ -1044,6 +1057,35 @@ routesContainer.innerHTML = `
             document.getElementById('totalRoutes').textContent = totalRoutesCount;
             document.getElementById('totalKm').textContent = totalKm.toFixed(0);
             document.getElementById('totalHm').textContent = Math.round(totalHm);
+
+            // Oppdater ruteliste i sammendrag
+            const summaryRouteList = document.getElementById('summaryRouteList');
+            if (summaryRouteList) {
+                summaryRouteList.innerHTML = days.map(day => {
+                    const dayRoutes = sortRoutesUtHjem(day.routes.map(id => routes.find(r => r.id === id)).filter(r => r));
+                    if (dayRoutes.length === 0) return '';
+                    const routeNames = dayRoutes.map(r => {
+                        const parts = r.fileName.replace('.gpx', '').split('_');
+                        const levelIndex = parts.findIndex(p => p.match(/^D\d+$/)) + 1;
+                        const locationParts = [];
+                        for (let j = levelIndex + 1; j < parts.length; j++) {
+                            if (parts[j].match(/^\d+km$/) || parts[j].match(/^\d+hm$/)) break;
+                            locationParts.push(parts[j]);
+                        }
+                        const hi = locationParts.indexOf('Helios');
+                        if (hi === 0) return `Helios → ${locationParts.slice(1).join(' ')}`;
+                        if (hi > 0) return `${locationParts.slice(0, hi).join(' ')} → Helios`;
+                        return locationParts.join(' ');
+                    });
+                    let km = 0, hm = 0;
+                    dayRoutes.forEach(r => { if (r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain; } });
+                    return `<div style="display:flex; align-items:baseline; gap:6px; margin-bottom:5px; border-left: 3px solid ${day.color}; padding-left: 8px;">
+                        <span style="color:${day.color}; font-weight:700; font-size:0.8rem; min-width:22px;">D${day.id}</span>
+                        <span style="color:#00f5ff; font-size:0.75rem; flex:1;">${routeNames.join(' + ')}</span>
+                        <span style="color:#ffaa00; font-size:0.7rem; white-space:nowrap;">${km.toFixed(0)}km ⬆️${hm}m</span>
+                    </div>`;
+                }).join('');
+            }
         }
         
         async function loadBundledRoutes() {
@@ -1165,8 +1207,8 @@ routesContainer.innerHTML = `
                         const dotProduct = dir1.lat * dir2.lat + dir1.lng * dir2.lng;
                         if (dotProduct > 0) {
                             overlapPoints++;
-                            break;
                         }
+                        break; // Alltid stopp ved første nærliggende punkt
                     }
                 }
             }
