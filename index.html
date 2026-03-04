@@ -32,822 +32,8 @@
     <meta name="author" content="Team Gåping">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            
-            background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-        }
-
-        .header {
-            background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 50%, #ffaa00 100%);
-            color: #0a0a0a;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.5), 0 0 40px rgba(0, 245, 255, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(255, 0, 255, 0.1) 2px,
-                rgba(255, 0, 255, 0.1) 4px
-            );
-            animation: scan 8s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(50px); }
-        }
-
-        .header h1 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 0 10px rgba(255, 255, 0, 0.8), 0 0 20px rgba(255, 0, 255, 0.6);
-            letter-spacing: 1px;
-        }
-
-        .controls {
-            background: rgba(20, 20, 40, 0.95);
-            padding: 1rem 1.5rem;
-            border-bottom: 2px solid #ff00ff;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.3);
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: -9999px;
-        }
-
-        .file-input-label {
-            background: linear-gradient(135deg, #00f5ff 0%, #0080ff 100%);
-            color: #0a0a0a;
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-block;
-            font-size: 0.9rem;
-            font-weight: 700;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
-            border: 2px solid #00f5ff;
-        }
-
-        .file-input-label:hover {
-            background: linear-gradient(135deg, #00ffff 0%, #00aaff 100%);
-            box-shadow: 0 6px 20px rgba(0, 245, 255, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #ff00ff 0%, #ff0080 100%);
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border: 2px solid #ff00ff;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 700;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.4);
-        }
-
-        .btn:hover {
-            background: linear-gradient(135deg, #ff00ff 0%, #ff00aa 100%);
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #302b63 0%, #24243e 100%);
-            border-color: #00f5ff;
-            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.3);
-        }
-
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #3d3768 0%, #2e2e4a 100%);
-            box-shadow: 0 6px 20px rgba(0, 245, 255, 0.5);
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        #map {
-            flex: 1;
-            transition: background-color 0.3s;
-        }
-
-        #map.light-background {
-            background: #f8f8f8;
-        }
-
-        .sidebar {
-            width: 230px;
-            background: white;
-            border-left: 1px solid #e0e0e0;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-
-        .route-item {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 0.8rem;
-            margin-bottom: 0.8rem;
-            border-left: 4px solid;
-            cursor: move;
-            position: relative;
-        }
-
-        .route-item:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .route-item.dragging {
-            opacity: 0.5;
-        }
-
-        .route-header {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
-
-        .route-toggle {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .route-name {
-            flex: 1;
-            font-weight: 500;
-            font-size: 0.9rem;
-            word-break: break-word;
-            padding-right: 1.5rem;
-        }
-
-        .remove-route {
-            position: absolute;
-            top: 0;
-            right: 0;
-            cursor: pointer;
-            color: #e74c3c;
-            font-weight: bold;
-            padding: 0.2rem 0.5rem;
-            background: white;
-            border-radius: 3px;
-            font-size: 0.9rem;
-            z-index: 10;
-        }
-
-        .remove-route:hover {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .route-stats {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 0.3rem;
-        }
-
-        .route-stats div {
-            margin-bottom: 0.2rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #999;
-        }
-
-        .stats-summary {
-            background: #e8f4f8;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-        }
-
-        .stats-summary strong {
-            color: #2c3e50;
-        }
-
-        .days-overlay {
-            position: absolute;
-            top: 10px;
-            left: 260px; /* Justert (var 200px) */
-            right: 10px; /* Justert (var 50px) */
-            z-index: 1000;
-            background: white;
-            padding: 0.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-        }
-
-        .days-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #2c3e50;
-        }
-
-        .days-toggle {
-            cursor: pointer;
-            font-size: 1.2rem;
-            user-select: none;
-            padding: 0 0.3rem;
-        }
-
-        .days-content {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-        }
-
-        .days-content.collapsed {
-            display: none;
-        }
-
-        .day-box {
-            flex: 1;
-            min-width: 150px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 0.6rem;
-            border: 2px solid #ddd;
-            transition: all 0.2s;
-        }
-
-        .day-box.drag-over {
-            background: #e8f4f8;
-            border-color: #3498db;
-            transform: scale(1.02);
-        }
-
-        .day-box-header {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .day-title {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #34495e;
-            text-align: center;
-        }
-
-        .day-stats-compact {
-            font-size: 0.7rem;
-            color: #7f8c8d;
-            text-align: center;
-        }
-
-        .day-controls {
-            display: flex;
-            gap: 0.3rem;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .day-select-btn {
-            background: linear-gradient(135deg, #ffaa00, #ff8800);
-            border: 2px solid #ffaa00;
-            color: #0a0a0a;
-            padding: 0.3rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(255,170,0,0.4);
-            transition: all 0.3s;
-            white-space: nowrap;
-            flex: 1;
-        }
-
-        .day-select-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255,170,0,0.6);
-        }
-
-        .btn-download-day {
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.4rem 0.6rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-download-day:hover {
-            background: #229954;
-        }
-
-        .btn-download-day:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        .btn-toggle-day {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            border: 2px solid #3498db;
-            color: white;
-            padding: 0.4rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .btn-toggle-day:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52,152,219,0.6);
-        }
-
-        .btn-toggle-day.hidden {
-            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-            border-color: #95a5a6;
-        }
-
-        .day-content {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .day-route-item {
-            background: white;
-            border-radius: 4px;
-            padding: 0.4rem;
-            font-size: 0.7rem;
-            border-left: 3px solid;
-            position: relative;
-        }
-
-        .day-route-item:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .day-route-name {
-            font-weight: 500;
-            margin-bottom: 0.1rem;
-            padding-right: 1rem;
-            word-break: break-word;
-            font-size: 0.7rem;
-            line-height: 1.2;
-        }
-
-        .day-route-stats {
-            font-size: 0.65rem;
-            color: #7f8c8d;
-        }
-
-        .remove-from-day {
-            position: absolute;
-            top: 0.2rem;
-            right: 0.2rem;
-            cursor: pointer;
-            color: #e74c3c;
-            font-weight: bold;
-            padding: 0 0.2rem;
-            line-height: 1;
-            font-size: 0.9rem;
-        }
-
-        .remove-from-day:hover {
-            color: #c0392b;
-        }
-
-        /* Splash Screen */
-        .splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: black;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 99999;
-            transition: all 0.8s ease-in-out;
-        }
-
-        .splash-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .splash-screen.minimized {
-            top: auto;
-            bottom: 10px;
-            left: 10px;
-            height: auto;
-            width: auto;
-            background: transparent;
-            box-shadow: none;
-            justify-content: flex-start;
-            padding: 0.5rem;
-        }
-
-        .splash-logo {
-            max-width: 80%;
-            width: 600px;
-            height: auto;
-            animation: pulse 2s ease-in-out infinite;
-            transition: all 0.8s ease-in-out;
-        }
-
-        .splash-screen.minimized .splash-logo {
-            width: 150px;
-            animation: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .splash-screen.minimized .splash-logo:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.5);
-        }
-
-        /* Løypeprofil */
-        .elevation-profile {
-            position: fixed;
-            bottom: 10px;
-            right: 240px; /* Justert (var 250px) */
-            width: 750px;  /* Justert (var 740px) */
-            height: 200px;
-            background: rgba(20, 20, 40, 0.95);
-            border: 2px solid #00f5ff;
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            z-index: 10000;
-            display: none;
-        }
-
-        .elevation-profile.visible {
-            display: block;
-        }
-
-        .elevation-profile-header {
-            color: #00f5ff;
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-shadow: 0 0 5px rgba(0,245,255,0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .elevation-profile-close {
-            cursor: pointer;
-            color: #ff0080;
-            font-size: 1.2rem;
-            line-height: 1;
-            padding: 0 5px;
-        }
-
-        .elevation-profile-close:hover {
-            color: #ff00ff;
-        }
-
-        .elevation-profile-canvas {
-            width: 100%;
-            height: 160px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-            cursor: none; /* Skjul cursor */
-        }
-
-        .elevation-tooltip {
-            position: fixed;
-            background: rgba(0, 245, 255, 0.95);
-            color: #0a0a0a;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
-            pointer-events: none;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 10002;
-        }
-
-        .elevation-cyclist {
-            position: fixed;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 245, 255, 0.3);
-            border: 2px solid #00f5ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            pointer-events: none;
-            z-index: 10001;
-            display: none;
-            transform: scaleX(-1); /* Snu syklisten horisontalt */
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .splash-progress {
-            width: 400px;
-            max-width: 80%;
-            margin-top: 3rem;
-            transition: all 0.8s ease-in-out;
-        }
-
-        .splash-screen.minimized .splash-progress {
-            display: none;
-        }
-
-        .splash-progress-bar {
-            width: 100%;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .splash-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00f5ff 0%, #ff00ff 50%, #ffaa00 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2s linear infinite;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .splash-text {
-            color: #00f5ff;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
-        }
-
-        .map-layer-selector {
-            position: absolute;
-            top: 10px;
-            left: 50px; /* Venstre side (var right: 10px) */
-            z-index: 1000;
-            background: white;
-            padding: 0.8rem;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .map-layer-selector label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .map-layer-selector input[type="radio"] {
-            margin-right: 0.5rem;
-        }
-
-        /* Route Selector Modal */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: linear-gradient(180deg, #1a1a2e, #16213e);
-            border: 2px solid #00f5ff;
-            border-radius: 12px;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 20px;
-            box-shadow: 0 0 40px rgba(0,245,255,0.5);
-        }
-
-        .modal-header {
-            color: #00f5ff;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px rgba(0,245,255,0.8);
-            text-align: center;
-        }
-
-        .route-selector {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .route-option {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(48,43,99,0.5);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .route-option.selected {
-            background: rgba(0,245,255,0.2);
-            border-color: #00f5ff;
-            box-shadow: 0 0 15px rgba(0,245,255,0.4);
-        }
-
-        .route-option input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-top: 2px;
-            accent-color: #00f5ff;
-            flex-shrink: 0;
-        }
-
-        .route-option label {
-            flex: 1;
-            position: relative;
-            color: white;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .route-name {
-            font-weight: 700;
-            color: #00f5ff;
-            margin-bottom: 4px;
-        }
-        .route-header .route-name {
-            color: #3200ff;
-        }
-
-        .route-details {
-            font-size: 0.8rem;
-            color: #ffaa00;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
-        }
-
-        .modal-btn.save {
-            background: linear-gradient(135deg, #00ff88, #00cc66);
-            border-color: #00ff88;
-            color: #0a0a0a;
-        }
-
-        .modal-btn.cancel {
-            background: transparent;
-            border-color: #ff0080;
-            color: #ff0080;
-        }
-
-        .modal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,245,255,0.4);
-        }
-
-        .route-badge {
-            position: absolute;
-            top: 5px;
-            right: -5px;
-            background: gold;
-            color: black;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 5px;
-            transform: rotate(15deg);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            font-size: 0.75rem;
-        }
-
-        .route-badge.best {
-            background: #28a745; /* grønn */
-            color: white;
-        }
-
-        .route-badge.worst {
-            background: #ffc107; /* gul */
-            color: black;
-        }
-       #confetti-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: visible;
-            z-index: 10005; /* Høyere enn elevation-profile (10000) */
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            opacity: 0.9;
-            border-radius: 2px;
-            animation: explode 3s forwards; /* Enda tregere: 3s */
-        }
-
-        @keyframes explode {
-            0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--x), var(--y)) rotate(720deg);
-                opacity: 0;
-            }
-        }
-
-
-    </style>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
     
@@ -2731,6 +1917,34 @@
             document.getElementById('elevationCyclist').style.display = 'none';
         });
 
+        // ---- Klatrebadge hover + klikk ----
+        (function() {
+            const BW = 86, BH = 38, GAP = 14;
+            function badgeAt(mx, my) {
+                return climbBadges.find(b => {
+                    const bcy = Math.max(BH / 2 + 5, b.peakY - GAP - BH / 2);
+                    return mx >= b.peakX - BW / 2 && mx <= b.peakX + BW / 2 &&
+                           my >= bcy - BH / 2     && my <= bcy + BH / 2;
+                });
+            }
+            canvas.addEventListener('mousemove', (e) => {
+                const r = canvas.getBoundingClientRect();
+                const mx = (e.clientX - r.left) * (canvas.width / r.width);
+                const my = (e.clientY - r.top)  * (canvas.height / r.height);
+                canvas.style.cursor = badgeAt(mx, my) ? 'pointer' : '';
+            });
+            canvas.addEventListener('click', (e) => {
+                const r = canvas.getBoundingClientRect();
+                const mx = (e.clientX - r.left) * (canvas.width / r.width);
+                const my = (e.clientY - r.top)  * (canvas.height / r.height);
+                const b = badgeAt(mx, my);
+                if (b) {
+                    const filesParam = b.routeFiles.map(encodeURIComponent).join(',');
+                    window.open(`analyze-climbs.html?files=${filesParam}`, '_blank');
+                }
+            });
+        })();
+
         // ---- Tegn bakgrunn og grid ----
         function drawBackground() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2861,8 +2075,13 @@
                     // Prøv å flytte startpunktet nærmere toppen
                     let bestStart = climbStart;
                     let bestGradient = avgGradient;
+                    const UPHILL_W = 6; // punkter fremover for å bekrefte oppoverbakke
 
-                    for (let i = climbStart + 1; i < peak.index; i++) {
+                    for (let i = climbStart + 1; i < peak.index - UPHILL_W; i++) {
+                        // Hopp over punkt der terrenget er nedoverbakke fremover
+                        // (unngå å starte midt i en nedstigning)
+                        if (elev[i + UPHILL_W] <= elev[i]) continue;
+
                         const testDistKm = dist[peak.index] - dist[i];
                         const testGain = elev[peak.index] - elev[i];
                         const testGradient = testDistKm > 0 ? (testGain / (testDistKm * 1000)) * 100 : 0;
@@ -2871,7 +2090,6 @@
                         if (testDistKm >= CLIMB_CONFIG.minLength &&
                             testGain >= CLIMB_CONFIG.minElevation &&
                             testGradient >= CLIMB_CONFIG.minGradient) {
-                            // Denne seksjonen er bedre!
                             bestStart = i;
                             bestGradient = testGradient;
                             break; // Bruk første gyldige seksjon (lengste som kvalifiserer)
@@ -2880,10 +2098,21 @@
 
                     // Oppdater hvis vi fant en bedre start
                     if (bestStart !== climbStart) {
-                        climbStart = bestStart;
+                        // Snap til nærmeste lokale minimum i neste 20 punkter
+                        // (ekstra sikkerhet mot GPS-støy nær startpunktet)
+                        const SNAP_RANGE = 20;
+                        let snapMin = elev[bestStart];
+                        let snapTo = bestStart;
+                        for (let i = bestStart + 1; i <= Math.min(bestStart + SNAP_RANGE, peak.index - 1); i++) {
+                            if (elev[i] < snapMin) {
+                                snapMin = elev[i];
+                                snapTo = i;
+                            }
+                        }
+                        climbStart = snapTo;
                         climbDistanceKm = dist[peak.index] - dist[climbStart];
                         climbGain = elev[peak.index] - elev[climbStart];
-                        avgGradient = bestGradient;
+                        avgGradient = climbDistanceKm > 0 ? (climbGain / (climbDistanceKm * 1000)) * 100 : 0;
                     }
                 }
 
@@ -2986,6 +2215,9 @@
         let startTime = null;
         const peaks = [];
         const shownPeaks = new Set(); // Track hvilke peaks som allerede er vist
+        const climbBadges = []; // Neon-badges for kategoriserte klatringer
+        const shownBadges = new Set();
+        const BADGE_ANIM_DUR = 450; // ms for pop-in animasjon
 
         function animateProfile(timestamp) {
             if (!startTime) startTime = timestamp;
@@ -3059,49 +2291,39 @@
                 // --- push stjerner og kategorier EN gang når vi når toppen ---
                 for (let peak of peakIndexes) {
                     if (i === peak.index && !shownPeaks.has(peak.index)) {
-                        peaks.push({ 
-                            x, 
-                            y, 
-                            life: 0, 
+                        peaks.push({
+                            x,
+                            y,
+                            life: 0,
                             index: peak.index,
                             category: peak.category,
                             midIndex: peak.midIndex
                         });
                         shownPeaks.add(peak.index);
                     }
+                    // Spawn neon-badge ved toppen (summiten) av klatringen
+                    if (peak.category && i === peak.index && !shownBadges.has(peak.index)) {
+                        const badgeColors = { 'HC':'#ff6464', '1':'#ff00ff', '2':'#a064ff', '3':'#00b4ff', '4':'#00f5ff' };
+                        const bx = cumulativeDistance[peak.index] / totalDistance * canvas.width;
+                        const by = canvas.height - ((elevations[peak.index] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
+                        climbBadges.push({
+                            peakX: bx, peakY: by,
+                            category: peak.category,
+                            color: badgeColors[peak.category] || '#00f5ff',
+                            bornElapsed: elapsed,
+                            avgGradient: peak.avgGradient,
+                            climbGain: peak.climbGain,
+                            routeFiles: dayRoutes.map(r => r.fileName)
+                        });
+                        shownBadges.add(peak.index);
+                    }
                 }
             }
             ctx.stroke();
 
-            // --- Tegn stjerner ---
+            // --- Tegn stjerner og neon-badges ---
             drawStars();
-            
-            // --- Tegn kategori-badges på midten av stigninger ---
-            if (progress >= 1) {
-                peakIndexes.forEach(peak => {
-                    // Kun vis badge hvis klatringen har en gyldig kategori
-                    if (peak.category) {
-                        const midX = cumulativeDistance[peak.midIndex] / totalDistance * canvas.width;
-                        const midY = canvas.height - ((elevations[peak.midIndex] - minEle) / (maxEle - minEle)) * (canvas.height - 20);
-
-                        // Rød sirkel
-                        ctx.beginPath();
-                        ctx.arc(midX, midY, 16, 0, 2 * Math.PI);
-                        ctx.fillStyle = '#e74c3c';
-                        ctx.fill();
-                        ctx.strokeStyle = '#fff';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-
-                        // Hvit tekst
-                        ctx.fillStyle = '#fff';
-                        ctx.font = 'bold 13px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(peak.category, midX, midY);
-                    }
-                });
-            }
+            drawClimbBadges(elapsed);
             
             // --- Tegn øl når animasjonen når midtpunktet (dag 1-3, kun for 2-ruters dager) ---
             if (dayId !== 4 && dayRoutes.length > 1 && maxIndex >= meetIdx) {
@@ -3137,9 +2359,8 @@
             }
             
             // --- Fortsett animasjon ---
-            if (progress < 1) {
-                requestAnimationFrame(animateProfile);
-            } else if (peaks.length > 0) {
+            const allBadgesDone = climbBadges.length === 0 || climbBadges.every(b => (elapsed - b.bornElapsed) >= BADGE_ANIM_DUR);
+            if (progress < 1 || peaks.length > 0 || !allBadgesDone) {
                 requestAnimationFrame(animateProfile);
             }
         }
@@ -3159,6 +2380,123 @@
                 drawStar(ctx, star.x, star.y - rise, 5, 8, 4);
                 ctx.restore();
             }
+        }
+
+        function climbBadgeRoundRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.arcTo(x + w, y, x + w, y + r, r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+            ctx.lineTo(x + r, y + h);
+            ctx.arcTo(x, y + h, x, y + h - r, r);
+            ctx.lineTo(x, y + r);
+            ctx.arcTo(x, y, x + r, y, r);
+            ctx.closePath();
+        }
+
+        function drawClimbBadges(elapsed) {
+            const BW = 86, BH = 38, BR = 5, GAP = 14;
+            climbBadges.forEach(badge => {
+                const age = elapsed - badge.bornElapsed;
+                let scale;
+                if (age >= BADGE_ANIM_DUR) {
+                    scale = 1.0;
+                } else {
+                    const t = age / BADGE_ANIM_DUR;
+                    if (t < 0.5)      scale = (t / 0.5) * 1.15;
+                    else if (t < 0.8) scale = 1.15 - ((t - 0.5) / 0.3) * 0.18;
+                    else              scale = 0.97 + ((t - 0.8) / 0.2) * 0.03;
+                }
+                const label = badge.category === 'HC' ? 'HC' : `K${badge.category}`;
+                const gradStr = `${badge.avgGradient.toFixed(1)}%`;
+                const gainStr = `↑${badge.climbGain}m`;
+                // Klamp badge innenfor canvas-toppen
+                const bcy = Math.max(BH / 2 + 5, badge.peakY - GAP - BH / 2);
+
+                // --- Badge ---
+                ctx.save();
+                ctx.translate(badge.peakX, bcy);
+                ctx.scale(scale, scale);
+
+                // Ytre neon-glow
+                ctx.shadowBlur = 22;
+                ctx.shadowColor = badge.color;
+
+                // Mørk bakgrunn
+                ctx.fillStyle = 'rgba(4, 4, 20, 0.96)';
+                climbBadgeRoundRect(-BW / 2, -BH / 2, BW, BH, BR);
+                ctx.fill();
+
+                // Neon kantlinje
+                ctx.shadowBlur = 12;
+                ctx.strokeStyle = badge.color;
+                ctx.lineWidth = 1.5;
+                climbBadgeRoundRect(-BW / 2, -BH / 2, BW, BH, BR);
+                ctx.stroke();
+
+                // Vertikal skillelinje mellom kategori og stats
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = badge.color + '44';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(8, -BH / 2 + 7);
+                ctx.lineTo(8, BH / 2 - 7);
+                ctx.stroke();
+
+                // Kategori-tekst (venstre side) — stor og neon
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = badge.color;
+                ctx.fillStyle = badge.color;
+                ctx.font = 'bold 13px "Courier New"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`▲ ${label}`, -BW / 4 - 4, 0);
+
+                // Gradient (høyre side, øverst)
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = 'rgba(255,255,255,0.88)';
+                ctx.font = 'bold 10px "Courier New"';
+                ctx.fillText(gradStr, BW / 4 + 8, -7);
+
+                // Høydemeter (høyre side, nederst)
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '8px "Courier New"';
+                ctx.fillText(gainStr, BW / 4 + 8, 7);
+
+                ctx.restore();
+
+                // --- Stiplet linje fra badge ned til topppunktet ---
+                const lineOpacity = Math.min(age / (BADGE_ANIM_DUR * 0.5), 1) * 0.55;
+                if (lineOpacity > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = lineOpacity;
+                    ctx.strokeStyle = badge.color;
+                    ctx.lineWidth = 1;
+                    ctx.shadowBlur = 4;
+                    ctx.shadowColor = badge.color;
+                    ctx.setLineDash([3, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(badge.peakX, bcy + (BH / 2) * scale);
+                    ctx.lineTo(badge.peakX, badge.peakY - 5);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.restore();
+                }
+
+                // --- Summit-dot (liten sirkel ved toppen) ---
+                const dotOpacity = Math.min(age / (BADGE_ANIM_DUR * 0.35), 1);
+                ctx.save();
+                ctx.globalAlpha = dotOpacity;
+                ctx.fillStyle = badge.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = badge.color;
+                ctx.beginPath();
+                ctx.arc(badge.peakX, badge.peakY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+            });
         }
 
         // Start animasjon
@@ -3271,6 +2609,185 @@
 
     </script>
     <div id="confetti-container"></div>
+
+    <!-- ===== FAKE ADS ===== -->
+    <div id="adBanner">
+        <div class="ad-label">Annonse</div>
+        <button class="ad-close" onclick="closeAd(event)">✕</button>
+        <div class="ad-image" id="adEmoji"></div>
+        <div class="ad-body">
+            <div class="ad-brand" id="adBrand"></div>
+            <div class="ad-headline" id="adHeadline"></div>
+            <div class="ad-copy" id="adCopy"></div>
+            <div class="ad-cta" id="adCTA"></div>
+            <div class="ad-url" id="adUrl"></div>
+        </div>
+    </div>
+
+    <div id="adPopup">
+        <div id="adPopupInner">
+            <div id="adPopupHeader">
+                <div id="adPopupEmoji"></div>
+                <button id="adPopupClose" onclick="closeAdPopup()">✕</button>
+            </div>
+            <div id="adPopupBody">
+                <div id="adPopupBrand"></div>
+                <div id="adPopupName"></div>
+                <div id="adPopupTagline"></div>
+                <ul id="adPopupFeatures"></ul>
+                <div id="adPopupReview"></div>
+                <div id="adPopupPrice"></div>
+                <button id="adPopupCTA" onclick="closeAdPopup()">Kjøp nå – mens lageret holder!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const ADS = [
+            {
+                emoji: '🟤',
+                brand: 'GoldenLeg™',
+                headline: 'Perfekte sykkelbein – uten sol!',
+                copy: 'Slut med skjemmende blek-over-sokkekanten. GoldenLeg gir jevn brun farge der sola aldri når.',
+                cta: 'Prøv gratis',
+                url: 'goldenleg.no',
+                name: 'GoldenLeg Pro Selvbruning',
+                tagline: '"Ingen vil vite at du ikke trente ute."',
+                features: [
+                    'Jevn farge – ingen striper, ingen oransje ankler',
+                    'Spesialformulert for sykkelutøvere med tanlinjer',
+                    'UV-beskyttelse SPF 20 inkludert',
+                    'Lukter faktisk ikke selvbruner (bare litt)'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Satte på GoldenLeg kvelden før granfonduet. Sykkelkompisen min spurte om jeg hadde vært i syden. Det hadde jeg ikke, men nå ser det slik ut." – Truls R., Drammen',
+                price: 'Kr 249,- (3 for 2!)'
+            },
+            {
+                emoji: '🪒',
+                brand: 'AeroShave Pro™',
+                headline: 'Spar 3 watt. Barber beina.',
+                copy: 'Vitenskapen er klar: glatte bein = færre watt i motstand. AeroShave er designet for rask effektiv barbering etter lange treningsøkter.',
+                cta: 'Bli aerodynamisk',
+                url: 'aeroshave.no',
+                name: 'AeroShave Pro Barbermaskin',
+                tagline: '"For rittersyklisten som tar seg selv på alvor."',
+                features: [
+                    '5-blads presisjonshode for total aerodynamikk',
+                    'Spesialbygd for bein av varierende grovhet',
+                    'Vanntett – kan brukes i dusjen etter rittet',
+                    'Inkluderer "Velobein"-instruksjonsvideo'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Barbert beina for første gang siden 2019. Kollegene trodde jeg hadde gått ned 5 kg. Jeg hadde ikke det, men jeg er nå 3 watt raskere." – Bjørn H., Trondheim',
+                price: 'Kr 599,- inkl. reiseetui'
+            },
+            {
+                emoji: '🟡',
+                brand: 'SaddleGold™',
+                headline: 'For ømme steder ingen snakker om.',
+                copy: 'SaddleGold chamois krem – den hemmeligheten alle syklister har men ingen innrømmer å trenge.',
+                cta: 'Beskytt deg selv',
+                url: 'saddlegold.no',
+                name: 'SaddleGold Chamois Krem 150ml',
+                tagline: '"Fordi fire timer i salen er nok straff som det er."',
+                features: [
+                    'Antibakteriell formel med tea tree og mentol',
+                    'Holder hele etapperittet – testet på 200km+',
+                    'Diskré parfymert (ingen vil spørre)',
+                    'Fungerer faktisk – i motsetning til "å bare herdes"'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Burde ha brukt dette på dag 1 i Mallorca. Dag 3 var for sent. Kjøp det. Det er ikke pinlig. Alle gjør det." – Anonym syklist, Gåping-laget',
+                price: 'Kr 189,- (størst rabatt ved kjøp av to)'
+            }
+        ];
+
+        let currentAd = null;
+        let bannerTimeout = null;
+        let nextAdTimeout = null;
+
+        function showAd(ad) {
+            currentAd = ad;
+            document.getElementById('adEmoji').textContent = ad.emoji;
+            document.getElementById('adBrand').textContent = ad.brand;
+            document.getElementById('adHeadline').textContent = ad.headline;
+            document.getElementById('adCopy').textContent = ad.copy;
+            document.getElementById('adCTA').textContent = ad.cta;
+            document.getElementById('adUrl').textContent = ad.url;
+
+            const banner = document.getElementById('adBanner');
+            banner.style.animation = 'none';
+            banner.offsetHeight; // reflow
+            banner.style.animation = '';
+            banner.style.display = 'block';
+
+            // Auto-dismiss after 12 seconds
+            clearTimeout(bannerTimeout);
+            bannerTimeout = setTimeout(() => closeAd(), 12000);
+        }
+
+        window.closeAd = function(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('adBanner').style.display = 'none';
+            clearTimeout(bannerTimeout);
+            scheduleNextAd();
+        };
+
+        window.closeAdPopup = function() {
+            document.getElementById('adPopup').classList.remove('open');
+            scheduleNextAd();
+        };
+
+        function openAdPopup(ad) {
+            document.getElementById('adPopup').classList.add('open');
+            document.getElementById('adPopupEmoji').textContent = ad.emoji;
+            document.getElementById('adPopupBrand').textContent = ad.brand;
+            document.getElementById('adPopupName').textContent = ad.name;
+            document.getElementById('adPopupTagline').textContent = ad.tagline;
+            const ul = document.getElementById('adPopupFeatures');
+            ul.innerHTML = '';
+            ad.features.forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = f;
+                ul.appendChild(li);
+            });
+            document.getElementById('adPopupReview').innerHTML =
+                '<span class="stars">★★★★★</span> ' + ad.review.replace(/^⭐+\s*/, '');
+            document.getElementById('adPopupPrice').textContent = ad.price;
+        }
+
+        // Click on banner → open popup
+        document.getElementById('adBanner').addEventListener('click', function() {
+            if (!currentAd) return;
+            document.getElementById('adBanner').style.display = 'none';
+            clearTimeout(bannerTimeout);
+            openAdPopup(currentAd);
+        });
+
+        // Click outside popup to close
+        document.getElementById('adPopup').addEventListener('click', function(e) {
+            if (e.target === this) closeAdPopup();
+        });
+
+        let adIndex = 0;
+        function scheduleNextAd() {
+            clearTimeout(nextAdTimeout);
+            // Random delay: 20–90 seconds between ads
+            const delay = (20 + Math.random() * 70) * 1000;
+            nextAdTimeout = setTimeout(() => {
+                showAd(ADS[adIndex % ADS.length]);
+                adIndex++;
+            }, delay);
+        }
+
+        // Start: first ad appears after 15–45 seconds
+        const firstDelay = (15 + Math.random() * 30) * 1000;
+        nextAdTimeout = setTimeout(() => {
+            showAd(ADS[0]);
+            adIndex = 1;
+        }, firstDelay);
+    })();
+    </script>
+    <!-- ===== END FAKE ADS ===== -->
 
 </body>
 </html>

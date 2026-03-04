@@ -1,0 +1,144 @@
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== BASE BODY ===== */
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(50px); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* ===== ROUTE SELECTOR MODAL (delt mellom index og mobile) ===== */
+.modal-content {
+    background: linear-gradient(180deg, #1a1a2e, #16213e);
+    border: 2px solid #00f5ff;
+    border-radius: 12px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.5);
+}
+
+.modal-header {
+    color: #00f5ff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.8);
+    text-align: center;
+}
+
+.route-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.route-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(48, 43, 99, 0.5);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.route-option.selected {
+    background: rgba(0, 245, 255, 0.2);
+    border-color: #00f5ff;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.4);
+}
+
+.route-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: #00f5ff;
+    flex-shrink: 0;
+}
+
+.route-option label {
+    flex: 1;
+    position: relative;
+    color: white;
+    cursor: pointer;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.modal-btn.save {
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    border-color: #00ff88;
+    color: #0a0a0a;
+}
+
+.modal-btn.cancel {
+    background: transparent;
+    border-color: #ff0080;
+    color: #ff0080;
+}
+
+.modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 245, 255, 0.4);
+}
+
+/* ===== ROUTE BADGE (delt mellom index og mobile) ===== */
+.route-badge {
+    position: absolute;
+    background: gold;
+    color: black;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 5px;
+    transform: rotate(15deg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 0.75rem;
+}
+
+.route-badge.best {
+    background: #28a745;
+    color: white;
+}
+
+.route-badge.worst {
+    background: #ffc107;
+    color: black;
+}
