@@ -1496,5 +1496,180 @@ routesContainer.innerHTML = `
 
     </script>
     <div id="confetti-container"></div>
+    <!-- ===== FAKE ADS ===== -->
+    <div id="adBanner">
+        <div class="ad-label">Annonse</div>
+        <button class="ad-close" onclick="closeAd(event)">✕</button>
+        <div class="ad-image" id="adEmoji"></div>
+        <div class="ad-body">
+            <div class="ad-brand" id="adBrand"></div>
+            <div class="ad-headline" id="adHeadline"></div>
+            <div class="ad-copy" id="adCopy"></div>
+            <div class="ad-cta" id="adCTA"></div>
+            <div class="ad-url" id="adUrl"></div>
+        </div>
+    </div>
+
+    <div id="adPopup">
+        <div id="adPopupInner">
+            <div id="adPopupHeader">
+                <div id="adPopupEmoji"></div>
+                <button id="adPopupClose" onclick="closeAdPopup()">✕</button>
+            </div>
+            <div id="adPopupBody">
+                <div id="adPopupBrand"></div>
+                <div id="adPopupName"></div>
+                <div id="adPopupTagline"></div>
+                <ul id="adPopupFeatures"></ul>
+                <div id="adPopupReview"></div>
+                <div id="adPopupPrice"></div>
+                <button id="adPopupCTA">Kjøp nå – mens lageret holder!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const ADS = [
+            {
+                emoji: '🟤',
+                brand: 'GoldenLeg™',
+                headline: 'Perfekte sykkelbein – uten sol!',
+                copy: 'Slut med skjemmende blek-over-sokkekanten. GoldenLeg gir jevn brun farge der sola aldri når.',
+                cta: 'Se tilbud',
+                url: 'meny.no',
+                link: 'https://meny.no/varer/personlige-artikler/hudpleie/selvbruningskrem/dove-self-tan-8720181260544',
+                name: 'GoldenLeg Pro Selvbruning',
+                tagline: '"Ingen vil vite at du ikke trente ute."',
+                features: [
+                    'Jevn farge – ingen striper, ingen oransje ankler',
+                    'Spesialformulert for sykkelutøvere med tanlinjer',
+                    'UV-beskyttelse SPF 20 inkludert',
+                    'Lukter faktisk ikke selvbruner (bare litt)'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Satte på GoldenLeg kvelden før granfonduet. Sykkelkompisen min spurte om jeg hadde vært i syden. Det hadde jeg ikke, men nå ser det slik ut." – Truls R., Drammen',
+                price: 'Kr 249,- (3 for 2!)'
+            },
+            {
+                emoji: '🪒',
+                brand: 'AeroShave Pro™',
+                headline: 'Spar 3 watt. Barber beina.',
+                copy: 'Vitenskapen er klar: glatte bein = færre watt i motstand. AeroShave er designet for rask effektiv barbering etter lange treningsøkter.',
+                cta: 'Se tilbud',
+                url: 'europris.no',
+                link: 'https://www.europris.no/p-barberhovel-10-pk-herre-engangs-206581',
+                name: 'AeroShave Pro Barbermaskin',
+                tagline: '"For rittersyklisten som tar seg selv på alvor."',
+                features: [
+                    '5-blads presisjonshode for total aerodynamikk',
+                    'Spesialbygd for bein av varierende grovhet',
+                    'Vanntett – kan brukes i dusjen etter rittet',
+                    'Inkluderer "Velobein"-instruksjonsvideo'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Barbert beina for første gang siden 2019. Kollegene trodde jeg hadde gått ned 5 kg. Jeg hadde ikke det, men jeg er nå 3 watt raskere." – Bjørn H., Trondheim',
+                price: 'Kr 599,- inkl. reiseetui'
+            },
+            {
+                emoji: '🟡',
+                brand: 'SaddleGold™',
+                headline: 'For ømme steder ingen snakker om.',
+                copy: 'SaddleGold chamois krem – den hemmeligheten alle syklister har men ingen innrømmer å trenge.',
+                cta: 'Se tilbud',
+                url: 'bikeshop.no',
+                link: 'https://bikeshop.no/assos/p139092099/assos-chamois-krem-200-ml-forhindrer-sårhet-og-infeksjon',
+                name: 'SaddleGold Chamois Krem 150ml',
+                tagline: '"Fordi fire timer i salen er nok straff som det er."',
+                features: [
+                    'Antibakteriell formel med tea tree og mentol',
+                    'Holder hele etapperittet – testet på 200km+',
+                    'Diskré parfymert (ingen vil spørre)',
+                    'Fungerer faktisk – i motsetning til "å bare herdes"'
+                ],
+                review: '⭐⭐⭐⭐⭐  "Burde ha brukt dette på dag 1 i Mallorca. Dag 3 var for sent. Kjøp det. Det er ikke pinlig. Alle gjør det." – Anonym syklist, Gåping-laget',
+                price: 'Kr 189,- (størst rabatt ved kjøp av to)'
+            }
+        ];
+
+        let currentAd = null;
+        let nextAdTimeout = null;
+        let adIndex = 0;
+
+        function showAd(ad) {
+            currentAd = ad;
+            document.getElementById('adEmoji').textContent = ad.emoji;
+            document.getElementById('adBrand').textContent = ad.brand;
+            document.getElementById('adHeadline').textContent = ad.headline;
+            document.getElementById('adCopy').textContent = ad.copy;
+            document.getElementById('adCTA').textContent = ad.cta;
+            document.getElementById('adUrl').textContent = ad.url;
+
+            const banner = document.getElementById('adBanner');
+            banner.style.animation = 'none';
+            banner.offsetHeight;
+            banner.style.animation = '';
+            banner.style.display = 'flex';
+        }
+
+        window.closeAd = function(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('adBanner').style.display = 'none';
+            scheduleNextAd();
+        };
+
+        window.closeAdPopup = function() {
+            document.getElementById('adPopup').classList.remove('open');
+            scheduleNextAd();
+        };
+
+        function openAdPopup(ad) {
+            document.getElementById('adPopup').classList.add('open');
+            document.getElementById('adPopupEmoji').textContent = ad.emoji;
+            document.getElementById('adPopupBrand').textContent = ad.brand;
+            document.getElementById('adPopupName').textContent = ad.name;
+            document.getElementById('adPopupTagline').textContent = ad.tagline;
+            const ul = document.getElementById('adPopupFeatures');
+            ul.innerHTML = '';
+            ad.features.forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = f;
+                ul.appendChild(li);
+            });
+            document.getElementById('adPopupReview').innerHTML =
+                '<span class="stars">★★★★★</span> ' + ad.review.replace(/^⭐+\s*/, '');
+            document.getElementById('adPopupPrice').textContent = ad.price;
+            document.getElementById('adPopupCTA').onclick = function() {
+                window.open(ad.link, '_blank');
+                closeAdPopup();
+            };
+        }
+
+        document.getElementById('adBanner').addEventListener('click', function() {
+            if (!currentAd) return;
+            document.getElementById('adBanner').style.display = 'none';
+            openAdPopup(currentAd);
+        });
+
+        document.getElementById('adPopup').addEventListener('click', function(e) {
+            if (e.target === this) closeAdPopup();
+        });
+
+        function scheduleNextAd() {
+            clearTimeout(nextAdTimeout);
+            const delay = (8 + Math.random() * 12) * 1000;
+            nextAdTimeout = setTimeout(() => {
+                showAd(ADS[adIndex % ADS.length]);
+                adIndex++;
+            }, delay);
+        }
+
+        const firstDelay = (5 + Math.random() * 5) * 1000;
+        nextAdTimeout = setTimeout(() => {
+            showAd(ADS[0]);
+            adIndex = 1;
+        }, firstDelay);
+    })();
+    </script>
+    <!-- ===== END FAKE ADS ===== -->
+
 </body>
 </html>

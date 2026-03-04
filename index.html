@@ -2637,7 +2637,7 @@
                 <ul id="adPopupFeatures"></ul>
                 <div id="adPopupReview"></div>
                 <div id="adPopupPrice"></div>
-                <button id="adPopupCTA" onclick="closeAdPopup()">Kjøp nå – mens lageret holder!</button>
+                <button id="adPopupCTA">Kjøp nå – mens lageret holder!</button>
             </div>
         </div>
     </div>
@@ -2650,8 +2650,9 @@
                 brand: 'GoldenLeg™',
                 headline: 'Perfekte sykkelbein – uten sol!',
                 copy: 'Slut med skjemmende blek-over-sokkekanten. GoldenLeg gir jevn brun farge der sola aldri når.',
-                cta: 'Prøv gratis',
-                url: 'goldenleg.no',
+                cta: 'Se tilbud',
+                url: 'meny.no',
+                link: 'https://meny.no/varer/personlige-artikler/hudpleie/selvbruningskrem/dove-self-tan-8720181260544',
                 name: 'GoldenLeg Pro Selvbruning',
                 tagline: '"Ingen vil vite at du ikke trente ute."',
                 features: [
@@ -2668,8 +2669,9 @@
                 brand: 'AeroShave Pro™',
                 headline: 'Spar 3 watt. Barber beina.',
                 copy: 'Vitenskapen er klar: glatte bein = færre watt i motstand. AeroShave er designet for rask effektiv barbering etter lange treningsøkter.',
-                cta: 'Bli aerodynamisk',
-                url: 'aeroshave.no',
+                cta: 'Se tilbud',
+                url: 'europris.no',
+                link: 'https://www.europris.no/p-barberhovel-10-pk-herre-engangs-206581',
                 name: 'AeroShave Pro Barbermaskin',
                 tagline: '"For rittersyklisten som tar seg selv på alvor."',
                 features: [
@@ -2686,8 +2688,9 @@
                 brand: 'SaddleGold™',
                 headline: 'For ømme steder ingen snakker om.',
                 copy: 'SaddleGold chamois krem – den hemmeligheten alle syklister har men ingen innrømmer å trenge.',
-                cta: 'Beskytt deg selv',
-                url: 'saddlegold.no',
+                cta: 'Se tilbud',
+                url: 'bikeshop.no',
+                link: 'https://bikeshop.no/assos/p139092099/assos-chamois-krem-200-ml-forhindrer-sårhet-og-infeksjon',
                 name: 'SaddleGold Chamois Krem 150ml',
                 tagline: '"Fordi fire timer i salen er nok straff som det er."',
                 features: [
@@ -2702,8 +2705,8 @@
         ];
 
         let currentAd = null;
-        let bannerTimeout = null;
         let nextAdTimeout = null;
+        let adIndex = 0;
 
         function showAd(ad) {
             currentAd = ad;
@@ -2719,16 +2722,11 @@
             banner.offsetHeight; // reflow
             banner.style.animation = '';
             banner.style.display = 'block';
-
-            // Auto-dismiss after 12 seconds
-            clearTimeout(bannerTimeout);
-            bannerTimeout = setTimeout(() => closeAd(), 12000);
         }
 
         window.closeAd = function(e) {
             if (e) e.stopPropagation();
             document.getElementById('adBanner').style.display = 'none';
-            clearTimeout(bannerTimeout);
             scheduleNextAd();
         };
 
@@ -2753,13 +2751,16 @@
             document.getElementById('adPopupReview').innerHTML =
                 '<span class="stars">★★★★★</span> ' + ad.review.replace(/^⭐+\s*/, '');
             document.getElementById('adPopupPrice').textContent = ad.price;
+            document.getElementById('adPopupCTA').onclick = function() {
+                window.open(ad.link, '_blank');
+                closeAdPopup();
+            };
         }
 
         // Click on banner → open popup
         document.getElementById('adBanner').addEventListener('click', function() {
             if (!currentAd) return;
             document.getElementById('adBanner').style.display = 'none';
-            clearTimeout(bannerTimeout);
             openAdPopup(currentAd);
         });
 
@@ -2768,19 +2769,18 @@
             if (e.target === this) closeAdPopup();
         });
 
-        let adIndex = 0;
         function scheduleNextAd() {
             clearTimeout(nextAdTimeout);
-            // Random delay: 20–90 seconds between ads
-            const delay = (20 + Math.random() * 70) * 1000;
+            // Random delay: 8–20 seconds between ads
+            const delay = (8 + Math.random() * 12) * 1000;
             nextAdTimeout = setTimeout(() => {
                 showAd(ADS[adIndex % ADS.length]);
                 adIndex++;
             }, delay);
         }
 
-        // Start: first ad appears after 15–45 seconds
-        const firstDelay = (15 + Math.random() * 30) * 1000;
+        // Start: first ad appears after 5–10 seconds
+        const firstDelay = (5 + Math.random() * 5) * 1000;
         nextAdTimeout = setTimeout(() => {
             showAd(ADS[0]);
             adIndex = 1;
