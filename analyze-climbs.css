@@ -1,0 +1,287 @@
+/* ===== BODY (analyze-climbs-spesifikt) ===== */
+body {
+    color: #fff;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+}
+
+/* ===== CONTROLS ===== */
+.controls {
+    background: rgba(20, 20, 40, 0.95);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border: 2px solid #ff00ff;
+}
+
+.file-input {
+    margin-bottom: 1rem;
+}
+
+button {
+    background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 100%);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    margin-right: 0.5rem;
+}
+
+button:hover { transform: translateY(-2px); }
+
+/* ===== ROUTE SECTION ===== */
+.route-section {
+    background: rgba(20, 20, 40, 0.95);
+    border: 2px solid #00f5ff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.route-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.route-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #00f5ff;
+}
+
+.route-stats {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== CLIMB CARDS ===== */
+.climb {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 5px;
+}
+
+.climb.hc  { border-color: #e74c3c; }
+.climb.\31 { border-color: #e67e22; }
+.climb.\32 { border-color: #f39c12; }
+.climb.\33 { border-color: #f1c40f; }
+.climb.\34 { border-color: #95a5a6; }
+
+.climb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.climb-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.climb-category {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.hc  .climb-category { background: #e74c3c; }
+.\\31 .climb-category { background: #e67e22; }
+.\\32 .climb-category { background: #f39c12; }
+.\\33 .climb-category { background: #f1c40f; color: #333; }
+.\\34 .climb-category { background: #95a5a6; }
+
+.climb-stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.2rem;
+}
+
+.stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+#results { margin-top: 2rem; }
+
+/* ===== RYTTER-PROFIL ===== */
+.rider-profile {
+    background: rgba(20, 20, 40, 0.95);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border: 2px solid #ffaa00;
+    box-shadow: 0 4px 20px rgba(255, 170, 0, 0.15);
+}
+
+.rider-profile h3 {
+    color: #ffaa00;
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+    text-shadow: 0 0 8px rgba(255, 170, 0, 0.5);
+}
+
+.rider-inputs {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.rider-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.rider-input-group label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rider-input-group input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1.5px solid rgba(255, 170, 0, 0.5);
+    color: #fff;
+    padding: 0.5rem 0.7rem;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-family: 'Courier New', monospace;
+    width: 100px;
+}
+
+.rider-input-group input:focus {
+    outline: none;
+    border-color: #ffaa00;
+    box-shadow: 0 0 8px rgba(255, 170, 0, 0.4);
+}
+
+.rider-input-group .unit {
+    font-size: 0.75rem;
+    color: rgba(255, 170, 0, 0.6);
+}
+
+.rider-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 1.2rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.rider-badge.a-level {
+    background: rgba(255, 0, 255, 0.1);
+    border: 2px solid #ff00ff;
+    color: #ff00ff;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.5);
+    box-shadow: 0 0 12px rgba(255, 0, 255, 0.15);
+}
+
+.rider-badge.b-level {
+    background: rgba(0, 245, 255, 0.1);
+    border: 2px solid #00f5ff;
+    color: #00f5ff;
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.15);
+}
+
+/* ===== TID-ESTIMAT ===== */
+.climb-time {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.climb-time-block { display: flex; flex-direction: column; }
+
+.climb-time-label {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.15rem;
+}
+
+.climb-time-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffaa00;
+    text-shadow: 0 0 8px rgba(255, 170, 0, 0.4);
+}
+
+.climb-speed-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+/* ===== SUMMARY ===== */
+.summary {
+    background: linear-gradient(135deg, #302b63, #24243e);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border: 2px solid #ffaa00;
+}
+
+.summary h2 {
+    margin-bottom: 1rem;
+    color: #ffaa00;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: #00f5ff;
+}

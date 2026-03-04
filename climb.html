@@ -1,0 +1,217 @@
+<html>
+<head>
+<title>Climbing Power Calculation</title>
+<script>
+function totalWeight(f) {
+	f.tw.value = 
+	  eval(f.w1.value) 
+	  / eval(f.w1Units.options[f.w1Units.options.selectedIndex].value)  
+	+ eval(f.w2.value) 
+	  / eval(f.w2Units.options[f.w2Units.options.selectedIndex].value);
+}
+function timeTaken(f) {
+	var t = 0;
+
+	if( f.hr.value ) t = t + eval(f.hr.value) * 3600;
+	if( f.min.value ) t = t + eval(f.min.value) * 60;
+	if( f.sec.value ) t = t + eval(f.sec.value);
+
+	return t;
+}
+function rr(f) {
+	return eval(f.tyre.options[f.tyre.options.selectedIndex].value);
+}
+function a2(f) {
+	return eval(f.position.options[f.position.options.selectedIndex].value);
+}
+function speed(f) {
+	var mPs = 
+	  eval(f.sp.value) * 
+	  eval(f.spUnits.options[f.spUnits.options.selectedIndex].value);
+	return mPs;
+}
+function speed3(f) {
+	var mPs = 
+	  eval(f.sp.value) * 
+	  eval(f.spUnits.options[f.spUnits.options.selectedIndex].value);
+	return mPs * mPs * mPs;
+}
+function climbRate(f) {
+	var mPs =
+	  (eval(f.vg.value) 
+	  / eval(f.vgUnits.options[f.vgUnits.options.selectedIndex].value)) 
+	/ timeTaken(f);
+	f.cr.value = mPs * 
+	  eval(f.crUnits.options[f.crUnits.options.selectedIndex].value);
+
+	return mPs;
+}
+function computePower(f) {
+	totalWeight(f);
+	f.gravity.value =	
+	  9.81 * eval(f.tw.value) * climbRate(f);
+	f.rr.value =
+	  9.81 * eval(f.tw.value) * rr(f) * speed(f);
+	f.aero.value =
+	  a2(f) * speed3(f);
+	f.power.value = 
+	  eval(f.gravity.value) + eval(f.rr.value) + eval(f.aero.value);
+}
+function computeTimeFromPower(f) {
+
+    totalWeight(f);
+
+    var mass = parseFloat(f.tw.value);
+    var g = 9.81;
+    var Crr = rr(f);
+    var CdA = a2(f);
+    var verticalGain = 
+        parseFloat(f.vg.value) / 
+        parseFloat(f.vgUnits.options[f.vgUnits.selectedIndex].value);
+
+    var targetPower = parseFloat(f.powerInput.value);
+
+    var v = 1; // startgjetning (m/s)
+    
+    for (var i = 0; i < 1000; i++) {
+        var gravity = mass * g * (verticalGain / (verticalGain / v));
+        var rolling = mass * g * Crr * v;
+        var aero = CdA * Math.pow(v, 3);
+
+        var totalP = gravity + rolling + aero;
+
+        v = v * (targetPower / totalP);
+    }
+
+    var climbRate = v;
+    var timeSeconds = verticalGain / climbRate;
+
+    var hours = Math.floor(timeSeconds / 3600);
+    var minutes = Math.floor((timeSeconds % 3600) / 60);
+    var seconds = Math.floor(timeSeconds % 60);
+
+    f.hr.value = hours;
+    f.min.value = minutes;
+    f.sec.value = seconds;
+}
+
+</script>
+</head>
+<body>
+<h1>Climbing Power Calculation</h1>
+<form>
+<table>
+<tr>
+<th colspan="3">Weight</th>
+<th colspan="3">Climb</th>
+</tr>
+<tr>
+<td>Your weight:</td>
+<td><input type="text" name="w1" size="3"></td>
+<td><select name="w1Units">
+<option selected value="2.2046">lbs</option>
+<option value="1">kg</option>
+</select>
+</td>
+<td>Vertical Gain:</td>
+<td><input type="text" name="vg" size="5"></td>
+<td><select name="vgUnits">
+<option selected value="3.2808">ft</option>
+<option value="1">m</option>
+</select>
+</td>
+<td>Speed:</td>
+<td><input type="text" name="sp" size="5"></td>
+<td><select name="spUnits">
+<option selected value="0.4669">mph</option>
+<option value="0.2778">km/h</option>
+</select>
+</tr>
+<tr>
+<td>Bike weight:</td>
+<td><input type="text" name="w2" size="3"></td>
+<td><select name="w2Units">
+<option selected value="2.2046">lbs</option>
+<option value="1">kg</option>
+</select>
+</td>
+<td>Time Taken:</td>
+<td colspan="4">
+<table>
+<tr>
+<td><input type="text" name="hr" size="2"></td>
+<td>hr</td>
+<td><input type="text" name="min" size="5"></td>
+<td>min</td>
+<td><input type="text" name="sec" size="3"></td>
+<td>sec</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>Tyre type:</td>
+<td colspan="2"><select name="tyre">
+<option selected value="0.0047">Road</option>
+<option value="0.0066">Mountain</option>
+</select>
+</td>
+<td>Position:</td>
+<td colspan="3"><select name="position">
+<option value="0.356">Standing</option>
+<option selected value="0.267">Seated, bar-tops</option>
+<option value="0.233">Seated, drops</option>
+<option value="0.167">Seated, tucked</option>
+</select>
+</td>
+</tr>
+</table>
+<hr>
+<table>
+<tr>
+<td>Input Power:</td>
+<td><input type="text" name="powerInput" size="6"></td>
+<td>watts</td>
+<td colspan="3">
+<input type="button" value=" Calculate Time " onclick="computeTimeFromPower(this.form)">
+</td>
+</tr>
+<tr>
+<td colspan="3">
+<input type="button" value=" Calculate Power " onclick="computePower(this.form)">
+</td>
+<td>Total Weight:</td>
+<td><input type="text" name="tw" size="4"></td>
+<td>kg</td>
+<td>Climb Rate:</td>
+<td><input type="text" name="cr" size="6"></td>
+<td><select name="crUnits">
+<option selected value="11810.88">ft/hr</option>
+<option value="3600">m/hr</option>
+</select>
+</td>
+</tr>
+<tr>
+<td>Power:</td>
+<td><input type="text" name="power" size="6"></td>
+<td>&nbsp; = &nbsp;</td>
+<td><input type="text" name="gravity" size="6"></td>
+<td>&nbsp; + &nbsp;</td>
+<td><input type="text" name="rr" size="4"></td>
+<td>&nbsp; + &nbsp;</td>
+<td><input type="text" name="aero" size="6"></td>
+</tr>
+<tr>
+<td>for:</td>
+<td>(watts)</td>
+<td></td>
+<td>gravity</td>
+<td></td>
+<td>rolling resistance</td>
+<td></td>
+<td>wind resistance</td>
+</tr>
+</table>
+</form>
+</body>
+</html>

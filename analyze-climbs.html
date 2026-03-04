@@ -4,144 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klatreanalyse - Mallorca Ruter</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            color: #fff;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
-        }
-        .controls {
-            background: rgba(20, 20, 40, 0.95);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            border: 2px solid #ff00ff;
-        }
-        .file-input {
-            margin-bottom: 1rem;
-        }
-        button {
-            background: linear-gradient(90deg, #ff00ff 0%, #00f5ff 100%);
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            margin-right: 0.5rem;
-        }
-        button:hover { transform: translateY(-2px); }
-        .route-section {
-            background: rgba(20, 20, 40, 0.95);
-            border: 2px solid #00f5ff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .route-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .route-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #00f5ff;
-        }
-        .route-stats {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        .climb {
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 4px solid;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            border-radius: 5px;
-        }
-        .climb.hc { border-color: #e74c3c; }
-        .climb.\\31 { border-color: #e67e22; } /* Category 1 */
-        .climb.\\32 { border-color: #f39c12; } /* Category 2 */
-        .climb.\\33 { border-color: #f1c40f; } /* Category 3 */
-        .climb.\\34 { border-color: #95a5a6; } /* Category 4 */
-        .climb-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        .climb-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .climb-category {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-        .hc .climb-category { background: #e74c3c; }
-        .\\31 .climb-category { background: #e67e22; } /* Category 1 */
-        .\\32 .climb-category { background: #f39c12; } /* Category 2 */
-        .\\33 .climb-category { background: #f1c40f; color: #333; } /* Category 3 */
-        .\\34 .climb-category { background: #95a5a6; } /* Category 4 */
-        .climb-stats {
-            display: flex;
-            gap: 2rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        .stat {
-            display: flex;
-            flex-direction: column;
-        }
-        .stat-label {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 0.2rem;
-        }
-        .stat-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        #results { margin-top: 2rem; }
-        .summary {
-            background: linear-gradient(135deg, #302b63, #24243e);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            border: 2px solid #ffaa00;
-        }
-        .summary h2 {
-            margin-bottom: 1rem;
-            color: #ffaa00;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            font-size: 1.2rem;
-            color: #00f5ff;
-        }
-    </style>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="analyze-climbs.css">
 </head>
 <body>
     <div class="container">
@@ -154,6 +18,28 @@
             </div>
             <button onclick="analyzeRoutes()">Analyser Klatringer</button>
             <button onclick="loadAllRoutes()">Last alle ruter fra /routes/</button>
+        </div>
+
+        <div class="rider-profile">
+            <h3>🚴 Din profil</h3>
+            <div class="rider-inputs">
+                <div class="rider-input-group">
+                    <label>Kroppsvekt</label>
+                    <input type="number" id="riderWeight" value="75" min="40" max="150" step="0.5">
+                    <span class="unit">kg</span>
+                </div>
+                <div class="rider-input-group">
+                    <label>Sykkelvekt</label>
+                    <input type="number" id="bikeWeight" value="8" min="3" max="20" step="0.5">
+                    <span class="unit">kg</span>
+                </div>
+                <div class="rider-input-group">
+                    <label>FTP</label>
+                    <input type="number" id="riderFTP" value="250" min="50" max="600" step="5">
+                    <span class="unit">watt</span>
+                </div>
+            </div>
+            <div id="riderBadge"></div>
         </div>
 
         <div id="results"></div>
@@ -293,6 +179,7 @@
         // Render results
         function renderResults(routes) {
             const resultsDiv = document.getElementById('results');
+            const profile = getRiderProfile();
 
             // Calculate summary
             let totalClimbs = 0;
@@ -362,6 +249,9 @@
                 } else {
                     route.climbs.forEach((climb, idx) => {
                         const catClass = climb.category.toLowerCase().replace(' ', '');
+                        const timeSeconds = calculateClimbTime(profile.ftp, profile.totalKg, climb.distance, climb.elevation);
+                        const timeStr = formatTime(timeSeconds);
+                        const speedKmh = ((climb.distance * 1000) / timeSeconds * 3.6).toFixed(1);
                         html += `
                             <div class="climb ${catClass}">
                                 <div class="climb-header">
@@ -384,6 +274,16 @@
                                     <div class="stat">
                                         <div class="stat-label">Høyde</div>
                                         <div class="stat-value">${Math.round(climb.startEle)}m → ${Math.round(climb.endEle)}m</div>
+                                    </div>
+                                </div>
+                                <div class="climb-time">
+                                    <div class="climb-time-block">
+                                        <div class="climb-time-label">Estimert tid @ FTP (${profile.ftp}W)</div>
+                                        <div class="climb-time-value">${timeStr}</div>
+                                    </div>
+                                    <div class="climb-time-block">
+                                        <div class="climb-time-label">Fart</div>
+                                        <div class="climb-speed-value">${speedKmh} km/t</div>
                                     </div>
                                 </div>
                             </div>
@@ -417,8 +317,69 @@
                 routes.push(route);
             }
 
+            lastRoutes = routes;
             renderResults(routes);
         }
+
+        // ---- Rytter-profil og tidsberegning ----
+
+        let lastRoutes = null;
+
+        function getRiderProfile() {
+            const riderKg = parseFloat(document.getElementById('riderWeight').value) || 75;
+            const bikeKg  = parseFloat(document.getElementById('bikeWeight').value)  || 8;
+            const ftp     = parseFloat(document.getElementById('riderFTP').value)     || 250;
+            return { riderKg, bikeKg, ftp, totalKg: riderKg + bikeKg, wkg: ftp / riderKg };
+        }
+
+        // Beregn tid opp en stigning fra effekt, vekt, distanse og høydemeter
+        // Bruker fysikkmodell: P = v·m·g·(gradient + Crr) + CdA·v³
+        function calculateClimbTime(power_w, total_kg, dist_km, elevation_m) {
+            const g        = 9.81;
+            const Crr      = 0.0047;   // vei-dekk rullemostand
+            const CdA      = 0.25;     // typisk klatreposisjon
+            const gradient = elevation_m / (dist_km * 1000); // desimalbrøk
+
+            let v = 3.0; // startgjetning ~10.8 km/t
+            for (let iter = 0; iter < 400; iter++) {
+                const P_calc = v * total_kg * g * (gradient + Crr) + CdA * Math.pow(v, 3);
+                if (P_calc <= 0 || !isFinite(P_calc)) break;
+                const newV = v * (power_w / P_calc);
+                if (!isFinite(newV) || newV <= 0) break;
+                if (Math.abs(newV - v) < 0.00001) { v = newV; break; }
+                v = newV;
+            }
+            return (dist_km * 1000) / Math.max(v, 0.1); // sekunder
+        }
+
+        function formatTime(seconds) {
+            if (!isFinite(seconds) || seconds <= 0) return '—';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            if (h > 0) return `${h}t ${m}m`;
+            return `${m}m ${s}s`;
+        }
+
+        function updateRiderBadge() {
+            const { riderKg, ftp, wkg } = getRiderProfile();
+            const isA  = wkg >= 3.5;
+            const level = isA ? 'A' : 'B';
+            const badge = document.getElementById('riderBadge');
+            if (badge) {
+                badge.innerHTML = `<div class="rider-badge ${level.toLowerCase()}-level">
+                    ${level}-rytter &nbsp;·&nbsp; ${wkg.toFixed(2)} W/kg${isA ? ' &nbsp;⚡' : ''}
+                </div>`;
+            }
+            if (lastRoutes) renderResults(lastRoutes);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ['riderWeight', 'bikeWeight', 'riderFTP'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateRiderBadge);
+            });
+            updateRiderBadge();
+        });
 
         // Load all routes from /routes/ directory (requires server)
         async function loadAllRoutes() {
@@ -428,6 +389,41 @@
                   '2. Kjør: python -m http.server 8000\n' +
                   '   og oppdater denne funksjonen til å hente filene');
         }
+
+        // ---- Auto-last ruter fra URL-parameter (?files=rute1.gpx,rute2.gpx) ----
+        // Brukes når man klikker på et klatrebadge i løypeprofilvisningen
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filesParam = urlParams.get('files');
+            if (!filesParam) return;
+
+            const fileNames = filesParam.split(',')
+                .map(f => decodeURIComponent(f).trim())
+                .filter(f => f.length > 0);
+            if (fileNames.length === 0) return;
+
+            document.getElementById('results').innerHTML =
+                '<div class="loading">Laster ruter fra løypeprofil...</div>';
+
+            const routes = [];
+            for (const fileName of fileNames) {
+                try {
+                    const res = await fetch(`routes/${encodeURIComponent(fileName)}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    routes.push(parseGPX(await res.text(), fileName));
+                } catch (err) {
+                    console.warn(`Kunne ikke laste ${fileName}:`, err);
+                }
+            }
+
+            if (routes.length > 0) {
+                lastRoutes = routes;
+                renderResults(routes);
+            } else {
+                document.getElementById('results').innerHTML =
+                    '<p style="color:rgba(255,100,100,0.8);padding:1rem;">Kunne ikke laste GPX-filer automatisk. Velg filer manuelt.</p>';
+            }
+        })();
     </script>
 </body>
 </html>
