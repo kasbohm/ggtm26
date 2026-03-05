@@ -2649,10 +2649,11 @@
                 emoji: '🟤',
                 brand: 'GoldenLeg™',
                 headline: 'Perfekte sykkelbein – uten sol!',
-                copy: 'Slut med skjemmende blek-over-sokkekanten. GoldenLeg gir jevn brun farge der sola aldri når.',
+                copy: 'Ikke møt opp med blendende ben - prøv GOLDENLEGS tm! Jevn og naturtro farge der sola tydeligvis aldri skinner!',
                 cta: 'Se tilbud',
                 url: 'meny.no',
                 link: 'https://meny.no/varer/personlige-artikler/hudpleie/selvbruningskrem/dove-self-tan-8720181260544',
+                image: 'goldenlegs.png', imagePosition: 'center 15%',
                 name: 'GoldenLeg Pro Selvbruning',
                 tagline: '"Ingen vil vite at du ikke trente ute."',
                 features: [
@@ -2672,6 +2673,7 @@
                 cta: 'Se tilbud',
                 url: 'europris.no',
                 link: 'https://www.europris.no/p-barberhovel-10-pk-herre-engangs-206581',
+                image: 'hairy.png', imagePosition: 'center 15%',
                 name: 'AeroShave Pro Barbermaskin',
                 tagline: '"For rittersyklisten som tar seg selv på alvor."',
                 features: [
@@ -2691,6 +2693,7 @@
                 cta: 'Se tilbud',
                 url: 'bikeshop.no',
                 link: 'https://bikeshop.no/assos/p139092099/assos-chamois-krem-200-ml-forhindrer-sårhet-og-infeksjon',
+                image: 'chamois.png', imagePosition: 'center 45%',
                 name: 'SaddleGold Chamois Krem 150ml',
                 tagline: '"Fordi fire timer i salen er nok straff som det er."',
                 features: [
@@ -2710,7 +2713,13 @@
 
         function showAd(ad) {
             currentAd = ad;
-            document.getElementById('adEmoji').textContent = ad.emoji;
+            const adImageEl = document.getElementById('adEmoji');
+            if (ad.image) {
+                const pos = ad.imagePosition || 'center 15%';
+                adImageEl.innerHTML = `<img src="${ad.image}" alt="${ad.brand}" style="object-position:${pos}">`;
+            } else {
+                adImageEl.textContent = ad.emoji;
+            }
             document.getElementById('adBrand').textContent = ad.brand;
             document.getElementById('adHeadline').textContent = ad.headline;
             document.getElementById('adCopy').textContent = ad.copy;
@@ -2737,7 +2746,13 @@
 
         function openAdPopup(ad) {
             document.getElementById('adPopup').classList.add('open');
-            document.getElementById('adPopupEmoji').textContent = ad.emoji;
+            const popupEmoji = document.getElementById('adPopupEmoji');
+            if (ad.image) {
+                const pos = ad.imagePosition || 'center 15%';
+                popupEmoji.innerHTML = `<img src="${ad.image}" alt="${ad.brand}" class="ad-popup-img" style="object-position:${pos}">`;
+            } else {
+                popupEmoji.textContent = ad.emoji;
+            }
             document.getElementById('adPopupBrand').textContent = ad.brand;
             document.getElementById('adPopupName').textContent = ad.name;
             document.getElementById('adPopupTagline').textContent = ad.tagline;
