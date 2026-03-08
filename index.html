@@ -130,6 +130,20 @@
                         </div>
                         <div class="day-content" id="day-4-content"></div>
                     </div>
+
+                    <div class="day-box" data-day-id="5" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        <div class="day-box-header">
+                            <div class="day-title">Dag 5 - Rapha, Palma ⭐</div>
+                            <div class="day-stats-compact" id="day-5-stats"></div>
+                            <div class="day-controls">
+                                <button class="day-select-btn" onclick="openRouteSelector(5)">Velg ruter</button>
+                                <button class="btn-download-day" onclick="downloadDayGPX(5)" title="Last ned dag som GPX">⬇️</button>
+                                <button class="btn-download-day" onclick="showElevationProfile(5)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
+                                <button class="btn-toggle-day" id="toggle-day-5" onclick="toggleDayVisibility(5)">Skjul dag</button>
+                            </div>
+                        </div>
+                        <div class="day-content" id="day-5-content"></div>
+                    </div>
                 </div>
             </div>
             <div class="map-layer-selector">
@@ -172,7 +186,7 @@
             
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
             document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
             
             // Filter routes for current day from BUNDLED routes only
@@ -368,12 +382,13 @@
         ];
 
         // Days structure: each day contains route IDs
-        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
         const days = [
             { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
             { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
-            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
+            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] },
+            { id: 5, name: 'Dag 5', routes: [], visible: true, color: dayColors[4] }
         ];
         const STORAGE_KEY = 'ggtm26_selected_routes';
 
@@ -415,6 +430,7 @@
             'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
             'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx',
             'GGTM26_D3_A_Helios_Sa_Calobra__105km_1900hm.gpx',
+            'GGTM26_D3_A1_Helios_Sa_Calobra__105km_1900hm.gpx',
             'GGTM26_D3_A_Sa_Calobra__Helios_100km_2300hm.gpx',
             'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
             'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
@@ -422,7 +438,9 @@
             'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx',
             'GGTM26_D4_A_Sant_Salvador_Helios_85km_600hm.gpx',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
-            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx'
+            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx',
+            'GGTM26_D5_A_Helios_Rapha.gpx',
+            'GGTM26_D5_B_Helios_Rapha.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -1588,7 +1606,7 @@
         window.autoMakeElite = function() {
             days.forEach(day => day.routes = []);
             
-            for (let dayNum = 1; dayNum <= 4; dayNum++) {
+            for (let dayNum = 1; dayNum <= 5; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
@@ -1638,7 +1656,7 @@
         window.autoMakeMosjonist = function() {
             days.forEach(day => day.routes = []);
             
-            for (let dayNum = 1; dayNum <= 4; dayNum++) {
+            for (let dayNum = 1; dayNum <= 5; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
@@ -2195,9 +2213,9 @@
         });
         
         // Sett tittel med klatrepoeng
-        const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+        const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
         let titleText = profileTitle;
-        if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
+        if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 5) {
             titleText = `Dag ${dayId} (${dayNames[dayId - 1]})`;
         }
         title.textContent = `Løypeprofil - ${titleText} - ${totalClimbingPoints} klatrepoeng`;

@@ -152,6 +152,19 @@
                 <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
             </div>
+
+            <!-- Dag 5 -->
+            <div class="day-card" style="border-top: 4px solid #9b59b6;">
+                <div class="day-header">
+                    <span class="day-title">Dag 5 - Rapha, Palma ⭐</span>
+                    <div class="day-buttons">
+                        <button class="profile-btn" onclick="showElevationProfile(4)">📈</button>
+                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
+                    </div>
+                </div>
+                <div class="day-stats" id="day5stats"></div>
+                <div class="day-routes" id="day5routes"></div>
+            </div>
         </div>
         <div class="day-dots" id="dayDots">
             <div class="dot active" onclick="goToDay(0)">📊</div>
@@ -159,6 +172,7 @@
             <div class="dot" onclick="goToDay(2)">2</div>
             <div class="dot" onclick="goToDay(3)">3</div>
             <div class="dot" onclick="goToDay(4)">4</div>
+            <div class="dot" onclick="goToDay(5)">5</div>
         </div>
     </div>
     
@@ -172,12 +186,13 @@
         // Inline common code for mobile
         const routes = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'];
-        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
         const days = [
             { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
             { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
-            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
+            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] },
+            { id: 5, name: 'Dag 5', routes: [], visible: true, color: dayColors[4] }
         ];
         const STORAGE_KEY = 'ggtm26_selected_routes';
 
@@ -219,6 +234,7 @@
             'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
             'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx',
             'GGTM26_D3_A_Helios_Sa_Calobra__105km_1900hm.gpx',
+            'GGTM26_D3_A1_Helios_Sa_Calobra__105km_1900hm.gpx',
             'GGTM26_D3_A_Sa_Calobra__Helios_100km_2300hm.gpx',
             'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
             'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
@@ -226,7 +242,9 @@
             'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx',
             'GGTM26_D4_A_Sant_Salvador_Helios_85km_600hm.gpx',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
-            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx'
+            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx',
+            'GGTM26_D5_A_Helios_Rapha.gpx',
+            'GGTM26_D5_B_Helios_Rapha.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -1112,9 +1130,9 @@ routesContainer.innerHTML = `
             let totalClimbingPoints = 0;
             peakIndexes.forEach(peak => totalClimbingPoints += peak.score);
 
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
             let title = profileTitle;
-            if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 4) {
+            if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 5) {
                 title = `Dag ${dayId} (${dayNames[dayId - 1]})`;
             }
             document.getElementById('elevationTitle').textContent = `${title} - ${totalClimbingPoints}p`;
