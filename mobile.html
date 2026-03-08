@@ -1669,12 +1669,11 @@ routesContainer.innerHTML = `
         });
 
         function scheduleNextAd() {
+            if (adIndex >= ADS.length) return; // all ads shown, stop
             clearTimeout(nextAdTimeout);
-            const completedCycle = adIndex > 0 && adIndex % ADS.length === 0;
-            // After all ads shown: wait 10 minutes; otherwise 8–20 seconds
-            const delay = completedCycle ? 10 * 60 * 1000 : (8 + Math.random() * 12) * 1000;
+            const delay = (8 + Math.random() * 12) * 1000;
             nextAdTimeout = setTimeout(() => {
-                showAd(ADS[adIndex % ADS.length]);
+                showAd(ADS[adIndex]);
                 adIndex++;
             }, delay);
         }
