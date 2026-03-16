@@ -50,21 +50,20 @@
 
     <div class="header">
         <h1>🌴 Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for Desktop Computers</h1>
+        <p class="header-subtitle">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</p>
     </div>
 
     <div class="controls">
-        <div class="file-input-wrapper">
-            <input type="file" id="gpxInput" accept=".gpx" multiple>
-            <label for="gpxInput" class="file-input-label">📁 Last opp GPX-filer</label>
+        <button class="btn hamburger-btn" onclick="toggleHamburger()">☰ Meny</button>
+        <div class="hamburger-menu" id="hamburgerMenu">
+            <button class="btn" style="background: #e67e22;" onclick="autoMakeElite()">⚡ Auto-Make Elite (A)</button>
+            <button class="btn" style="background: #3498db;" onclick="autoMakeMosjonist()">🚴 Auto-Make Mosjonist (B)</button>
+            <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
+            <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
+            <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
+            <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
         </div>
-        <button class="btn" style="background: #e67e22;" onclick="autoMakeElite()">⚡ Auto-Make Elite (A)</button>
-        <button class="btn" style="background: #3498db;" onclick="autoMakeMosjonist()">🚴 Auto-Make Mosjonist (B)</button>
-        <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
-        <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
-        <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
-        <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
-        <!--<button class="btn" style="background: #f39c12;" onclick="window.location.href='konkurranse.html'">🏆</button>-->
-        <div id="fileCount" style="color: #666; font-size: 0.9rem; display: flex; gap: 1.5rem; flex-wrap: wrap;"></div>
+        <div id="fileCount" style="color: #aaa; font-size: 0.9rem; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-left: auto;"></div>
     </div>
 
     <div class="main-content">
@@ -146,7 +145,7 @@
                     </div>
                 </div>
             </div>
-            <div class="map-layer-selector">
+            <div class="map-layer-selector" style="display:none;">
                 <label><input type="radio" name="mapLayer" value="standard" checked onchange="changeMapLayer('standard')"> Standard</label>
                 <label><input type="radio" name="mapLayer" value="cycle" onchange="changeMapLayer('cycle')"> CyclOSM (Sykkelvennlig)</label>
                 <label><input type="radio" name="mapLayer" value="transport" onchange="changeMapLayer('transport')"> Transport (veier)</label>
@@ -155,6 +154,10 @@
         </div>
         <div class="sidebar">
             <div id="routeList"></div>
+            <div class="file-input-wrapper sidebar-upload">
+                <input type="file" id="gpxInput" accept=".gpx" multiple>
+                <label for="gpxInput" class="file-input-label">📁 Last opp GPX-filer</label>
+            </div>
         </div>
 
         <!-- Route Selector Modal -->
@@ -1208,6 +1211,11 @@
                 contentDiv.innerHTML = html;
             });
         }
+
+        window.toggleHamburger = function() {
+            const menu = document.getElementById('hamburgerMenu');
+            menu.classList.toggle('open');
+        };
 
         window.toggleDaysExpand = function() {
             const content = document.getElementById('daysContent');

@@ -41,6 +41,16 @@ body {
     letter-spacing: 1px;
 }
 
+.header-subtitle {
+    position: relative;
+    z-index: 1;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0a0a0a;
+    margin-top: 0.3rem;
+    opacity: 0.85;
+}
+
 /* ===== CONTROLS ===== */
 .controls {
     background: rgba(20, 20, 40, 0.95);
@@ -112,6 +122,37 @@ body {
 .btn-secondary:hover {
     background: linear-gradient(135deg, #3d3768 0%, #2e2e4a 100%);
     box-shadow: 0 6px 20px rgba(0, 245, 255, 0.5);
+}
+
+/* ===== HAMBURGER MENU ===== */
+.hamburger-btn {
+    background: linear-gradient(135deg, #302b63 0%, #24243e 100%);
+    border-color: #ff00ff;
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.hamburger-menu {
+    display: none;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.hamburger-menu.open {
+    display: flex;
+}
+
+/* ===== SIDEBAR UPLOAD ===== */
+.sidebar-upload {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.sidebar-upload .file-input-label {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 /* ===== MAIN LAYOUT ===== */
