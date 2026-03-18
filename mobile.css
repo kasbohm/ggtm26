@@ -491,11 +491,11 @@ body {
 }
 
 .summary-title {
-    font-size: 1rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #00f5ff;
     text-align: center;
-    text-shadow: 0 0 15px rgba(0, 245, 255, 0.8);
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
 }
 
 .summary-grid {
