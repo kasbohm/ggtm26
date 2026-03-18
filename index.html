@@ -53,6 +53,14 @@
         <p class="header-subtitle">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</p>
     </div>
 
+    <!-- Værvarselpanel -->
+    <div id="weatherBar" style="background:#1a2a3a;border-bottom:1px solid #2c4a6a;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:#cce4ff;">
+        <span style="font-weight:bold;white-space:nowrap;">🌤️ Vær i Mallorca idag:</span>
+        <div id="weatherHours" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <span style="color:#667;">Laster...</span>
+        </div>
+    </div>
+
     <div class="controls">
         <button class="btn hamburger-btn" onclick="toggleHamburger()">☰ Meny</button>
         <div class="hamburger-menu" id="hamburgerMenu">
@@ -2829,6 +2837,94 @@
     })();
     </script>
     <!-- ===== END FAKE ADS ===== -->
+
+    <!-- ===== VÆRVARSELPANEL ===== -->
+    <script>
+    (function() {
+        // Port de Soller, Mallorca
+        const LAT = 39.7942;
+        const LON = 2.6895;
+
+        const SYMBOL_EMOJI = {
+            clearsky_day: '☀️', clearsky_night: '🌙', clearsky_polartwilight: '☀️',
+            fair_day: '🌤️', fair_night: '🌤️', fair_polartwilight: '🌤️',
+            partlycloudy_day: '⛅', partlycloudy_night: '⛅', partlycloudy_polartwilight: '⛅',
+            cloudy: '☁️',
+            fog: '🌫️',
+            lightrain: '🌦️', rain: '🌧️', heavyrain: '🌧️',
+            lightrainshowers_day: '🌦️', lightrainshowers_night: '🌦️', lightrainshowers_polartwilight: '🌦️',
+            rainshowers_day: '🌦️', rainshowers_night: '🌦️', rainshowers_polartwilight: '🌦️',
+            heavyrainshowers_day: '⛈️', heavyrainshowers_night: '⛈️', heavyrainshowers_polartwilight: '⛈️',
+            lightrainandthunder: '⛈️', rainandthunder: '⛈️', heavyrainandthunder: '⛈️',
+            sleet: '🌨️', lightsleet: '🌨️', heavysleet: '🌨️',
+            sleetshowers_day: '🌨️', sleetshowers_night: '🌨️', sleetshowers_polartwilight: '🌨️',
+            snow: '❄️', lightsnow: '❄️', heavysnow: '❄️',
+            snowshowers_day: '🌨️', snowshowers_night: '🌨️', snowshowers_polartwilight: '🌨️',
+        };
+
+        function symbolEmoji(code) {
+            if (!code) return '🌡️';
+            const base = code.replace(/_day$|_night$|_polartwilight$/, '');
+            return SYMBOL_EMOJI[code] || SYMBOL_EMOJI[base] || '🌡️';
+        }
+
+        function windDir(deg) {
+            const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV'];
+            return dirs[Math.round(deg / 45) % 8];
+        }
+
+        async function fetchWeather() {
+            const container = document.getElementById('weatherHours');
+            try {
+                const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`;
+                const res = await fetch(url, { headers: { 'User-Agent': 'GGTM26-planner/1.0 github.com/kasbohm/ggtm26' } });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const series = data.properties.timeseries.filter(t => t.time.startsWith(todayStr));
+
+                if (!series.length) {
+                    container.innerHTML = '<span style="color:#f90">Ingen data for i dag</span>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                series.forEach(t => {
+                    const hour = new Date(t.time).getUTCHours();
+                    if (hour < 6 || hour > 21) return; // vis bare dagtid
+                    const inst = t.data.instant.details;
+                    const next1 = t.data.next_1_hours;
+                    const symbol = next1 ? next1.summary.symbol_code : '';
+                    const precip = next1 ? next1.details.precipitation_amount : 0;
+                    const temp = Math.round(inst.air_temperature);
+                    const wind = Math.round(inst.wind_speed);
+                    const dir = windDir(inst.wind_from_direction);
+
+                    const cell = document.createElement('div');
+                    cell.style.cssText = 'text-align:center;min-width:52px;background:#162534;border-radius:6px;padding:4px 6px;';
+                    cell.innerHTML = `
+                        <div style="color:#88aacc;font-size:0.75rem">${hour.toString().padStart(2,'0')}:00</div>
+                        <div style="font-size:1.3rem">${symbolEmoji(symbol)}</div>
+                        <div style="font-weight:bold;color:#fff">${temp}°</div>
+                        <div style="color:#8bc;font-size:0.72rem">${wind}m/s ${dir}</div>
+                        ${precip > 0 ? `<div style="color:#6af;font-size:0.7rem">${precip.toFixed(1)}mm</div>` : ''}
+                    `;
+                    container.appendChild(cell);
+                });
+
+                if (!container.children.length) {
+                    container.innerHTML = '<span style="color:#aaa">Ingen dagtime-data</span>';
+                }
+            } catch(e) {
+                document.getElementById('weatherHours').innerHTML = '<span style="color:#f66">Kunne ikke laste vær: ' + e.message + '</span>';
+            }
+        }
+
+        fetchWeather();
+    })();
+    </script>
+    <!-- ===== END VÆRVARSELPANEL ===== -->
 
 </body>
 </html>
