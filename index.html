@@ -2845,67 +2845,47 @@
         const LAT = 39.7942;
         const LON = 2.6895;
 
-        const SYMBOL_EMOJI = {
-            clearsky_day: '☀️', clearsky_night: '🌙', clearsky_polartwilight: '☀️',
-            fair_day: '🌤️', fair_night: '🌤️', fair_polartwilight: '🌤️',
-            partlycloudy_day: '⛅', partlycloudy_night: '⛅', partlycloudy_polartwilight: '⛅',
-            cloudy: '☁️',
-            fog: '🌫️',
-            lightrain: '🌦️', rain: '🌧️', heavyrain: '🌧️',
-            lightrainshowers_day: '🌦️', lightrainshowers_night: '🌦️', lightrainshowers_polartwilight: '🌦️',
-            rainshowers_day: '🌦️', rainshowers_night: '🌦️', rainshowers_polartwilight: '🌦️',
-            heavyrainshowers_day: '⛈️', heavyrainshowers_night: '⛈️', heavyrainshowers_polartwilight: '⛈️',
-            lightrainandthunder: '⛈️', rainandthunder: '⛈️', heavyrainandthunder: '⛈️',
-            sleet: '🌨️', lightsleet: '🌨️', heavysleet: '🌨️',
-            sleetshowers_day: '🌨️', sleetshowers_night: '🌨️', sleetshowers_polartwilight: '🌨️',
-            snow: '❄️', lightsnow: '❄️', heavysnow: '❄️',
-            snowshowers_day: '🌨️', snowshowers_night: '🌨️', snowshowers_polartwilight: '🌨️',
-        };
-
-        function symbolEmoji(code) {
-            if (!code) return '🌡️';
-            const base = code.replace(/_day$|_night$|_polartwilight$/, '');
-            return SYMBOL_EMOJI[code] || SYMBOL_EMOJI[base] || '🌡️';
-        }
-
         function windDir(deg) {
             const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV'];
             return dirs[Math.round(deg / 45) % 8];
         }
 
+        // WMO weather code → emoji
+        const WMO_EMOJI = {
+            0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+            45:'🌫️', 48:'🌫️',
+            51:'🌦️', 53:'🌦️', 55:'🌧️',
+            61:'🌧️', 63:'🌧️', 65:'🌧️',
+            71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
+            80:'🌦️', 81:'🌧️', 82:'🌧️',
+            85:'🌨️', 86:'🌨️',
+            95:'⛈️', 96:'⛈️', 99:'⛈️'
+        };
+
         async function fetchWeather() {
             const container = document.getElementById('weatherHours');
             try {
-                const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&forecast_days=1&timezone=Europe%2FMadrid`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
 
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const series = data.properties.timeseries.filter(t => t.time.startsWith(todayStr));
-
-                if (!series.length) {
-                    container.innerHTML = '<span style="color:#f90">Ingen data for i dag</span>';
-                    return;
-                }
-
+                const hours = data.hourly.time;
                 container.innerHTML = '';
-                series.forEach(t => {
-                    const hour = new Date(t.time).getUTCHours();
-                    if (hour < 6 || hour > 21) return; // vis bare dagtid
-                    const inst = t.data.instant.details;
-                    const next1 = t.data.next_1_hours;
-                    const symbol = next1 ? next1.summary.symbol_code : '';
-                    const precip = next1 ? next1.details.precipitation_amount : 0;
-                    const temp = Math.round(inst.air_temperature);
-                    const wind = Math.round(inst.wind_speed);
-                    const dir = windDir(inst.wind_from_direction);
+                hours.forEach((t, i) => {
+                    const hour = parseInt(t.slice(11, 13));
+                    if (hour < 6 || hour > 21) return;
+                    const temp = Math.round(data.hourly.temperature_2m[i]);
+                    const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6); // km/h → m/s
+                    const dir = windDir(data.hourly.winddirection_10m[i]);
+                    const precip = data.hourly.precipitation[i];
+                    const emoji = WMO_EMOJI[data.hourly.weathercode[i]] || '🌡️';
 
                     const cell = document.createElement('div');
                     cell.style.cssText = 'text-align:center;min-width:52px;background:#162534;border-radius:6px;padding:4px 6px;';
                     cell.innerHTML = `
                         <div style="color:#88aacc;font-size:0.75rem">${hour.toString().padStart(2,'0')}:00</div>
-                        <div style="font-size:1.3rem">${symbolEmoji(symbol)}</div>
+                        <div style="font-size:1.3rem">${emoji}</div>
                         <div style="font-weight:bold;color:#fff">${temp}°</div>
                         <div style="color:#8bc;font-size:0.72rem">${wind}m/s ${dir}</div>
                         ${precip > 0 ? `<div style="color:#6af;font-size:0.7rem">${precip.toFixed(1)}mm</div>` : ''}
@@ -2914,7 +2894,7 @@
                 });
 
                 if (!container.children.length) {
-                    container.innerHTML = '<span style="color:#aaa">Ingen dagtime-data</span>';
+                    container.innerHTML = '<span style="color:#aaa">Ingen data</span>';
                 }
             } catch(e) {
                 document.getElementById('weatherHours').innerHTML = '<span style="color:#f66">Kunne ikke laste vær: ' + e.message + '</span>';

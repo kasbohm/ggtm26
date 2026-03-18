@@ -100,6 +100,14 @@
                     </div>
                 </div>
                 <div id="summaryRouteList" style="margin-top: 10px; overflow-y: auto; flex: 1;"></div>
+
+                <!-- Vær -->
+                <div style="margin-top:10px;border-top:1px solid #2a2a4a;padding-top:8px;">
+                    <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">🌤️ Vær i Mallorca idag</div>
+                    <div id="weatherHoursMobile" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;">
+                        <span style="color:#555;font-size:0.8rem">Laster...</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Dag 1 -->
@@ -1704,6 +1712,60 @@ routesContainer.innerHTML = `
     })();
     </script>
     <!-- ===== END FAKE ADS ===== -->
+
+    <!-- ===== VÆRVARSELPANEL ===== -->
+    <script>
+    (function() {
+        const LAT = 39.7942, LON = 2.6895;
+        const WMO_EMOJI = {
+            0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+            45:'🌫️',48:'🌫️',
+            51:'🌦️',53:'🌦️',55:'🌧️',
+            61:'🌧️',63:'🌧️',65:'🌧️',
+            71:'❄️',73:'❄️',75:'❄️',77:'❄️',
+            80:'🌦️',81:'🌧️',82:'🌧️',
+            85:'🌨️',86:'🌨️',
+            95:'⛈️',96:'⛈️',99:'⛈️'
+        };
+        function windDir(deg) {
+            return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg/45)%8];
+        }
+        async function fetchWeather() {
+            const container = document.getElementById('weatherHoursMobile');
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&forecast_days=1&timezone=Europe%2FMadrid`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                container.innerHTML = '';
+                data.hourly.time.forEach((t, i) => {
+                    const hour = parseInt(t.slice(11,13));
+                    if (hour < 6 || hour > 21) return;
+                    const temp = Math.round(data.hourly.temperature_2m[i]);
+                    const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
+                    const dir = windDir(data.hourly.winddirection_10m[i]);
+                    const precip = data.hourly.precipitation[i];
+                    const emoji = WMO_EMOJI[data.hourly.weathercode[i]] || '🌡️';
+                    const cell = document.createElement('div');
+                    cell.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1a3a;border-radius:6px;padding:3px 5px;';
+                    cell.innerHTML = `
+                        <div style="color:#88aacc;font-size:0.65rem">${hour.toString().padStart(2,'0')}:00</div>
+                        <div style="font-size:1.1rem">${emoji}</div>
+                        <div style="font-weight:bold;color:#fff;font-size:0.8rem">${temp}°</div>
+                        <div style="color:#8bc;font-size:0.6rem">${wind}m/s</div>
+                        ${precip > 0 ? `<div style="color:#6af;font-size:0.6rem">${precip.toFixed(1)}mm</div>` : ''}
+                    `;
+                    container.appendChild(cell);
+                });
+                if (!container.children.length) container.innerHTML = '<span style="color:#555;font-size:0.8rem">Ingen data</span>';
+            } catch(e) {
+                document.getElementById('weatherHoursMobile').innerHTML = `<span style="color:#f66;font-size:0.75rem">Feil: ${e.message}</span>`;
+            }
+        }
+        fetchWeather();
+    })();
+    </script>
+    <!-- ===== END VÆRVARSELPANEL ===== -->
 
 </body>
 </html>
