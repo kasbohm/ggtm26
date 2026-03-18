@@ -80,16 +80,15 @@
         <div class="day-cards" id="dayCards">
             <!-- Summary Slide -->
             <div class="day-card summary-card" style="border-top: 4px solid #ff00ff;">
-                <div class="summary-title">📊 Sammendrag</div>
-
                 <!-- Vær -->
-                <div style="margin-bottom:8px;border-bottom:1px solid #2a2a4a;padding-bottom:8px;">
+                <div style="border-bottom:1px solid #2a2a4a;padding-bottom:6px;">
                     <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">🌤️ Vær i Mallorca idag</div>
                     <div id="weatherHoursMobile" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;">
                         <span style="color:#555;font-size:0.8rem">Laster...</span>
                     </div>
                 </div>
 
+                <div class="summary-title">📊 Sammendrag</div>
                 <div class="summary-grid" id="summaryGrid">
                     <div class="summary-stat">
                         <div class="summary-stat-value" id="totalDays">0</div>
@@ -1741,7 +1740,7 @@ routesContainer.innerHTML = `
                 container.innerHTML = '';
                 data.hourly.time.forEach((t, i) => {
                     const hour = parseInt(t.slice(11,13));
-                    if (hour < 6 || hour > 21) return;
+                    if (hour < 6 || hour > 21 || hour % 2 !== 0) return;
                     const temp = Math.round(data.hourly.temperature_2m[i]);
                     const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
                     const dir = windDir(data.hourly.winddirection_10m[i]);

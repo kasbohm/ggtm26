@@ -224,6 +224,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
 }
 
 .route-leg {
@@ -482,15 +483,15 @@ body {
 
 /* ===== SUMMARY SLIDE ===== */
 .summary-card {
-    padding: 20px;
+    padding: 10px 14px 44px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 15px;
+    justify-content: flex-start;
+    gap: 6px;
 }
 
 .summary-title {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #00f5ff;
     text-align: center;
