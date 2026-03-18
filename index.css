@@ -278,7 +278,7 @@ body {
 .days-overlay {
     position: absolute;
     top: 10px;
-    left: 260px;
+    left: 50px;
     right: 10px;
     z-index: 1000;
     background: white;

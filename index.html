@@ -2877,7 +2877,7 @@
             const container = document.getElementById('weatherHours');
             try {
                 const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`;
-                const res = await fetch(url, { headers: { 'User-Agent': 'GGTM26-planner/1.0 github.com/kasbohm/ggtm26' } });
+                const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
 
