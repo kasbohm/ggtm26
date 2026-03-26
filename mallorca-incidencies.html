@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mallorca — Veiarbeid & Hendelser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- proj4 for UTM→WGS84 conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --border: #252830;
+      --accent: #f5a623;
+      --accent2: #e8453c;
+      --text: #e8eaf0;
+      --muted: #6b7080;
+      --green: #3ecf8e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 1000;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.4s;
+    }
+    .status-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
+    .status-dot.ok      { background: var(--green); }
+    .status-dot.error   { background: var(--accent2); }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+
+    .counter {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .counter strong { color: var(--accent); font-size: 14px; }
+
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: 320px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .incident-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .incident-list::-webkit-scrollbar { width: 4px; }
+    .incident-list::-webkit-scrollbar-track { background: transparent; }
+    .incident-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .incident-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .incident-item:hover { background: rgba(245,166,35,0.05); }
+    .incident-item.active { background: rgba(245,166,35,0.1); border-left: 2px solid var(--accent); }
+
+    .incident-icon {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .icon-work    { background: rgba(245,166,35,0.15); }
+    .icon-cut     { background: rgba(232,69,60,0.15); }
+    .icon-other   { background: rgba(107,112,128,0.15); }
+
+    .incident-body { flex: 1; min-width: 0; }
+    .incident-road {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .incident-desc {
+      font-size: 11px;
+      color: var(--text);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .incident-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    /* ── MAP ── */
+    #map {
+      flex: 1;
+      background: #0d0f14;
+    }
+
+    /* ── DETAIL PANEL ── */
+    #detail-panel {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      width: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      z-index: 800;
+      display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    #detail-panel.visible { display: block; }
+    .detail-close {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 16px;
+    }
+    .detail-label {
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .detail-road {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 20px; color: var(--accent); margin-bottom: 8px;
+    }
+    .detail-desc {
+      font-size: 12px; color: var(--text); line-height: 1.6; margin-bottom: 12px;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted);
+      padding: 5px 0; border-top: 1px solid var(--border);
+    }
+    .detail-row span { color: var(--text); }
+
+    /* ── LEAFLET OVERRIDES ── */
+    .leaflet-popup-content-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .leaflet-popup-tip { background: var(--surface); }
+    .leaflet-popup-content { font-family: 'DM Mono', monospace; font-size: 11px; margin: 10px 14px; }
+
+    .custom-marker {
+      background: var(--accent);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .custom-marker.type-cut { background: var(--accent2); }
+    .custom-marker.type-other { background: var(--muted); }
+
+    /* ── LOADING OVERLAY ── */
+    #loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(13,15,20,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { font-size: 12px; color: var(--muted); }
+
+    /* ── ERROR BANNER ── */
+    #error-banner {
+      display: none;
+      padding: 10px 16px;
+      background: rgba(232,69,60,0.1);
+      border-bottom: 1px solid rgba(232,69,60,0.3);
+      font-size: 11px;
+      color: #f08080;
+    }
+    #error-banner.visible { display: block; }
+
+    /* ── LEGEND ── */
+    .legend {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      z-index: 700;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 2;
+    }
+    .legend-row { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Mallorca <span>Vei</span></div>
+  <div class="status-pill">
+    <div class="status-dot loading" id="status-dot"></div>
+    <span id="status-text">Henter data...</span>
+  </div>
+  <div class="counter" id="counter" style="display:none">
+    <strong id="count-num">0</strong> aktive hendelser
+  </div>
+  <button class="refresh-btn" onclick="loadData()">↻ Oppdater</button>
+</header>
+
+<div id="error-banner">
+  ⚠ Kunne ikke koble til Consell de Mallorca sitt API. CORS-blokkering er vanlig — prøv å kjøre via en lokal proxy eller åpne siden direkte i nettleseren uten utvidelser.
+</div>
+
+<main style="position:relative">
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Kobler til GeoServer WFS...</p>
+  </div>
+
+  <aside>
+    <div class="sidebar-header">Aktive hendelser</div>
+    <div class="incident-list" id="incident-list">
+      <div class="empty-state">Laster inn hendelser...</div>
+    </div>
+  </aside>
+
+  <div id="map"></div>
+
+  <div class="legend">
+    <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div> Veiarbeid</div>
+    <div class="legend-row"><div class="legend-dot" style="background:var(--accent2)"></div> Stengt vei</div>
+    <div class="legend-row"><div class="legend-dot" style="background:var(--muted)"></div> Annen hendelse</div>
+  </div>
+
+  <div id="detail-panel">
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div class="detail-label">Hendelse</div>
+    <div class="detail-road" id="d-road">—</div>
+    <div class="detail-desc" id="d-desc">—</div>
+    <div class="detail-row">Kategori <span id="d-cat">—</span></div>
+    <div class="detail-row">Status <span id="d-status">—</span></div>
+    <div class="detail-row">Koordinater <span id="d-coords">—</span></div>
+  </div>
+</main>
+
+<script>
+// ── PROJ4 UTM 25831 → WGS84 ──
+proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+
+function toLatLng(coords) {
+  // Detect if coords look like UTM (large numbers) or already lon/lat
+  const x = coords[0], y = coords[1];
+  if (Math.abs(x) > 180 || Math.abs(y) > 90) {
+    // UTM — convert to WGS84
+    const [lon, lat] = proj4('EPSG:25831', 'EPSG:4326', [x, y]);
+    return [lat, lon];
+  }
+  // Already lon/lat
+  return [y, x];
+}
+
+function coordsToLatLng(geometry) {
+  if (geometry.type === 'Point') {
+    return toLatLng(geometry.coordinates);
+  } else if (geometry.type === 'LineString') {
+    const mid = Math.floor(geometry.coordinates.length / 2);
+    return toLatLng(geometry.coordinates[mid]);
+  }
+  return null;
+}
+
+function lineToLatLngs(geometry) {
+  return geometry.coordinates.map(c => toLatLng(c));
+}
+
+// ── MAP SETUP ──
+const map = L.map('map', {
+  center: [39.57, 2.95],
+  zoom: 10,
+  zoomControl: false
+});
+
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+let markers = [];
+let activeItem = null;
+
+// ── WFS ENDPOINTS ──
+// Two layers: icon points and road segments
+// Bruker corsproxy.io for å omgå CORS — fungerer direkte i nettleseren
+const PROXY = 'https://corsproxy.io/?';
+const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
+const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
+const URL_TRAM = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_tram&outputFormat=application/json`);
+
+// ── HELPERS ──
+function setStatus(state, text) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot ' + state;
+  txt.textContent = text;
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.textContent = '⚠ ' + msg;
+  b.classList.add('visible');
+  setStatus('error', 'Feil ved lasting');
+  document.getElementById('loading').style.display = 'none';
+}
+
+function getTypeClass(props) {
+  const desc = (props.descripcio || props.tipus || '').toLowerCase();
+  if (desc.includes('tall') || desc.includes('corte') || desc.includes('tanca')) return 'cut';
+  if (desc.includes('obra') || desc.includes('treball') || desc.includes('work')) return 'work';
+  return 'other';
+}
+
+function getIcon(typeClass) {
+  const icons = { work: '🚧', cut: '🚫', other: '⚠️' };
+  return icons[typeClass] || '⚠️';
+}
+
+function makeMarkerIcon(typeClass) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:14px; height:14px; border-radius:50%;
+      background:${typeClass === 'cut' ? 'var(--accent2, #e8453c)' : typeClass === 'work' ? 'var(--accent, #f5a623)' : '#6b7080'};
+      border: 2px solid rgba(255,255,255,0.7);
+      box-shadow: 0 0 0 3px rgba(${typeClass === 'cut' ? '232,69,60' : typeClass === 'work' ? '245,166,35' : '107,112,128'},0.3);
+    "></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+}
+
+// ── RENDER SIDEBAR ──
+function renderSidebar(features) {
+  const list = document.getElementById('incident-list');
+  if (!features.length) {
+    list.innerHTML = '<div class="empty-state">Ingen aktive hendelser<br>funnet akkurat nå 🟢</div>';
+    return;
+  }
+
+  list.innerHTML = features.map((f, i) => {
+    const p = f.properties;
+    const road = p.carretera || p.road || p.nom || '—';
+    const desc = p.descripcio || p.description || p.tipus || 'Ingen beskrivelse';
+    const typeClass = getTypeClass(p);
+    const icon = getIcon(typeClass);
+    return `
+      <div class="incident-item" data-index="${i}" onclick="focusIncident(${i})">
+        <div class="incident-icon icon-${typeClass}">${icon}</div>
+        <div class="incident-body">
+          <div class="incident-road">${road}</div>
+          <div class="incident-desc">${desc}</div>
+          <div class="incident-meta">${p.data_inici || p.start_date || ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER MAP MARKERS ──
+function renderMarkers(features) {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  features.forEach((f, i) => {
+    if (!f.geometry) return;
+    const latlng = coordsToLatLng(f.geometry);
+    if (!latlng) return;
+
+    const p = f.properties;
+    const typeClass = getTypeClass(p);
+    const road = p.carretera || p.road || p.nom || '—';
+    const desc = p.descripcio || p.description || p.tipus || '—';
+
+    const marker = L.marker(latlng, { icon: makeMarkerIcon(typeClass) })
+      .addTo(map)
+      .bindPopup(`
+        <strong style="color:var(--accent,#f5a623)">${road}</strong><br>
+        ${desc}<br>
+        <span style="color:#6b7080">${latlng[0].toFixed(4)}, ${latlng[1].toFixed(4)}</span>
+      `);
+
+    marker.on('click', () => {
+      showDetail(f, latlng);
+      highlightSidebarItem(i);
+    });
+
+    markers.push(marker);
+    f._latlng = latlng;
+    f._index = i;
+  });
+}
+
+// ── RENDER TRAM LINES ──
+function renderTrams(features) {
+  features.forEach(f => {
+    if (!f.geometry || f.geometry.type !== 'LineString') return;
+    const coords = lineToLatLngs(f.geometry);
+    const typeClass = getTypeClass(f.properties);
+    const color = typeClass === 'cut' ? '#e8453c' : typeClass === 'work' ? '#f5a623' : '#6b7080';
+    L.polyline(coords, {
+      color,
+      weight: 4,
+      opacity: 0.7,
+      dashArray: typeClass === 'cut' ? null : '8, 6'
+    }).addTo(map);
+  });
+}
+
+// ── DETAIL PANEL ──
+function showDetail(f, latlng) {
+  const p = f.properties;
+  document.getElementById('d-road').textContent = p.carretera || p.road || p.nom || '—';
+  document.getElementById('d-desc').textContent = p.descripcio || p.description || p.tipus || '—';
+  document.getElementById('d-cat').textContent = p.categoria || p.category || '—';
+  document.getElementById('d-status').textContent = p.estat || p.status || 'Aktiv';
+  document.getElementById('d-coords').textContent = `${latlng[0].toFixed(4)}, ${latlng[1].toFixed(4)}`;
+  document.getElementById('detail-panel').classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+
+function highlightSidebarItem(index) {
+  document.querySelectorAll('.incident-item').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.incident-item[data-index="${index}"]`);
+  if (el) {
+    el.classList.add('active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function focusIncident(index) {
+  highlightSidebarItem(index);
+  if (markers[index]) {
+    map.flyTo(markers[index].getLatLng(), 14, { duration: 0.8 });
+    markers[index].openPopup();
+  }
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  setStatus('loading', 'Henter data...');
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('error-banner').classList.remove('visible');
+  document.getElementById('counter').style.display = 'none';
+
+  // Clear existing
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  map.eachLayer(l => { if (l instanceof L.Polyline) map.removeLayer(l); });
+
+  try {
+    // Fetch both layers in parallel
+    const [iconResp, tramResp] = await Promise.all([
+      fetch(URL_ICON),
+      fetch(URL_TRAM)
+    ]);
+
+    if (!iconResp.ok) throw new Error(`HTTP ${iconResp.status}`);
+
+    const iconData = await iconResp.json();
+    const tramData = tramResp.ok ? await tramResp.json() : { features: [] };
+
+    const iconFeatures = iconData.features || [];
+    const tramFeatures = tramData.features || [];
+
+    renderSidebar(iconFeatures);
+    renderMarkers(iconFeatures);
+    renderTrams(tramFeatures);
+
+    const count = iconFeatures.length;
+    document.getElementById('count-num').textContent = count;
+    document.getElementById('counter').style.display = 'block';
+    setStatus('ok', `Oppdatert ${new Date().toLocaleTimeString('no')}`);
+    document.getElementById('loading').style.display = 'none';
+
+    // Dump raw properties to console for debugging field names
+    if (iconFeatures.length > 0) {
+      console.log('📋 Tilgjengelige felt i WFS-data:', Object.keys(iconFeatures[0].properties));
+      console.log('📍 Eksempel-feature:', iconFeatures[0].properties);
+    }
+
+  } catch (err) {
+    console.error('WFS fetch feil:', err);
+
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.name === 'TypeError') {
+      // CORS error — show helpful message and load demo data
+      showError('CORS-blokkering fra nettleser. API-endepunktet er tilgjengelig, men krever enten server-side proxy eller direkte nettleser-tilgang. Viser demo-data nedenfor.');
+      loadDemoData();
+    } else {
+      showError(`Kunne ikke hente data: ${err.message}`);
+    }
+  }
+}
+
+// ── DEMO DATA (fallback ved CORS-blokkering) ──
+function loadDemoData() {
+  const demo = [
+    { properties: { carretera: 'MA-10', descripcio: 'Obres de millora del ferm', estat: 'Activa', categoria: 'Obres' }, geometry: { type: 'Point', coordinates: [2.5678, 39.7456] } },
+    { properties: { carretera: 'MA-15', descripcio: 'Tall per accident de trànsit', estat: 'Activa', categoria: 'Emergència' }, geometry: { type: 'Point', coordinates: [2.9123, 39.5891] } },
+    { properties: { carretera: 'MA-13', descripcio: 'Treballs de senyalització horitzontal', estat: 'Activa', categoria: 'Obres' }, geometry: { type: 'Point', coordinates: [2.8234, 39.6234] } },
+    { properties: { carretera: 'MA-19', descripcio: 'Obres de drenatge lateral', estat: 'Activa', categoria: 'Obres' }, geometry: { type: 'Point', coordinates: [2.7012, 39.5012] } },
+    { properties: { carretera: 'MA-3010', descripcio: 'Incidència per caiguda de roques', estat: 'Activa', categoria: 'Emergència' }, geometry: { type: 'Point', coordinates: [2.6789, 39.8123] } },
+  ];
+
+  renderSidebar(demo);
+  renderMarkers(demo);
+
+  document.getElementById('count-num').textContent = `${demo.length} (demo)`;
+  document.getElementById('counter').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+
+  console.log('ℹ️ WFS URL for ikoner:', URL_ICON);
+  console.log('ℹ️ WFS URL for trase:', URL_TRAM);
+}
+
+// ── INIT ──
+loadData();
+
+// Auto-refresh hvert 5. minutt
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>

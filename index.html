@@ -69,6 +69,7 @@
             <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
             <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
             <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
+            <button class="btn btn-secondary" id="toggleVeiarbeidBtn" onclick="toggleVeiarbeid()">🚧 Vis veiarbeid</button>
             <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
         </div>
         <div id="fileCount" style="color: #aaa; font-size: 0.9rem; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-left: auto;"></div>
@@ -184,6 +185,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
+    <script src="routes-bundle.js"></script>
     <script>
         let currentSelectingDay = 1;
 
@@ -1225,6 +1227,7 @@
             menu.classList.toggle('open');
         };
 
+
         window.toggleDaysExpand = function() {
             const content = document.getElementById('daysContent');
             const toggle = document.querySelector('.days-toggle');
@@ -1305,12 +1308,17 @@
                 progressText.textContent = `${i + 1} av ${bundledRouteFiles.length} - Laster ${fileName}...`;
 
                 try {
-                    const encodedFileName = fileName.split('/').map(encodeURIComponent).join('/');
-                    const response = await fetch(`routes/${encodedFileName}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                    let gpxContent;
+                    if (window.bundledRouteData && window.bundledRouteData[fileName]) {
+                        gpxContent = window.bundledRouteData[fileName];
+                    } else {
+                        const encodedFileName = fileName.split('/').map(encodeURIComponent).join('/');
+                        const response = await fetch(`routes/${encodedFileName}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        gpxContent = await response.text();
                     }
-                    const gpxContent = await response.text();
                     await addRouteFromGpxContent(
                         fileName,
                         gpxContent,
@@ -2905,6 +2913,143 @@
     })();
     </script>
     <!-- ===== END VÆRVARSELPANEL ===== -->
+
+    <!-- ===== VEIARBEID / INCIDENCIES ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script>
+    (function() {
+        proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+
+        const PROXY = 'https://corsproxy.io/?';
+        const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
+        const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
+        const URL_TRAM = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_tram&outputFormat=application/json`);
+
+        let veiarbeidLayers = [];
+        let veiarbeidVisible = false;
+        let veiarbeidLoaded = false;
+
+        function toLatLng(coords) {
+            const x = coords[0], y = coords[1];
+            if (Math.abs(x) > 180 || Math.abs(y) > 90) {
+                const [lon, lat] = proj4('EPSG:25831', 'EPSG:4326', [x, y]);
+                return [lat, lon];
+            }
+            return [y, x];
+        }
+
+        const ICON_BASE = 'http://www.conselldemallorca.info/sit/IMG/VIC_ICONS/';
+
+        function getIconNum(props) {
+            // Prøv kjente feltnavn for ikontype
+            const candidates = [props.id_tipus, props.tipus_id, props.icona, props.icon, props.tipus];
+            for (const v of candidates) {
+                if (v !== undefined && v !== null && !isNaN(parseInt(v))) {
+                    return parseInt(v);
+                }
+            }
+            return null;
+        }
+
+        function makeMarker(latlng, props) {
+            const road = props.carretera || props.road || props.nom || '—';
+            const desc = props.descripcio || props.description || '—';
+            const iconNum = getIconNum(props);
+
+            let leafletIcon;
+            if (iconNum !== null) {
+                leafletIcon = L.icon({
+                    iconUrl: `${ICON_BASE}${iconNum}.png`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12],
+                    popupAnchor: [0, -14]
+                });
+            } else {
+                leafletIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="width:13px;height:13px;border-radius:50%;background:#f5a623;border:2px solid rgba(255,255,255,0.75);box-shadow:0 0 0 3px #f5a62344;"></div>`,
+                    iconSize: [13, 13],
+                    iconAnchor: [6, 6]
+                });
+            }
+
+            return L.marker(latlng, { icon: leafletIcon })
+                .bindPopup(`<b>${road}</b><br>${desc}${iconNum !== null ? `<br><small style="color:#aaa">tipus: ${iconNum}</small>` : ''}`);
+        }
+
+        async function loadVeiarbeid() {
+            try {
+                const [iconResp, tramResp] = await Promise.all([
+                    fetch(URL_ICON),
+                    fetch(URL_TRAM)
+                ]);
+                if (!iconResp.ok) throw new Error(`HTTP ${iconResp.status}`);
+                const iconData = await iconResp.json();
+                const tramData = tramResp.ok ? await tramResp.json() : { features: [] };
+
+                const iconFeatures = iconData.features || [];
+                if (iconFeatures.length > 0) {
+                    console.log('🚧 Veiarbeid felt:', Object.keys(iconFeatures[0].properties));
+                    console.log('🚧 Eksempel:', iconFeatures[0].properties);
+                }
+
+                iconFeatures.forEach(f => {
+                    if (!f.geometry) return;
+                    let latlng;
+                    if (f.geometry.type === 'Point') {
+                        latlng = toLatLng(f.geometry.coordinates);
+                    } else if (f.geometry.type === 'LineString') {
+                        const mid = Math.floor(f.geometry.coordinates.length / 2);
+                        latlng = toLatLng(f.geometry.coordinates[mid]);
+                    }
+                    if (!latlng) return;
+                    veiarbeidLayers.push(makeMarker(latlng, f.properties));
+                });
+
+                (tramData.features || []).forEach(f => {
+                    if (!f.geometry || f.geometry.type !== 'LineString') return;
+                    const coords = f.geometry.coordinates.map(c => toLatLng(c));
+                    const iconNum = getIconNum(f.properties);
+                    // Bruk ikontype til å farge linjen: rød for stengt (0?), oransje for arbeid, grå ellers
+                    const desc = (f.properties.descripcio || '').toLowerCase();
+                    const isCut = desc.includes('tall') || desc.includes('corte') || desc.includes('tanca');
+                    const color = isCut ? '#e8453c' : '#f5a623';
+                    veiarbeidLayers.push(L.polyline(coords, {
+                        color, weight: 5, opacity: 0.75,
+                        dashArray: isCut ? null : '10, 6'
+                    }));
+                });
+
+                veiarbeidLoaded = true;
+                veiarbeidLayers.forEach(l => l.addTo(map));
+            } catch (err) {
+                console.warn('Veiarbeid: kunne ikke hente data:', err.message);
+            }
+        }
+
+        window.toggleVeiarbeid = function() {
+            const btn = document.getElementById('toggleVeiarbeidBtn');
+            if (!veiarbeidVisible) {
+                if (!veiarbeidLoaded) {
+                    btn.textContent = '🚧 Laster...';
+                    loadVeiarbeid().then(() => {
+                        veiarbeidVisible = true;
+                        btn.textContent = '🚧 Skjul veiarbeid';
+                    });
+                } else {
+                    veiarbeidLayers.forEach(l => l.addTo(map));
+                    veiarbeidVisible = true;
+                    btn.textContent = '🚧 Skjul veiarbeid';
+                }
+            } else {
+                veiarbeidLayers.forEach(l => map.removeLayer(l));
+                veiarbeidVisible = false;
+                btn.textContent = '🚧 Vis veiarbeid';
+            }
+        };
+    })();
+    </script>
+    <!-- ===== END VEIARBEID ===== -->
 
 </body>
 </html>
