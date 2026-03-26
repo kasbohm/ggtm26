@@ -182,6 +182,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
@@ -2920,6 +2921,8 @@
     (function() {
         proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
 
+        const DEEPL_KEY = window.CONFIG?.DEEPL_KEY || null;
+
         const PROXY = 'https://corsproxy.io/?';
         const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
         const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
@@ -2976,22 +2979,34 @@
             }
 
             const obs = props.observacions || desc;
-            const dateStart = props.data_inici || '';
-            const dateEnd = props.data_fi || '';
+            const dateStart = props.inici || '';
+            const dateEnd = props.fin || '';
             const dateStr = dateStart ? `<br><small style="color:#aaa">${dateStart}${dateEnd ? ' → ' + dateEnd : ''}</small>` : '';
 
             return L.marker(latlng, { icon: leafletIcon })
                 .bindPopup(`<b>${road}</b><br>${obs}${dateStr}`);
         }
 
-        async function translate(text) {
-            if (!text) return text;
+        async function translateBatch(texts) {
+            if (!texts.length || !DEEPL_KEY) return texts;
             try {
-                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=es|no`);
+                const body = new URLSearchParams({ target_lang: 'NB' });
+                texts.forEach(t => body.append('text', t));
+                const res = await fetch(PROXY + encodeURIComponent('https://api-free.deepl.com/v2/translate'), {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `DeepL-Auth-Key ${DEEPL_KEY}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body
+                });
                 const data = await res.json();
-                return data.responseData?.translatedText || text;
-            } catch {
-                return text;
+                console.log('DeepL svar:', data);
+                if (!data.translations) return texts;
+                return data.translations.map(t => t.text);
+            } catch (e) {
+                console.warn('DeepL feil:', e);
+                return texts;
             }
         }
 
@@ -3011,7 +3026,17 @@
                     console.log('🚧 Eksempel:', iconFeatures[0].properties);
                 }
 
-                await Promise.all(iconFeatures.map(async f => {
+                // Batch-oversett alle observacions i én DeepL-kall
+                const texts = iconFeatures.map(f => f.properties.observacions || '');
+                const translated = await translateBatch(texts.filter(t => t));
+                let ti = 0;
+                iconFeatures.forEach(f => {
+                    if (f.properties.observacions) {
+                        f.properties.observacions = translated[ti++];
+                    }
+                });
+
+                iconFeatures.forEach(f => {
                     if (!f.geometry) return;
                     let latlng;
                     if (f.geometry.type === 'Point') {
@@ -3021,11 +3046,8 @@
                         latlng = toLatLng(f.geometry.coordinates[mid]);
                     }
                     if (!latlng) return;
-                    if (f.properties.observacions) {
-                        f.properties.observacions = await translate(f.properties.observacions);
-                    }
                     veiarbeidLayers.push(makeMarker(latlng, f.properties));
-                }));
+                });
 
                 (tramData.features || []).forEach(f => {
                     if (!f.geometry || f.geometry.type !== 'LineString') return;
