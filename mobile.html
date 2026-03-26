@@ -39,6 +39,7 @@
         <button class="menu-item" onclick="autoMakeElite(); closeMenu();">⚡ Auto Elite (A)</button>
         <button class="menu-item" onclick="autoMakeMosjonist(); closeMenu();">🚴 Auto Mosjonist (B)</button>
         <button class="menu-item" onclick="document.getElementById('gpxInput').click();">📁 Last opp GPX</button>
+        <button class="menu-item" id="toggleVeiarbeidBtn" onclick="toggleVeiarbeid()">🚧 Vis veiarbeid</button>
         <button class="menu-item" onclick="clearAll(); closeMenu();">🗑️ Fjern alle</button>
         <!--<button class="menu-item" onclick="window.location.href='konkurranse-mobil.html';">🏆 Konkurranse</button>-->
     </div>
@@ -183,6 +184,7 @@
         </div>
     </div>
     
+    <script src="config.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
@@ -1765,6 +1767,137 @@ routesContainer.innerHTML = `
     })();
     </script>
     <!-- ===== END VÆRVARSELPANEL ===== -->
+
+    <!-- ===== VEIARBEID / INCIDENCIES ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script>
+    (function() {
+        proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+
+        const DEEPL_KEY = window.CONFIG?.DEEPL_KEY || null;
+        const PROXY = 'https://corsproxy.io/?';
+        const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
+        const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
+        const URL_TRAM = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_tram&outputFormat=application/json`);
+        const ICON_BASE = 'vic-icons/';
+        const VALID_ICONS = new Set([0,1,2,3,4,5,6,7,8,9,10,11,30]);
+
+        let veiarbeidLayers = [];
+        let veiarbeidVisible = false;
+        let veiarbeidLoaded = false;
+
+        function toLatLng(coords) {
+            const x = coords[0], y = coords[1];
+            if (Math.abs(x) > 180 || Math.abs(y) > 90) {
+                const [lon, lat] = proj4('EPSG:25831', 'EPSG:4326', [x, y]);
+                return [lat, lon];
+            }
+            return [y, x];
+        }
+
+        function getIconNum(props) {
+            const candidates = [props.id_tipus, props.tipus_id, props.icona, props.icon, props.tipus];
+            for (const v of candidates) {
+                if (v !== undefined && v !== null && !isNaN(parseInt(v))) return parseInt(v);
+            }
+            return null;
+        }
+
+        function makeMarker(latlng, props) {
+            const road = props.carretera || props.road || props.nom || '—';
+            const obs = props.observacions || props.descripcio || '—';
+            const iconNum = getIconNum(props);
+            const dateStart = props.inici || '';
+            const dateEnd = props.fin || '';
+            const dateStr = dateStart ? `<br><small style="color:#aaa">${dateStart}${dateEnd ? ' → ' + dateEnd : ''}</small>` : '';
+
+            const leafletIcon = (iconNum !== null && VALID_ICONS.has(iconNum))
+                ? L.icon({ iconUrl: `${ICON_BASE}${iconNum}.png`, iconSize: [24,24], iconAnchor: [12,12], popupAnchor: [0,-14] })
+                : L.divIcon({ className: '', html: `<div style="width:13px;height:13px;border-radius:50%;background:#f5a623;border:2px solid rgba(255,255,255,0.75);"></div>`, iconSize: [13,13], iconAnchor: [6,6] });
+
+            return L.marker(latlng, { icon: leafletIcon })
+                .bindPopup(`<b>${road}</b><br>${obs}${dateStr}`);
+        }
+
+        async function translateBatch(texts) {
+            if (!texts.length || !DEEPL_KEY) return texts;
+            try {
+                const body = new URLSearchParams({ target_lang: 'NB' });
+                texts.forEach(t => body.append('text', t));
+                const res = await fetch(PROXY + encodeURIComponent('https://api-free.deepl.com/v2/translate'), {
+                    method: 'POST',
+                    headers: { 'Authorization': `DeepL-Auth-Key ${DEEPL_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                });
+                const data = await res.json();
+                if (!data.translations) return texts;
+                return data.translations.map(t => t.text);
+            } catch (e) {
+                console.warn('DeepL feil:', e);
+                return texts;
+            }
+        }
+
+        async function loadVeiarbeid() {
+            try {
+                const [iconResp, tramResp] = await Promise.all([fetch(URL_ICON), fetch(URL_TRAM)]);
+                if (!iconResp.ok) throw new Error(`HTTP ${iconResp.status}`);
+                const iconData = await iconResp.json();
+                const tramData = tramResp.ok ? await tramResp.json() : { features: [] };
+                const iconFeatures = iconData.features || [];
+
+                const texts = iconFeatures.map(f => f.properties.observacions || '');
+                const translated = await translateBatch(texts.filter(t => t));
+                let ti = 0;
+                iconFeatures.forEach(f => { if (f.properties.observacions) f.properties.observacions = translated[ti++]; });
+
+                iconFeatures.forEach(f => {
+                    if (!f.geometry) return;
+                    let latlng;
+                    if (f.geometry.type === 'Point') latlng = toLatLng(f.geometry.coordinates);
+                    else if (f.geometry.type === 'LineString') latlng = toLatLng(f.geometry.coordinates[Math.floor(f.geometry.coordinates.length / 2)]);
+                    if (!latlng) return;
+                    veiarbeidLayers.push(makeMarker(latlng, f.properties));
+                });
+
+                (tramData.features || []).forEach(f => {
+                    if (!f.geometry || f.geometry.type !== 'LineString') return;
+                    const coords = f.geometry.coordinates.map(c => toLatLng(c));
+                    const desc = (f.properties.descripcio || '').toLowerCase();
+                    const isCut = desc.includes('tall') || desc.includes('corte') || desc.includes('tanca');
+                    veiarbeidLayers.push(L.polyline(coords, { color: isCut ? '#e8453c' : '#f5a623', weight: 5, opacity: 0.75, dashArray: isCut ? null : '10, 6' }));
+                });
+
+                veiarbeidLoaded = true;
+                veiarbeidLayers.forEach(l => l.addTo(map));
+            } catch (err) {
+                console.warn('Veiarbeid feil:', err.message);
+            }
+        }
+
+        window.toggleVeiarbeid = function() {
+            const btn = document.getElementById('toggleVeiarbeidBtn');
+            if (!veiarbeidVisible) {
+                if (!veiarbeidLoaded) {
+                    btn.textContent = '🚧 Laster...';
+                    loadVeiarbeid().then(() => {
+                        veiarbeidVisible = true;
+                        btn.textContent = '🚧 Skjul veiarbeid';
+                    });
+                } else {
+                    veiarbeidLayers.forEach(l => l.addTo(map));
+                    veiarbeidVisible = true;
+                    btn.textContent = '🚧 Skjul veiarbeid';
+                }
+            } else {
+                veiarbeidLayers.forEach(l => map.removeLayer(l));
+                veiarbeidVisible = false;
+                btn.textContent = '🚧 Vis veiarbeid';
+            }
+        };
+    })();
+    </script>
+    <!-- ===== END VEIARBEID ===== -->
 
 </body>
 </html>
