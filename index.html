@@ -2938,7 +2938,7 @@
             return [y, x];
         }
 
-        const ICON_BASE = 'http://www.conselldemallorca.info/sit/IMG/VIC_ICONS/';
+        const ICON_BASE = 'vic-icons/';
 
         function getIconNum(props) {
             // Prøv kjente feltnavn for ikontype
@@ -2951,13 +2951,15 @@
             return null;
         }
 
+        const VALID_ICONS = new Set([0,1,2,3,4,5,6,7,8,9,10,11,30]);
+
         function makeMarker(latlng, props) {
             const road = props.carretera || props.road || props.nom || '—';
             const desc = props.descripcio || props.description || '—';
             const iconNum = getIconNum(props);
 
             let leafletIcon;
-            if (iconNum !== null) {
+            if (iconNum !== null && VALID_ICONS.has(iconNum)) {
                 leafletIcon = L.icon({
                     iconUrl: `${ICON_BASE}${iconNum}.png`,
                     iconSize: [24, 24],
