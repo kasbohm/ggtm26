@@ -2975,12 +2975,24 @@
                 });
             }
 
-            const dateStart = props.data_inici || props.start_date || '';
-            const dateEnd = props.data_fi || props.end_date || '';
+            const obs = props.observacions || desc;
+            const dateStart = props.data_inici || '';
+            const dateEnd = props.data_fi || '';
             const dateStr = dateStart ? `<br><small style="color:#aaa">${dateStart}${dateEnd ? ' → ' + dateEnd : ''}</small>` : '';
 
             return L.marker(latlng, { icon: leafletIcon })
-                .bindPopup(`<b>${road}</b><br>${desc}${dateStr}`);
+                .bindPopup(`<b>${road}</b><br>${obs}${dateStr}`);
+        }
+
+        async function translate(text) {
+            if (!text) return text;
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=es|no`);
+                const data = await res.json();
+                return data.responseData?.translatedText || text;
+            } catch {
+                return text;
+            }
         }
 
         async function loadVeiarbeid() {
@@ -2999,7 +3011,7 @@
                     console.log('🚧 Eksempel:', iconFeatures[0].properties);
                 }
 
-                iconFeatures.forEach(f => {
+                await Promise.all(iconFeatures.map(async f => {
                     if (!f.geometry) return;
                     let latlng;
                     if (f.geometry.type === 'Point') {
@@ -3009,8 +3021,11 @@
                         latlng = toLatLng(f.geometry.coordinates[mid]);
                     }
                     if (!latlng) return;
+                    if (f.properties.observacions) {
+                        f.properties.observacions = await translate(f.properties.observacions);
+                    }
                     veiarbeidLayers.push(makeMarker(latlng, f.properties));
-                });
+                }));
 
                 (tramData.features || []).forEach(f => {
                     if (!f.geometry || f.geometry.type !== 'LineString') return;

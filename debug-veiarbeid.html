@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug veiarbeid API</title>
+  <style>
+    body { font-family: monospace; background: #0d0f14; color: #e8eaf0; padding: 20px; }
+    h2 { color: #f5a623; margin-top: 32px; }
+    pre { background: #161920; border: 1px solid #252830; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; white-space: pre-wrap; }
+    .fields { background: #1a2a1a; border: 1px solid #2a4a2a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+    .fields span { color: #3ecf8e; }
+    button { background: #f5a623; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: monospace; }
+    #status { color: #6b7080; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1 style="color:#f5a623">Veiarbeid API — debug</h1>
+  <button onclick="load()">Hent data</button>
+  <div id="status"></div>
+
+  <h2>Felt i incidencies_icon</h2>
+  <div class="fields" id="icon-fields">—</div>
+  <h2>Første feature (icon)</h2>
+  <pre id="icon-example">—</pre>
+
+  <h2>Felt i incidencies_tram</h2>
+  <div class="fields" id="tram-fields">—</div>
+  <h2>Første feature (tram)</h2>
+  <pre id="tram-example">—</pre>
+
+  <h2>Alle features (icon)</h2>
+  <pre id="icon-all">—</pre>
+
+<script>
+const PROXY = 'https://corsproxy.io/?';
+const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
+const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
+const URL_TRAM = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_tram&outputFormat=application/json`);
+
+async function load() {
+  document.getElementById('status').textContent = 'Henter...';
+  try {
+    const [iconResp, tramResp] = await Promise.all([fetch(URL_ICON), fetch(URL_TRAM)]);
+    const iconData = await iconResp.json();
+    const tramData = tramResp.ok ? await tramResp.json() : { features: [] };
+
+    const iconFeatures = iconData.features || [];
+    const tramFeatures = tramData.features || [];
+
+    document.getElementById('status').textContent = `Hentet ${iconFeatures.length} icon-features, ${tramFeatures.length} tram-features`;
+
+    if (iconFeatures.length > 0) {
+      const fields = Object.keys(iconFeatures[0].properties);
+      document.getElementById('icon-fields').innerHTML = fields.map(f => `<span>${f}</span>`).join(' &nbsp;·&nbsp; ');
+      document.getElementById('icon-example').textContent = JSON.stringify(iconFeatures[0], null, 2);
+      document.getElementById('icon-all').textContent = JSON.stringify(iconFeatures.map(f => f.properties), null, 2);
+    }
+
+    if (tramFeatures.length > 0) {
+      const fields = Object.keys(tramFeatures[0].properties);
+      document.getElementById('tram-fields').innerHTML = fields.map(f => `<span>${f}</span>`).join(' &nbsp;·&nbsp; ');
+      document.getElementById('tram-example').textContent = JSON.stringify(tramFeatures[0], null, 2);
+    }
+  } catch(e) {
+    document.getElementById('status').textContent = 'Feil: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
