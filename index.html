@@ -2975,8 +2975,12 @@
                 });
             }
 
+            const dateStart = props.data_inici || props.start_date || '';
+            const dateEnd = props.data_fi || props.end_date || '';
+            const dateStr = dateStart ? `<br><small style="color:#aaa">${dateStart}${dateEnd ? ' → ' + dateEnd : ''}</small>` : '';
+
             return L.marker(latlng, { icon: leafletIcon })
-                .bindPopup(`<b>${road}</b><br>${desc}${iconNum !== null ? `<br><small style="color:#aaa">tipus: ${iconNum}</small>` : ''}`);
+                .bindPopup(`<b>${road}</b><br>${desc}${dateStr}`);
         }
 
         async function loadVeiarbeid() {
