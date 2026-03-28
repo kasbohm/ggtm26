@@ -719,11 +719,11 @@
             const decorator = L.polylineDecorator(polyline, {
                 patterns: [
                     {
-                        offset: '10%',
-                        repeat: '15%',
+                        offset: '25%',
+                        repeat: '50%',
                         symbol: L.Symbol.arrowHead({
-                            pixelSize: 15,
-                            polygon: true,
+                            pixelSize: 8,
+                            polygon: false,
                             pathOptions: {
                                 stroke: true,
                                 weight: 3,
@@ -781,11 +781,11 @@
                             route.decorator.remove();
                             route.decorator = L.polylineDecorator(route.polyline, {
                                 patterns: [{
-                                    offset: '10%',
-                                    repeat: '15%',
+                                    offset: '25%',
+                                    repeat: '50%',
                                     symbol: L.Symbol.arrowHead({
-                                        pixelSize: 15,
-                                        polygon: true,
+                                        pixelSize: 8,
+                                        polygon: false,
                                         pathOptions: {
                                             stroke: true,
                                             weight: 3,
@@ -814,11 +814,11 @@
                         route.decorator.remove();
                         route.decorator = L.polylineDecorator(route.polyline, {
                             patterns: [{
-                                offset: '10%',
-                                repeat: '15%',
+                                offset: '25%',
+                                repeat: '50%',
                                 symbol: L.Symbol.arrowHead({
-                                    pixelSize: 15,
-                                    polygon: true,
+                                    pixelSize: 8,
+                                    polygon: false,
                                     pathOptions: {
                                         stroke: true,
                                         weight: 3,
@@ -1643,12 +1643,14 @@
                     return afterA && !afterA.match(/^[12]/);
                 });
                 
-                if (dayARoutes.length >= 2) {
+                if (dayARoutes.length === 1) {
+                    day.routes.push(dayARoutes[0].id);
+                } else if (dayARoutes.length >= 2) {
                     // Finn UT (Helios som FØRSTE lokasjon)
                     const utRoute = dayARoutes.find(r => r.fileName.match(/_A_Helios_/));
                     // Finn HJEM (Helios som SISTE lokasjon, men IKKE første)
                     const hjemRoute = dayARoutes.find(r => r.fileName.includes('_Helios') && !r.fileName.match(/_A_Helios_/));
-                    
+
                     if (utRoute && hjemRoute) {
                         // VIKTIG: Legg til UT først (Helios øverst)
                         day.routes.push(utRoute.id, hjemRoute.id);
@@ -1675,7 +1677,7 @@
 
             updateRouteColors();
             updateSidebar();
-            alert('✅ Elite (A) ruter lastet for alle 4 dager!');
+            alert('✅ Elite (A) ruter lastet for alle 5 dager!');
         };
 
         window.autoMakeMosjonist = function() {
@@ -1694,24 +1696,21 @@
                 
                 console.log(`Dag ${dayNum} B-ruter:`, allBRoutes.map(r => r.fileName));
                 
-                if (allBRoutes.length >= 2) {
+                if (allBRoutes.length === 1) {
+                    day.routes.push(allBRoutes[0].id);
+                } else if (allBRoutes.length >= 2) {
                     // Finn UT (Helios som FØRSTE lokasjon)
                     const utRoute = allBRoutes.find(r => r.fileName.match(/_B[12]?_Helios_/));
-                    
+
                     // Finn HJEM (Helios som SISTE lokasjon, men IKKE første)
-                    const hjemRoute = allBRoutes.find(r => 
-                        r.fileName.includes('_Helios') && 
+                    const hjemRoute = allBRoutes.find(r =>
+                        r.fileName.includes('_Helios') &&
                         !r.fileName.match(/_B[12]?_Helios_/)
                     );
-                    
-                    console.log(`Dag ${dayNum} - UT:`, utRoute?.fileName, 'HJEM:', hjemRoute?.fileName);
-                    
+
                     if (utRoute && hjemRoute) {
-                        // VIKTIG: Legg til UT først (Helios øverst)
                         day.routes.push(utRoute.id, hjemRoute.id);
-                    } else if (allBRoutes.length >= 2) {
-                        // Fallback: første 2 ruter
-                        console.warn(`Dag ${dayNum} - Kunne ikke finne UT/HJEM, bruker første 2`);
+                    } else {
                         allBRoutes.slice(0, 2).forEach(route => day.routes.push(route.id));
                     }
                 }
@@ -1734,7 +1733,7 @@
 
             updateRouteColors();
             updateSidebar();
-            alert('✅ Mosjonist (B) ruter lastet for alle 4 dager!');
+            alert('✅ Mosjonist (B) ruter lastet for alle 5 dager!');
         };
 
         // Initialize
@@ -2984,7 +2983,7 @@
             const dateStr = dateStart ? `<br><small style="color:#aaa">${dateStart}${dateEnd ? ' → ' + dateEnd : ''}</small>` : '';
 
             return L.marker(latlng, { icon: leafletIcon })
-                .bindPopup(`<b>${road}</b><br>${obs}${dateStr}`);
+                .bindPopup(`<b style="background:#f5a623;color:#000;border:1.5px solid #000;border-radius:3px;padding:1px 6px;font-size:12px;display:inline-block">${road}</b><br>${obs}${dateStr}`);
         }
 
         async function translateBatch(texts) {
