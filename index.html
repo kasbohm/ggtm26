@@ -984,6 +984,20 @@
             updateSidebar();
         }
 
+        function syncDayToggleBtns() {
+            days.forEach(day => {
+                const btn = document.getElementById(`toggle-day-${day.id}`);
+                if (!btn) return;
+                if (day.visible) {
+                    btn.textContent = 'Skjul';
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.textContent = 'Vis';
+                    btn.classList.add('hidden');
+                }
+            });
+        }
+
         function updateSidebar() {
             const routeList = document.getElementById('routeList');
             const fileCountDiv = document.getElementById('fileCount');
@@ -1690,6 +1704,7 @@
 
             updateRouteColors();
             updateSidebar();
+            syncDayToggleBtns();
             alert('✅ Elite (A) ruter lastet for alle 5 dager!');
         };
 
@@ -1746,6 +1761,7 @@
 
             updateRouteColors();
             updateSidebar();
+            syncDayToggleBtns();
             alert('✅ Mosjonist (B) ruter lastet for alle 5 dager!');
         };
 
