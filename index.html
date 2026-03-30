@@ -88,10 +88,10 @@
                             <div class="day-title">Dag 1 - Port de Soller</div>
                             <div class="day-stats-compact" id="day-1-stats"></div>
                             <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(1)">Velg ruter</button>
+                                <button class="day-select-btn" onclick="openRouteSelector(1)">Velg</button>
                                 <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️</button>
                                 <button class="btn-download-day" onclick="showElevationProfile(1)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-1" onclick="toggleDayVisibility(1)">Skjul dag</button>
+                                <button class="btn-toggle-day" id="toggle-day-1" onclick="toggleDayVisibility(1)">Skjul</button>
                             </div>
                         </div>
                         <div class="day-content" id="day-1-content"></div>
@@ -102,10 +102,10 @@
                             <div class="day-title">Dag 2 - Cap de Formentor</div>
                             <div class="day-stats-compact" id="day-2-stats"></div>
                             <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(2)">Velg ruter</button>
+                                <button class="day-select-btn" onclick="openRouteSelector(2)">Velg</button>
                                 <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️</button>
                                 <button class="btn-download-day" onclick="showElevationProfile(2)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-2" onclick="toggleDayVisibility(2)">Skjul dag</button>
+                                <button class="btn-toggle-day" id="toggle-day-2" onclick="toggleDayVisibility(2)">Skjul</button>
                             </div>
                         </div>
                         <div class="day-content" id="day-2-content"></div>
@@ -116,10 +116,10 @@
                             <div class="day-title">Dag 3 - Sa Calobra</div>
                             <div class="day-stats-compact" id="day-3-stats"></div>
                             <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(3)">Velg ruter</button>
+                                <button class="day-select-btn" onclick="openRouteSelector(3)">Velg</button>
                                 <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️</button>
                                 <button class="btn-download-day" onclick="showElevationProfile(3)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-3" onclick="toggleDayVisibility(3)">Skjul dag</button>
+                                <button class="btn-toggle-day" id="toggle-day-3" onclick="toggleDayVisibility(3)">Skjul</button>
                             </div>
                         </div>
                         <div class="day-content" id="day-3-content"></div>
@@ -130,10 +130,10 @@
                             <div class="day-title">Dag 4 - Sant Salvador</div>
                             <div class="day-stats-compact" id="day-4-stats"></div>
                             <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(4)">Velg ruter</button>
+                                <button class="day-select-btn" onclick="openRouteSelector(4)">Velg</button>
                                 <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️</button>
                                 <button class="btn-download-day" onclick="showElevationProfile(4)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-4" onclick="toggleDayVisibility(4)">Skjul dag</button>
+                                <button class="btn-toggle-day" id="toggle-day-4" onclick="toggleDayVisibility(4)">Skjul</button>
                             </div>
                         </div>
                         <div class="day-content" id="day-4-content"></div>
@@ -144,10 +144,10 @@
                             <div class="day-title">Dag 5 - Rapha, Palma ⭐</div>
                             <div class="day-stats-compact" id="day-5-stats"></div>
                             <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(5)">Velg ruter</button>
+                                <button class="day-select-btn" onclick="openRouteSelector(5)">Velg</button>
                                 <button class="btn-download-day" onclick="downloadDayGPX(5)" title="Last ned dag som GPX">⬇️</button>
                                 <button class="btn-download-day" onclick="showElevationProfile(5)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-5" onclick="toggleDayVisibility(5)">Skjul dag</button>
+                                <button class="btn-toggle-day" id="toggle-day-5" onclick="toggleDayVisibility(5)">Skjul</button>
                             </div>
                         </div>
                         <div class="day-content" id="day-5-content"></div>
@@ -958,6 +958,11 @@
                     if (route.endMarker) route.endMarker.remove();
                 }
             });
+            days.forEach(day => {
+                day.visible = false;
+                const btn = document.getElementById(`toggle-day-${day.id}`);
+                if (btn) { btn.textContent = 'Vis'; btn.classList.add('hidden'); }
+            });
             updateSidebar();
         }
 
@@ -970,6 +975,11 @@
                     if (route.startMarker) route.startMarker.addTo(map);
                     if (route.endMarker) route.endMarker.addTo(map);
                 }
+            });
+            days.forEach(day => {
+                day.visible = true;
+                const btn = document.getElementById(`toggle-day-${day.id}`);
+                if (btn) { btn.textContent = 'Skjul'; btn.classList.remove('hidden'); }
             });
             updateSidebar();
         }
@@ -1197,10 +1207,10 @@
                 // Update toggle button text
                 if (toggleBtn) {
                     if (day.visible) {
-                        toggleBtn.textContent = 'Skjul dag';
+                        toggleBtn.textContent = 'Skjul';
                         toggleBtn.classList.remove('hidden');
                     } else {
-                        toggleBtn.textContent = 'Vis dag';
+                        toggleBtn.textContent = 'Vis';
                         toggleBtn.classList.add('hidden');
                     }
                 }
