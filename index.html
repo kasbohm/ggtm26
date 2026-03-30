@@ -1742,6 +1742,12 @@
         // Initialize
         updateSidebar();
         loadBundledRoutes();
+
+        // Farg dag-boksene med same farge som sporene
+        days.forEach(day => {
+            const box = document.querySelector(`.day-box[data-day-id="${day.id}"]`);
+            if (box) box.style.borderColor = day.color;
+        });
     </script>
 
     <!-- SoundCloud Embed -->
