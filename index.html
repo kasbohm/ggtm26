@@ -443,14 +443,15 @@
             'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx',
             'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx',
             'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx',
-            'GGTM26_D3_A_Helios_Sa_Calobra__105km_1900hm.gpx',
-            'GGTM26_D3_A1_Helios_Sa_Calobra__105km_1900hm.gpx',
-            'GGTM26_D3_A_Sa_Calobra__Helios_100km_2300hm.gpx',
-            'GGTM26_D3_B_Helios_Sa_Calobra__75km_1100hm.gpx',
-            'GGTM26_D3_B1_Sa_Calobra__Helios_70km_1000hm.gpx',
-            'GGTM26_D3_B2_Sa_Calobra__Helios_90km_1500hm.gpx',
+            'GGTM26_D3_A_Helios_Sa_Calobra_105km_1900hm.gpx',
+            'GGTM26_D3_A1_Helios_Sa_Calobra_105km_1900hm.gpx',
+            'GGTM26_D3_A_Sa_Calobra_Helios_100km_2300hm.gpx',
+            'GGTM26_D3_B_Helios_Sa_Calobra_75km_1100hm.gpx',
+            'GGTM26_D3_B1_Sa_Calobra_Helios_70km_1000hm.gpx',
+            'GGTM26_D3_B2_Sa_Calobra_Helios_90km_1500hm.gpx',
             'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx',
-            'GGTM26_D4_A_Sant_Salvador_Helios_85km_600hm.gpx',
+            'GGTM26_D4_A_Sant_Salvador_Helios_96km_1050hm.gpx',
+            'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
             'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx',
             'GGTM26_D5_A_Helios_Rapha.gpx',
@@ -699,8 +700,10 @@
         function sortRoutesUtHjem(dayRoutes) {
             if (dayRoutes.length !== 2) return dayRoutes;
             const score = (r) => {
-                if (r.fileName.includes('Helios_')) return 0; // UT
-                if (r.fileName.includes('_Helios')) return 1; // HJEM
+                // UT: Helios er første lokasjon, rett etter rutetypekoden (_A_, _B_, _A1_ osv.)
+                if (r.fileName.match(/_(A|B)\d?_Helios_/)) return 0;
+                // HJEM: Helios er siste lokasjon (før km-tallet)
+                if (r.fileName.match(/_Helios_\d+km/)) return 1;
                 return 2;
             };
             return [...dayRoutes].sort((a, b) => score(a) - score(b));
