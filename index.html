@@ -48,126 +48,67 @@
         </div>
     </div>
 
-    <div class="header">
-        <h1>🌴 Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for Desktop Computers</h1>
-        <p class="header-subtitle">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</p>
-    </div>
-
-    <!-- Værvarselpanel -->
-    <div id="weatherBar" style="background:#1a2a3a;border-bottom:1px solid #2c4a6a;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:#cce4ff;">
-        <span style="font-weight:bold;white-space:nowrap;">🌤️ Vær i Mallorca idag:</span>
-        <div id="weatherHours" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-            <span style="color:#667;">Laster...</span>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="btn hamburger-btn" onclick="toggleHamburger()">☰ Meny</button>
-        <div class="hamburger-menu" id="hamburgerMenu">
-            <button class="btn" style="background: #e67e22;" onclick="autoMakeElite()">⚡ Auto-Make Elite (A)</button>
-            <button class="btn" style="background: #3498db;" onclick="autoMakeMosjonist()">🚴 Auto-Make Mosjonist (B)</button>
-            <button class="btn btn-secondary" id="toggleMapBtn">🗺️ Skjul kart</button>
-            <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
-            <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
-            <button class="btn btn-secondary" id="toggleVeiarbeidBtn" onclick="toggleVeiarbeid()">🚧 Vis veiarbeid</button>
-            <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
-        </div>
-        <div id="fileCount" style="color: #aaa; font-size: 0.9rem; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-left: auto;"></div>
-    </div>
-
-    <div class="main-content">
-        <div id="map">
-            <div class="days-overlay" id="daysOverlay">
-                <div class="days-header">
-                    <span>📅 Dager</span>
-                    <span class="days-toggle" onclick="toggleDaysExpand()">▼</span>
-                </div>
-                <div class="days-content" id="daysContent">
-                    <div class="day-box" data-day-id="1" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title">Dag 1 - Port de Soller</div>
-                            <div class="day-stats-compact" id="day-1-stats"></div>
-                            <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(1)">Velg</button>
-                                <button class="btn-download-day" onclick="downloadDayGPX(1)" title="Last ned dag som GPX">⬇️</button>
-                                <button class="btn-download-day" onclick="showElevationProfile(1)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-1" onclick="toggleDayVisibility(1)">Skjul</button>
-                            </div>
-                        </div>
-                        <div class="day-content" id="day-1-content"></div>
-                    </div>
-
-                    <div class="day-box" data-day-id="2" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title">Dag 2 - Cap de Formentor</div>
-                            <div class="day-stats-compact" id="day-2-stats"></div>
-                            <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(2)">Velg</button>
-                                <button class="btn-download-day" onclick="downloadDayGPX(2)" title="Last ned dag som GPX">⬇️</button>
-                                <button class="btn-download-day" onclick="showElevationProfile(2)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-2" onclick="toggleDayVisibility(2)">Skjul</button>
-                            </div>
-                        </div>
-                        <div class="day-content" id="day-2-content"></div>
-                    </div>
-
-                    <div class="day-box" data-day-id="3" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title">Dag 3 - Sa Calobra</div>
-                            <div class="day-stats-compact" id="day-3-stats"></div>
-                            <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(3)">Velg</button>
-                                <button class="btn-download-day" onclick="downloadDayGPX(3)" title="Last ned dag som GPX">⬇️</button>
-                                <button class="btn-download-day" onclick="showElevationProfile(3)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-3" onclick="toggleDayVisibility(3)">Skjul</button>
-                            </div>
-                        </div>
-                        <div class="day-content" id="day-3-content"></div>
-                    </div>
-
-                    <div class="day-box" data-day-id="4" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title">Dag 4 - Sant Salvador</div>
-                            <div class="day-stats-compact" id="day-4-stats"></div>
-                            <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(4)">Velg</button>
-                                <button class="btn-download-day" onclick="downloadDayGPX(4)" title="Last ned dag som GPX">⬇️</button>
-                                <button class="btn-download-day" onclick="showElevationProfile(4)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-4" onclick="toggleDayVisibility(4)">Skjul</button>
-                            </div>
-                        </div>
-                        <div class="day-content" id="day-4-content"></div>
-                    </div>
-
-                    <div class="day-box" data-day-id="5" ondrop="dropOnDay(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                        <div class="day-box-header">
-                            <div class="day-title">Dag 5 - Rapha, Palma ⭐</div>
-                            <div class="day-stats-compact" id="day-5-stats"></div>
-                            <div class="day-controls">
-                                <button class="day-select-btn" onclick="openRouteSelector(5)">Velg</button>
-                                <button class="btn-download-day" onclick="downloadDayGPX(5)" title="Last ned dag som GPX">⬇️</button>
-                                <button class="btn-download-day" onclick="showElevationProfile(5)" title="Vis løypeprofil" style="background: #9b59b6;">📊</button>
-                                <button class="btn-toggle-day" id="toggle-day-5" onclick="toggleDayVisibility(5)">Skjul</button>
-                            </div>
-                        </div>
-                        <div class="day-content" id="day-5-content"></div>
-                    </div>
+    <header class="site-header">
+        <img src="G.png" class="site-logo" alt="GGTM26" style="height:36px;max-height:36px;width:auto;max-width:150px;object-fit:contain;flex-shrink:0;">
+        <nav class="site-nav">
+            <div class="nav-program" id="navProgram">
+                <button class="nav-btn" onclick="toggleNavDropdown()">Program ▾</button>
+                <div class="nav-dropdown" id="navDropdown">
+                    <button onclick="switchDay(1)">Dag 1 — Port de Soller</button>
+                    <button onclick="switchDay(2)">Dag 2 — Cap de Formentor</button>
+                    <button onclick="switchDay(3)">Dag 3 — Sa Calobra</button>
+                    <button onclick="switchDay(4)">Dag 4 — Sant Salvador</button>
+                    <button onclick="switchDay(5)">Dag 5 — Rapha, Palma ⭐</button>
+                    <hr class="nav-divider">
+                    <button onclick="switchDay('alle')">Alle Dager</button>
                 </div>
             </div>
-            <div class="map-layer-selector" style="display:none;">
-                <label><input type="radio" name="mapLayer" value="standard" checked onchange="changeMapLayer('standard')"> Standard</label>
-                <label><input type="radio" name="mapLayer" value="cycle" onchange="changeMapLayer('cycle')"> CyclOSM (Sykkelvennlig)</label>
-                <label><input type="radio" name="mapLayer" value="transport" onchange="changeMapLayer('transport')"> Transport (veier)</label>
-                <label><input type="radio" name="mapLayer" value="satellite" onchange="changeMapLayer('satellite')"> Satellitt</label>
+            <button class="nav-btn" onclick="document.getElementById('gpxInput').click()">⬆️ Last opp GPX</button>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <div id="map"></div>
+
+        <!-- Weather strip -->
+        <div class="weather-strip" id="weatherStrip">
+            <div id="weatherHours"><span style="color:#666;font-size:0.72rem;padding:0 8px">Laster vær…</span></div>
+        </div>
+
+        <!-- Left floating panel -->
+        <div class="panel-left" id="leftPanel"></div>
+
+        <!-- Right floating panels -->
+        <div class="panel-right-container">
+            <div class="panel-right" id="rightPanel">
+                <div class="right-brand">
+                    <div class="right-title">🌴 Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for Desktop Computers</div>
+                    <div class="right-subtitle">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</div>
+                </div>
+                <div class="right-actions">
+                    <button class="btn" style="background:#e67e22;border-color:#e67e22;" onclick="autoMakeElite()">⚡ Auto-Make Elite (A)</button>
+                    <button class="btn" style="background:#3498db;border-color:#3498db;" onclick="autoMakeMosjonist()">🚴 Auto-Make Mosjonist (B)</button>
+                    <button class="btn btn-secondary" id="toggleVeiarbeidBtn" onclick="toggleVeiarbeid()">🚧 Vis veiarbeid</button>
+                    <div class="right-divider"></div>
+                    <button class="btn btn-secondary" id="hideAllBtn">👁️ Skjul alle spor</button>
+                    <button class="btn btn-secondary" id="showAllBtn">👁️ Vis alle spor</button>
+                    <button class="btn" id="clearBtn">🗑️ Fjern alle</button>
+                </div>
+            </div>
+            <div class="panel-upload" id="uploadPanel" onclick="document.getElementById('gpxInput').click()">
+                <span class="upload-icon">📂</span>
+                <span class="upload-label">Last opp din egen rute her!</span><br>
+                GPX-fil — vises i alle dager
             </div>
         </div>
-        <div class="sidebar">
-            <div id="routeList"></div>
-            <div class="file-input-wrapper sidebar-upload">
-                <input type="file" id="gpxInput" accept=".gpx" multiple>
-                <label for="gpxInput" class="file-input-label">📁 Last opp GPX-filer</label>
-            </div>
-        </div>
+
+        <!-- Hidden for JS compatibility -->
+        <div id="routeList" style="display:none;"></div>
+        <div id="fileCount" style="display:none;"></div>
+        <input type="file" id="gpxInput" accept=".gpx" multiple style="display:none;">
+
+        <!-- Upload toast -->
+        <div class="upload-toast" id="uploadToast"></div>
 
         <!-- Route Selector Modal -->
         <div class="modal" id="routeModal" style="display: none;">
@@ -180,7 +121,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="config.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -230,53 +171,67 @@
             worstRoute = dayRoutes.reduce((min, route) => (route.score < min.score ? route : min), dayRoutes[0]);
 
 
+            const utRoutes = dayRoutes.filter(r => r.fileName.match(/_[AB]\d?_Helios_/));
+            const hjemRoutes = dayRoutes.filter(r => !r.fileName.match(/_[AB]\d?_Helios_/));
+            const myRoutes = routes.filter(r => !r.isBundled);
+
             selector.innerHTML = '';
-            dayRoutes.forEach(route => {
+
+            function appendSection(label, routeList, type) {
+                if (routeList.length === 0) return;
+                const hdr = document.createElement('div');
+                hdr.className = 'route-section-header' + (type === 'user' ? ' user-section' : '');
+                hdr.textContent = label;
+                selector.appendChild(hdr);
+                routeList.forEach(r => appendRoute(r, type));
+            }
+
+            function appendRoute(route, type) {
                 const isSelected = day.routes.includes(route.id);
                 const div = document.createElement('div');
                 div.className = `route-option ${isSelected ? 'selected' : ''}`;
-                
-                // Parse filename
-                const parts = route.fileName.replace('.gpx', '').split('_');
-                let level = '';
-                let levelIndex = -1;
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].match(/^D\d+$/)) {
-                        level = parts[i + 1];
-                        levelIndex = i + 1;
-                        break;
-                    }
-                }
-                
-                const locationParts = [];
-                for (let i = levelIndex + 1; i < parts.length; i++) {
-                    if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
-                    locationParts.push(parts[i]);
-                }
-                
-                let fromTo = locationParts.join(' ');
-                const heliosIndex = locationParts.indexOf('Helios');
-                
-                if (heliosIndex !== -1) {
-                    if (heliosIndex === 0) {
-                        const destination = locationParts.slice(1).join(' ');
-                        fromTo = `Helios > ${destination}`;
-                    } else {
-                        const origin = locationParts.slice(0, heliosIndex).join(' ');
-                        fromTo = `${origin} > Helios`;
-                    }
-                }
-                
-                const name = `${fromTo} (${level})`;
-                const km = route.stats ? route.stats.distance : '?';
-                const hm = route.stats ? route.stats.elevationGain : '?';
-                
-                const isBest = route === bestRoute;
-                const isWorst = route === worstRoute;
+                div.dataset.type = type;
 
-                const badgeHTML = isBest ? `<span class="route-badge best">Best Value!</span>` :
+                let name, km, hm, badgeHTML = '';
+
+                if (type === 'user') {
+                    name = route.fileName.replace('.gpx', '').replace(/_/g, ' ');
+                    km = route.stats ? route.stats.distance : '?';
+                    hm = route.stats ? route.stats.elevationGain : '?';
+                } else {
+                    // Parse bundled filename
+                    const parts = route.fileName.replace('.gpx', '').split('_');
+                    let level = '';
+                    let levelIndex = -1;
+                    for (let i = 0; i < parts.length; i++) {
+                        if (parts[i].match(/^D\d+$/)) {
+                            level = parts[i + 1];
+                            levelIndex = i + 1;
+                            break;
+                        }
+                    }
+                    const locationParts = [];
+                    for (let i = levelIndex + 1; i < parts.length; i++) {
+                        if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+                        locationParts.push(parts[i]);
+                    }
+                    let fromTo = locationParts.join(' ');
+                    const heliosIndex = locationParts.indexOf('Helios');
+                    if (heliosIndex !== -1) {
+                        if (heliosIndex === 0) {
+                            fromTo = `Helios > ${locationParts.slice(1).join(' ')}`;
+                        } else {
+                            fromTo = `${locationParts.slice(0, heliosIndex).join(' ')} > Helios`;
+                        }
+                    }
+                    name = `${fromTo} (${level})`;
+                    km = route.stats ? route.stats.distance : '?';
+                    hm = route.stats ? route.stats.elevationGain : '?';
+                    const isBest = route === bestRoute;
+                    const isWorst = route === worstRoute;
+                    badgeHTML = isBest ? `<span class="route-badge best">Best Value!</span>` :
                                 isWorst ? `<span class="route-badge worst">Most Beers!</span>` : '';
-
+                }
 
                 div.innerHTML = `
                     <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
@@ -286,34 +241,55 @@
                         ${badgeHTML}
                     </label>
                 `;
+
                 div.onclick = (e) => {
+                    const cb = div.querySelector('input');
+                    const t = div.dataset.type;
                     if (e.target.tagName !== 'INPUT') {
-                        const checkbox = div.querySelector('input');
-                        const checked = document.querySelectorAll('.route-option input:checked').length;
-                        if (!checkbox.checked && checked >= 2) {
-                            alert('Maks 2 ruter per dag!');
-                            return;
+                        if (!cb.checked) {
+                            if (t !== 'user') {
+                                const sameChecked = document.querySelectorAll(`.route-option[data-type="${t}"] input:checked`).length;
+                                if (sameChecked >= 1) {
+                                    alert(`Kan kun velge én ${t === 'ut' ? '🏨 Fra hotellet' : '🏠 Tilbake'}-rute per dag!`);
+                                    return;
+                                }
+                            }
+                            if (document.querySelectorAll('.route-option input:checked').length >= 2) {
+                                alert('Maks 2 ruter per dag!');
+                                return;
+                            }
                         }
-                        checkbox.checked = !checkbox.checked;
-                        div.classList.toggle('selected', checkbox.checked);
+                        cb.checked = !cb.checked;
+                        div.classList.toggle('selected', cb.checked);
                     } else {
-                        const checked = document.querySelectorAll('.route-option input:checked').length;
-                        if (e.target.checked && checked > 2) {
-                            e.target.checked = false;
-                            alert('Maks 2 ruter per dag!');
-                            return;
+                        if (e.target.checked) {
+                            if (t !== 'user') {
+                                const sameChecked = document.querySelectorAll(`.route-option[data-type="${t}"] input:checked`).length;
+                                if (sameChecked > 1) {
+                                    e.target.checked = false;
+                                    alert(`Kan kun velge én ${t === 'ut' ? '🏨 Fra hotellet' : '🏠 Tilbake'}-rute per dag!`);
+                                    return;
+                                }
+                            }
+                            if (document.querySelectorAll('.route-option input:checked').length > 2) {
+                                e.target.checked = false;
+                                alert('Maks 2 ruter per dag!');
+                                return;
+                            }
                         }
                         div.classList.toggle('selected', e.target.checked);
-
-                        if (div.classList.contains('selected') &&
-                            div.querySelector('.route-badge.best')) {
+                        if (div.classList.contains('selected') && div.querySelector('.route-badge.best')) {
                             triggerConfetti();
                         }
                     }
                 };
                 selector.appendChild(div);
-            });
-            
+            }
+
+            appendSection('📁 Mine ruter', myRoutes, 'user');
+            appendSection('🏨 Fra hotellet', utRoutes, 'ut');
+            appendSection('🏠 Tilbake', hjemRoutes, 'hjem');
+
             modal.style.display = 'flex';
         };
 
@@ -328,23 +304,12 @@
             const day = days.find(d => d.id === currentSelectingDay);
             day.routes = selected;
             
-            // Hide all routes first
+            // Show only routes in VISIBLE days, hide the rest
+            const selRoutesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                route.visible = false;
-                route.polyline.remove();
-            });
-            
-            // Show only routes in VISIBLE days
-            days.forEach(d => {
-                if (d.visible) {
-                    d.routes.forEach(routeId => {
-                        const route = routes.find(r => r.id === routeId);
-                        if (route) {
-                            route.visible = true;
-                            route.polyline.addTo(map);
-                        }
-                    });
-                }
+                const day = days.find(d => d.routes.includes(route.id));
+                if (day && day.visible) showRoute(route);
+                else hideRoute(route);
             });
             saveToLocalStorage(); // 🔥 LEGG TIL DENNE
             updateRouteColors();
@@ -405,6 +370,8 @@
             { id: 5, name: 'Dag 5', routes: [], visible: true, color: dayColors[4] }
         ];
         const STORAGE_KEY = 'ggtm26_selected_routes';
+        let currentView = 1;
+        const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
 
         function saveToLocalStorage() {
             const data = days.map(day => ({
@@ -949,15 +916,7 @@
         }
 
         function hideAllRoutes() {
-            routes.forEach(route => {
-                if (route.visible) {
-                    route.visible = false;
-                    route.polyline.remove();
-                    if (route.decorator) route.decorator.remove();
-                    if (route.startMarker) route.startMarker.remove();
-                    if (route.endMarker) route.endMarker.remove();
-                }
-            });
+            routes.forEach(route => { hideRoute(route); });
             days.forEach(day => {
                 day.visible = false;
                 const btn = document.getElementById(`toggle-day-${day.id}`);
@@ -967,14 +926,11 @@
         }
 
         function showAllRoutes() {
+            const routesInDays = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                if (!route.visible) {
-                    route.visible = true;
-                    route.polyline.addTo(map);
-                    if (route.decorator) route.decorator.addTo(map);
-                    if (route.startMarker) route.startMarker.addTo(map);
-                    if (route.endMarker) route.endMarker.addTo(map);
-                }
+                const inDay = routesInDays.has(route.id);
+                if (inDay) showRoute(route);
+                else hideRoute(route);
             });
             days.forEach(day => {
                 day.visible = true;
@@ -998,10 +954,176 @@
             });
         }
 
+        // ===== NAV + LEFT PANEL =====
+
+        window.toggleNavDropdown = function() {
+            document.getElementById('navDropdown').classList.toggle('open');
+        };
+
+        document.addEventListener('click', function(e) {
+            const nav = document.getElementById('navProgram');
+            if (nav && !nav.contains(e.target)) {
+                document.getElementById('navDropdown').classList.remove('open');
+            }
+        });
+
+        function showRoute(r) {
+            if (r.visible) return;
+            r.visible = true;
+            r.polyline.addTo(map);
+            if (r.decorator) r.decorator.addTo(map);
+            if (r.startMarker) r.startMarker.addTo(map);
+            if (r.endMarker) r.endMarker.addTo(map);
+            if (r.meetMarker) r.meetMarker.addTo(map);
+        }
+
+        function hideRoute(r) {
+            if (!r.visible) return;
+            r.visible = false;
+            r.polyline.remove();
+            if (r.decorator) r.decorator.remove();
+            if (r.startMarker) r.startMarker.remove();
+            if (r.endMarker) r.endMarker.remove();
+            if (r.meetMarker) r.meetMarker.remove();
+        }
+
+        window.switchDay = function(dayId) {
+            currentView = dayId;
+            document.getElementById('navDropdown').classList.remove('open');
+
+            if (dayId === 'alle') {
+                days.forEach(day => {
+                    day.routes.forEach(rId => {
+                        const r = routes.find(x => x.id === rId);
+                        if (!r) return;
+                        if (day.visible) showRoute(r); else hideRoute(r);
+                    });
+                });
+            } else {
+                routes.forEach(r => {
+                    const day = days.find(d => d.routes.includes(r.id));
+                    const isCurrentDay = day && day.id === dayId;
+                    if (isCurrentDay) showRoute(r); else hideRoute(r);
+                });
+                const day = days.find(d => d.id === dayId);
+                if (day) day.visible = true;
+            }
+            updateRouteColors();
+            renderLeftPanel();
+        };
+
+
+        function parseRouteDisplayName(fileName) {
+            const parts = fileName.replace('.gpx', '').split('_');
+            let levelIndex = -1;
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].match(/^D\d+$/)) { levelIndex = i + 1; break; }
+            }
+            const level = parts[levelIndex] || '';
+            const locationParts = [];
+            for (let i = levelIndex + 1; i < parts.length; i++) {
+                if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+                locationParts.push(parts[i]);
+            }
+            const heliosIndex = locationParts.indexOf('Helios');
+            let fromTo;
+            if (heliosIndex === 0) {
+                fromTo = `Helios › ${locationParts.slice(1).join(' ')}`;
+            } else if (heliosIndex > 0) {
+                fromTo = `${locationParts.slice(0, heliosIndex).join(' ')} › Helios`;
+            } else {
+                fromTo = locationParts.join(' ');
+            }
+            return `${fromTo} (${level})`;
+        }
+
+        function getDayRoutesSorted(day) {
+            const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(Boolean);
+            const utRoute = dayRoutes.find(r => r.fileName.match(/_[AB]\d?_Helios_/)) || null;
+            const hjemRoute = dayRoutes.find(r => r !== utRoute) || null;
+            return { utRoute, hjemRoute, dayRoutes };
+        }
+
+        function getDayStats(day) {
+            const { dayRoutes } = getDayRoutesSorted(day);
+            let km = 0, hm = 0;
+            dayRoutes.forEach(r => { if (r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain || 0; } });
+            return { km, hm, count: dayRoutes.length };
+        }
+
+        function renderSlot(route, dayId) {
+            if (!route) return `<div class="day-slot empty" onclick="openRouteSelector(${dayId})">+ Velg rute</div>`;
+            const name = parseRouteDisplayName(route.fileName);
+            const km = route.stats ? route.stats.distance : '?';
+            const hm = route.stats ? route.stats.elevationGain : '?';
+            return `<div class="day-slot filled" style="border-left:3px solid ${route.color}">
+                <div class="slot-name">${name}</div>
+                <div class="slot-stats">${km} km · ⬆️ ${hm} m</div>
+            </div>`;
+        }
+
+        function renderSlotCompact(route, dayId) {
+            if (!route) return `<div class="day-slot-compact empty" onclick="openRouteSelector(${dayId})">+</div>`;
+            const name = parseRouteDisplayName(route.fileName);
+            const km = route.stats ? route.stats.distance : '?';
+            const hm = route.stats ? route.stats.elevationGain : '?';
+            return `<div class="day-slot-compact filled" style="border-left:3px solid ${route.color}">
+                <div class="slot-name">${name}</div>
+                <div class="slot-stats">${km} km · ⬆️ ${hm} m</div>
+            </div>`;
+        }
+
+        function renderLeftPanel() {
+            const panel = document.getElementById('leftPanel');
+            if (!panel) return;
+
+            if (currentView === 'alle') {
+                let html = '';
+                days.forEach(day => {
+                    const { utRoute, hjemRoute } = getDayRoutesSorted(day);
+                    const { km, hm, count } = getDayStats(day);
+                    const statsText = count > 0 ? `${km.toFixed(1)} km · ⬆️ ${hm} m` : '';
+                    html += `<div class="alle-day" style="border-top:3px solid ${day.color}">
+                        <div class="alle-day-header">
+                            <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
+                            <button class="btn-sm" onclick="openRouteSelector(${day.id})">Velg</button>
+                            <button class="btn-sm btn-secondary" id="toggle-day-${day.id}" onclick="toggleDayVisibility(${day.id})">${day.visible ? 'Skjul' : 'Vis'}</button>
+                        </div>
+                        ${statsText ? `<div class="alle-day-stats">${statsText}</div>` : ''}
+                        <div class="alle-day-slots">
+                            <div><div class="slot-label">Fra hotellet</div>${renderSlotCompact(utRoute, day.id)}</div>
+                            <div><div class="slot-label">Tilbake</div>${renderSlotCompact(hjemRoute, day.id)}</div>
+                        </div>
+                    </div>`;
+                });
+                panel.innerHTML = html;
+            } else {
+                const dayId = currentView;
+                const day = days.find(d => d.id === dayId);
+                if (!day) return;
+                const { utRoute, hjemRoute } = getDayRoutesSorted(day);
+                const { km, hm, count } = getDayStats(day);
+                const statsText = count > 0 ? `${km.toFixed(1)} km · ⬆️ ${hm} m` : '';
+                panel.innerHTML = `
+                    <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
+                        <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
+                        <button class="btn-sm" onclick="openRouteSelector(${dayId})">Velg</button>
+                        ${statsText ? `<div class="single-day-stats">${statsText}</div>` : ''}
+                    </div>
+                    <div class="single-day-slots">
+                        <div class="slot-label">Fra hotellet</div>
+                        ${renderSlot(utRoute, dayId)}
+                        <div class="slot-label">Tilbake</div>
+                        ${renderSlot(hjemRoute, dayId)}
+                    </div>`;
+            }
+        }
+
         function updateSidebar() {
             const routeList = document.getElementById('routeList');
             const fileCountDiv = document.getElementById('fileCount');
-            
+
+            renderLeftPanel();
             updateDayBoxes();
             
             // Get user-uploaded routes only (not bundled)
@@ -1250,10 +1372,6 @@
             });
         }
 
-        window.toggleHamburger = function() {
-            const menu = document.getElementById('hamburgerMenu');
-            menu.classList.toggle('open');
-        };
 
 
         window.toggleDaysExpand = function() {
@@ -1405,68 +1523,34 @@
             setTimeout(() => {
                 progressContainer.classList.add('minimized');
             }, 500);
+
+            // Show toast
+            const toast = document.getElementById('uploadToast');
+            toast.textContent = `✅ Ruten din er nå valgbar for alle dager!`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+
             e.target.value = '';
         });
 
         window.toggleDayVisibility = function(dayId) {
             const day = days.find(d => d.id === dayId);
             if (!day) return;
-
             day.visible = !day.visible;
-
             day.routes.forEach(routeId => {
                 const route = routes.find(r => r.id === routeId);
-                if (route) {
-                    route.visible = day.visible;
-                    if (day.visible) {
-                        route.polyline.addTo(map);
-                        if (route.decorator) route.decorator.addTo(map);
-                    } else {
-                        route.polyline.remove();
-                        if (route.decorator) route.decorator.remove();
-                    }
-                }
+                if (route) { if (day.visible) showRoute(route); else hideRoute(route); }
             });
-
-            // Performance fix: Kun oppdater markers for denne dagen, ikke alle
-            const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
-
-            if (day.visible) {
-                // Vis markers for denne dagen
-                if (dayRoutes.length === 2) {
-                    const route1 = dayRoutes[0];
-                    const route2 = dayRoutes[1];
-                    if (route1.startMarker) route1.startMarker.addTo(map);
-                    if (route1.meetMarker) route1.meetMarker.addTo(map);
-                    if (route2.endMarker) route2.endMarker.addTo(map);
-                } else if (dayRoutes.length === 1) {
-                    const route = dayRoutes[0];
-                    if (route.startMarker) route.startMarker.addTo(map);
-                    if (route.endMarker) route.endMarker.addTo(map);
-                }
-            } else {
-                // Skjul markers for denne dagen
-                dayRoutes.forEach(route => {
-                    if (route.startMarker) route.startMarker.remove();
-                    if (route.endMarker) route.endMarker.remove();
-                    if (route.meetMarker) route.meetMarker.remove();
-                });
-            }
-
             updateSidebar();
-
-            // Zoom til alle synlige ruter
             const visiblePolylines = days
                 .filter(d => d.visible)
                 .flatMap(d => d.routes.map(id => routes.find(r => r.id === id)).filter(r => r))
                 .map(r => r.polyline);
-
             if (visiblePolylines.length > 0) {
                 map.fitBounds(L.featureGroup(visiblePolylines).getBounds(), { padding: [40, 40] });
             }
         };
 
-        document.getElementById('toggleMapBtn').addEventListener('click', toggleMapBackground);
         document.getElementById('hideAllBtn').addEventListener('click', hideAllRoutes);
         document.getElementById('showAllBtn').addEventListener('click', showAllRoutes);
 
@@ -1564,23 +1648,11 @@
                 }
                 day.routes.push(draggedRouteId);
                 
-                // Hide all routes first
+                // Show only routes in VISIBLE days, hide the rest
                 routes.forEach(route => {
-                    route.visible = false;
-                    route.polyline.remove();
-                });
-                
-                // Show only routes in VISIBLE days
-                days.forEach(d => {
-                    if (d.visible) {
-                        d.routes.forEach(routeId => {
-                            const route = routes.find(r => r.id === routeId);
-                            if (route) {
-                                route.visible = true;
-                                route.polyline.addTo(map);
-                            }
-                        });
-                    }
+                    const day = days.find(d => d.routes.includes(route.id));
+                    if (day && day.visible) showRoute(route);
+                    else hideRoute(route);
                 });
             }
             
@@ -1688,18 +1760,10 @@
             }
 
             // Vis ruter som nå er i dager, skjul de som ikke er det
-            const routesInDays = new Set(days.flatMap(d => d.routes));
+            const routesInDaysA = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                if (routesInDays.has(route.id)) {
-                    if (!route.visible) {
-                        route.visible = true;
-                        route.polyline.addTo(map);
-                    }
-                } else if (route.visible) {
-                    route.visible = false;
-                    route.polyline.remove();
-                    if (route.decorator) route.decorator.remove();
-                }
+                if (routesInDaysA.has(route.id)) showRoute(route);
+                else hideRoute(route);
             });
 
             updateRouteColors();
@@ -1745,18 +1809,10 @@
             }
 
             // Vis ruter som nå er i dager, skjul de som ikke er det
-            const routesInDays = new Set(days.flatMap(d => d.routes));
+            const routesInDaysB = new Set(days.flatMap(d => d.routes));
             routes.forEach(route => {
-                if (routesInDays.has(route.id)) {
-                    if (!route.visible) {
-                        route.visible = true;
-                        route.polyline.addTo(map);
-                    }
-                } else if (route.visible) {
-                    route.visible = false;
-                    route.polyline.remove();
-                    if (route.decorator) route.decorator.remove();
-                }
+                if (routesInDaysB.has(route.id)) showRoute(route);
+                else hideRoute(route);
             });
 
             updateRouteColors();
@@ -1768,12 +1824,8 @@
         // Initialize
         updateSidebar();
         loadBundledRoutes();
-
-        // Farg dag-boksene med same farge som sporene
-        days.forEach(day => {
-            const box = document.querySelector(`.day-box[data-day-id="${day.id}"]`);
-            if (box) box.style.borderColor = day.color;
-        });
+        renderLeftPanel();
+        setTimeout(() => map.invalidateSize(), 50);
     </script>
 
     <!-- SoundCloud Embed -->
@@ -2691,13 +2743,17 @@
     <div id="adBanner">
         <div class="ad-label">Annonse</div>
         <button class="ad-close" onclick="closeAd(event)">✕</button>
-        <div class="ad-image" id="adEmoji"></div>
-        <div class="ad-body">
-            <div class="ad-brand" id="adBrand"></div>
-            <div class="ad-headline" id="adHeadline"></div>
-            <div class="ad-copy" id="adCopy"></div>
-            <div class="ad-cta" id="adCTA"></div>
-            <div class="ad-url" id="adUrl"></div>
+        <div style="display:flex;align-items:stretch;">
+            <div class="ad-image" id="adEmoji"></div>
+            <div class="ad-body">
+                <div class="ad-body-text">
+                    <div class="ad-brand" id="adBrand"></div>
+                    <div class="ad-headline" id="adHeadline"></div>
+                    <div class="ad-copy" id="adCopy"></div>
+                    <div class="ad-url" id="adUrl"></div>
+                </div>
+                <div class="ad-cta" id="adCTA"></div>
+            </div>
         </div>
     </div>
 
