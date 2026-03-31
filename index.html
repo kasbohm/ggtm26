@@ -1010,6 +1010,11 @@
             }
             updateRouteColors();
             renderLeftPanel();
+
+            // Update weather for the selected day
+            if (dayId !== 'alle' && typeof DAY_DATES !== 'undefined' && DAY_DATES[dayId]) {
+                fetchWeather(DAY_DATES[dayId]);
+            }
         };
 
 
@@ -1051,6 +1056,24 @@
             return { km, hm, count: dayRoutes.length };
         }
 
+        window.downloadDayGpx = function(dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (!day || day.routes.length === 0) { alert('Ingen ruter valgt for denne dagen!'); return; }
+            day.routes.forEach(routeId => {
+                const route = routes.find(r => r.id === routeId);
+                if (!route) return;
+                const latlngs = route.polyline.getLatLngs();
+                const trkpts = latlngs.map(ll =>
+                    `      <trkpt lat="${ll.lat.toFixed(6)}" lon="${ll.lng.toFixed(6)}"></trkpt>`
+                ).join('\n');
+                const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="GGTM26" xmlns="http://www.topografix.com/GPX/1/1">\n  <trk>\n    <name>${route.fileName.replace('.gpx','')}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
+                const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+                const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: route.fileName });
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            });
+        };
+
         function renderSlot(route, dayId) {
             if (!route) return `<div class="day-slot empty" onclick="openRouteSelector(${dayId})">+ Velg rute</div>`;
             const name = parseRouteDisplayName(route.fileName);
@@ -1088,6 +1111,7 @@
                             <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
                             <button class="btn-sm" onclick="openRouteSelector(${day.id})">Velg</button>
                             <button class="btn-sm btn-secondary" id="toggle-day-${day.id}" onclick="toggleDayVisibility(${day.id})">${day.visible ? 'Skjul' : 'Vis'}</button>
+                            ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button>` : ''}
                         </div>
                         ${statsText ? `<div class="alle-day-stats">${statsText}</div>` : ''}
                         <div class="alle-day-slots">
@@ -1108,6 +1132,7 @@
                     <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
                         <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
                         <button class="btn-sm" onclick="openRouteSelector(${dayId})">Velg</button>
+                        ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button>` : ''}
                         ${statsText ? `<div class="single-day-stats">${statsText}</div>` : ''}
                     </div>
                     <div class="single-day-slots">
@@ -2939,69 +2964,76 @@
 
     <!-- ===== VÆRVARSELPANEL ===== -->
     <script>
-    (function() {
-        // Port de Soller, Mallorca
-        const LAT = 39.7942;
-        const LON = 2.6895;
+    // Port de Soller, Mallorca
+    const WEATHER_LAT = 39.7942;
+    const WEATHER_LON = 2.6895;
 
-        function windDir(deg) {
-            const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV'];
-            return dirs[Math.round(deg / 45) % 8];
+    // Fixed dates for each day of the trip
+    const DAY_DATES = { 1: '2026-04-08', 2: '2026-04-09', 3: '2026-04-10', 4: '2026-04-11', 5: '2026-04-12' };
+
+    function windDir(deg) {
+        const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV'];
+        return dirs[Math.round(deg / 45) % 8];
+    }
+
+    const WMO_EMOJI = {
+        0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+        45:'🌫️', 48:'🌫️',
+        51:'🌦️', 53:'🌦️', 55:'🌧️',
+        61:'🌧️', 63:'🌧️', 65:'🌧️',
+        71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
+        80:'🌦️', 81:'🌧️', 82:'🌧️',
+        85:'🌨️', 86:'🌨️',
+        95:'⛈️', 96:'⛈️', 99:'⛈️'
+    };
+
+    window.fetchWeather = async function(date) {
+        const container = document.getElementById('weatherHours');
+        if (!container) return;
+        container.innerHTML = '<span style="color:#666;font-size:0.72rem;padding:0 8px">Laster…</span>';
+        try {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&start_date=${date}&end_date=${date}&timezone=Europe%2FMadrid`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            container.innerHTML = '';
+            // Date label at start
+            const label = document.createElement('div');
+            label.style.cssText = 'color:#6af;font-size:0.68rem;white-space:nowrap;padding:0 6px 0 2px;align-self:center;opacity:0.8;';
+            const MONTHS_NO = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+            const [, , dd] = date.split('-');
+            const monthIdx = parseInt(date.split('-')[1]) - 1;
+            label.textContent = `${parseInt(dd)}. ${MONTHS_NO[monthIdx]}`;
+            container.appendChild(label);
+
+            data.hourly.time.forEach((t, i) => {
+                const hour = parseInt(t.slice(11, 13));
+                if (hour < 6 || hour > 21) return;
+                const temp = Math.round(data.hourly.temperature_2m[i]);
+                const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
+                const dir = windDir(data.hourly.winddirection_10m[i]);
+                const precip = data.hourly.precipitation[i];
+                const emoji = WMO_EMOJI[data.hourly.weathercode[i]] || '🌡️';
+                const cell = document.createElement('div');
+                cell.style.cssText = 'text-align:center;min-width:48px;background:#162534;border-radius:6px;padding:4px 5px;';
+                cell.innerHTML = `
+                    <div style="color:#88aacc;font-size:0.7rem">${hour.toString().padStart(2,'0')}:00</div>
+                    <div style="font-size:1.2rem">${emoji}</div>
+                    <div style="font-weight:bold;color:#fff;font-size:0.82rem">${temp}°</div>
+                    <div style="color:#8bc;font-size:0.68rem">${wind}m/s ${dir}</div>
+                    ${precip > 0 ? `<div style="color:#6af;font-size:0.65rem">${precip.toFixed(1)}mm</div>` : ''}
+                `;
+                container.appendChild(cell);
+            });
+            if (container.children.length <= 1) container.innerHTML = '<span style="color:#aaa;padding:0 8px;font-size:0.72rem">Ingen data</span>';
+        } catch(e) {
+            container.innerHTML = '<span style="color:#f66;padding:0 8px;font-size:0.72rem">Vær utilgjengelig</span>';
         }
+    };
 
-        // WMO weather code → emoji
-        const WMO_EMOJI = {
-            0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
-            45:'🌫️', 48:'🌫️',
-            51:'🌦️', 53:'🌦️', 55:'🌧️',
-            61:'🌧️', 63:'🌧️', 65:'🌧️',
-            71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
-            80:'🌦️', 81:'🌧️', 82:'🌧️',
-            85:'🌨️', 86:'🌨️',
-            95:'⛈️', 96:'⛈️', 99:'⛈️'
-        };
-
-        async function fetchWeather() {
-            const container = document.getElementById('weatherHours');
-            try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&forecast_days=1&timezone=Europe%2FMadrid`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-
-                const hours = data.hourly.time;
-                container.innerHTML = '';
-                hours.forEach((t, i) => {
-                    const hour = parseInt(t.slice(11, 13));
-                    if (hour < 6 || hour > 21) return;
-                    const temp = Math.round(data.hourly.temperature_2m[i]);
-                    const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6); // km/h → m/s
-                    const dir = windDir(data.hourly.winddirection_10m[i]);
-                    const precip = data.hourly.precipitation[i];
-                    const emoji = WMO_EMOJI[data.hourly.weathercode[i]] || '🌡️';
-
-                    const cell = document.createElement('div');
-                    cell.style.cssText = 'text-align:center;min-width:52px;background:#162534;border-radius:6px;padding:4px 6px;';
-                    cell.innerHTML = `
-                        <div style="color:#88aacc;font-size:0.75rem">${hour.toString().padStart(2,'0')}:00</div>
-                        <div style="font-size:1.3rem">${emoji}</div>
-                        <div style="font-weight:bold;color:#fff">${temp}°</div>
-                        <div style="color:#8bc;font-size:0.72rem">${wind}m/s ${dir}</div>
-                        ${precip > 0 ? `<div style="color:#6af;font-size:0.7rem">${precip.toFixed(1)}mm</div>` : ''}
-                    `;
-                    container.appendChild(cell);
-                });
-
-                if (!container.children.length) {
-                    container.innerHTML = '<span style="color:#aaa">Ingen data</span>';
-                }
-            } catch(e) {
-                document.getElementById('weatherHours').innerHTML = '<span style="color:#f66">Kunne ikke laste vær: ' + e.message + '</span>';
-            }
-        }
-
-        fetchWeather();
-    })();
+    // Load Dag 1 weather on startup
+    fetchWeather(DAY_DATES[1]);
     </script>
     <!-- ===== END VÆRVARSELPANEL ===== -->
 

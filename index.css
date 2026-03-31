@@ -441,24 +441,25 @@ body {
 
 /* ===== UPLOAD PANEL ===== */
 .panel-upload {
-    background: rgba(200,210,240,0.05);
-    border: 2px dashed rgba(180,190,220,0.3);
+    background: rgba(220, 225, 240, 0.9);
+    border: 2px dashed rgba(100, 110, 160, 0.5);
     border-radius: 8px;
     padding: 0.7rem 0.9rem;
     cursor: pointer;
     text-align: center;
-    color: #999;
+    color: #555;
     font-size: 0.7rem;
     line-height: 1.5;
     transition: all 0.2s;
+    backdrop-filter: blur(10px);
 }
 .panel-upload:hover {
-    background: rgba(200,210,240,0.09);
-    border-color: rgba(180,190,220,0.55);
-    color: #ccc;
+    background: rgba(230, 234, 248, 0.95);
+    border-color: rgba(100, 110, 160, 0.8);
+    color: #333;
 }
 .panel-upload .upload-icon { font-size: 1.1rem; display: block; margin-bottom: 2px; }
-.panel-upload .upload-label { font-weight: 600; color: #bbb; font-size: 0.72rem; }
+.panel-upload .upload-label { font-weight: 700; color: #333; font-size: 0.72rem; }
 
 /* ===== UPLOAD TOAST ===== */
 .upload-toast {
@@ -744,8 +745,36 @@ body {
 }
 .route-section-header:first-child { margin-top: 0; }
 .route-section-header.user-section {
-    color: #bbb;
-    border-bottom-color: rgba(180,180,180,0.25);
+    color: #888;
+    border-bottom-color: rgba(160,160,160,0.25);
+}
+
+/* User-uploaded routes get a light background */
+.route-option[data-type="user"] {
+    background: rgba(220, 225, 240, 0.12);
+    border-color: rgba(180,185,210,0.25);
+}
+.route-option[data-type="user"].selected {
+    background: rgba(220, 225, 240, 0.28);
+    border-color: rgba(180,185,210,0.7);
+    box-shadow: 0 0 10px rgba(180,185,210,0.3);
+}
+.route-option[data-type="user"] .route-name { color: #ccc; }
+
+/* Download button */
+.btn-download {
+    background: rgba(0,200,100,0.15);
+    border: 1px solid rgba(0,200,100,0.4);
+    color: #00c864;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-download:hover {
+    background: rgba(0,200,100,0.3);
+    border-color: #00c864;
 }
 
 .route-name {
