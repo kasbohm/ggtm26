@@ -1,3 +1,15 @@
+/* ===== UPLOAD TOAST ===== */
+#uploadToastMobile.show {
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(0) !important;
+}
+
+/* ===== MODAL USER SECTION ===== */
+.route-section-header.user-section { color: #888; border-bottom-color: rgba(160,160,160,0.25); }
+.route-option[data-type="user"] { background: rgba(220,225,240,0.12); border-color: rgba(180,185,210,0.25); }
+.route-option[data-type="user"].selected { background: rgba(220,225,240,0.28); border-color: rgba(180,185,210,0.7); }
+.route-option[data-type="user"] .route-name { color: #ccc; }
+
 /* ===== BODY (mobile-spesifikt) ===== */
 body {
     color: #fff;

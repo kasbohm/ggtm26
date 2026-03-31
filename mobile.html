@@ -83,8 +83,8 @@
             <div class="day-card summary-card" style="border-top: 4px solid #ff00ff;">
                 <!-- Vær -->
                 <div style="margin-top:20px;border-bottom:1px solid #2a2a4a;padding-bottom:6px;">
-                    <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">🌤️ Vær i Mallorca idag</div>
-                    <div id="weatherHoursMobile" style="display:flex;gap:6px;justify-content:space-between;">
+                    <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">🌤️ Vær — <span id="weatherDateLabel">Dag 1, 8. apr</span></div>
+                    <div id="weatherHoursMobile" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;">
                         <span style="color:#555;font-size:0.8rem">Laster...</span>
                     </div>
                 </div>
@@ -184,6 +184,9 @@
         </div>
     </div>
     
+    <!-- Upload toast -->
+    <div id="uploadToastMobile" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(0,255,136,0.12);border:1px solid #00ff88;color:#00ff88;padding:9px 18px;border-radius:8px;font-size:0.8rem;font-family:'Courier New',monospace;z-index:9999;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;white-space:nowrap;"></div>
+
     <script src="config.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
@@ -466,13 +469,13 @@
             const endX = e.changedTouches[0].clientX;
             const diff = startX - endX;
             console.log('🏁 TOUCHEND:', { start: startX, end: endX, diff, currentDay });
-            
+
             if (Math.abs(diff) < 50) {
                 console.log('❌ Too short');
                 return;
             }
-            
-            if (diff > 0 && currentDay < 4) {
+
+            if (diff > 0 && currentDay < 5) {
                 currentDay++;
                 console.log('➡️ Next day:', currentDay);
             } else if (diff < 0 && currentDay > 0) {
@@ -480,12 +483,14 @@
                 console.log('⬅️ Prev day:', currentDay);
             }
             updateSwiper();
+            if (currentDay > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(currentDay);
         });
         
         function goToDay(dayIndex) {
             console.log('🎯 goToDay:', currentDay, '→', dayIndex);
             currentDay = dayIndex;
             updateSwiper();
+            if (dayIndex > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(dayIndex);
         }
         
         function updateSwiper() {
@@ -576,103 +581,80 @@
         }
         
         function openRouteSelector() {
-            if (currentDay === 0) return; // No selection on summary slide
+            if (currentDay === 0) return;
 
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNum = currentDay; // currentDay 1-4 = dag 1-4
-            document.getElementById('modalDayTitle').textContent = `Dag ${dayNum}`;
+            const dayNum = currentDay;
+            const dayIndex = currentDay - 1;
+            const day = days[dayIndex];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+            document.getElementById('modalDayTitle').textContent = `Dag ${dayNum} — ${dayNames[dayNum-1]}`;
 
-            // Filter routes for current day only, sorted by level then ut before hjem
-            const dayRoutes = routes.filter(r => {
+            const bundledDayRoutes = routes.filter(r => {
+                if (!r.isBundled) return false;
                 const match = r.fileName.match(/GGTM26_D(\d+)_/);
                 return match && parseInt(match[1]) === dayNum;
-            }).sort((a, b) => {
-                // Primary: sort by level (A, B, B1, B2, etc.)
-                const levelA = a.fileName.match(/GGTM26_D\d+_([^_]+)_/)?.[1] ?? '';
-                const levelB = b.fileName.match(/GGTM26_D\d+_([^_]+)_/)?.[1] ?? '';
-                if (levelA !== levelB) return levelA.localeCompare(levelB);
-                // Secondary: ut (Helios_) before hjem (_Helios)
-                const dirScore = r => r.fileName.includes('Helios_') ? 0 : 1;
-                return dirScore(a) - dirScore(b);
             });
+
+            bundledDayRoutes.forEach(route => {
+                const km = Number(route.stats ? route.stats.distance : 0);
+                const hm = Number(route.stats ? route.stats.elevationGain : 0);
+                route.score = Math.round(km + hm);
+            });
+
+            const bestRoute = bundledDayRoutes.length ? bundledDayRoutes.reduce((max, r) => r.score > max.score ? r : max, bundledDayRoutes[0]) : null;
+            const worstRoute = bundledDayRoutes.length ? bundledDayRoutes.reduce((min, r) => r.score < min.score ? r : min, bundledDayRoutes[0]) : null;
+
+            const utRoutes = bundledDayRoutes.filter(r => r.fileName.match(/_[AB]\d?_Helios_/));
+            const hjemRoutes = bundledDayRoutes.filter(r => !r.fileName.match(/_[AB]\d?_Helios_/));
+            const myRoutes = routes.filter(r => !r.isBundled);
 
             selector.innerHTML = '';
 
-                // Før du løkker gjennom dayRoutes
-            let bestRoute = null;
-            let worstRoute = null;
+            function appendSection(label, routeList, type) {
+                if (routeList.length === 0) return;
+                const hdr = document.createElement('div');
+                hdr.className = 'route-section-header' + (type === 'user' ? ' user-section' : '');
+                hdr.textContent = label;
+                selector.appendChild(hdr);
+                routeList.forEach(r => appendRoute(r, type));
+            }
 
-            dayRoutes.forEach(route => {
-                const km = route.stats ? route.stats.distance : 0;
-                const hm = route.stats ? route.stats.elevationGain : 0;
-
-                const kmNum = Number(km);
-                const hmNum = Number(hm);
-                route.score = Math.round(kmNum + hmNum ); // enkel måte å sammenligne totalt "verdi"
-                console.log(`Route ${route.fileName}: ${km} km, ${hm} hm, score: ${route.score}`);
-            });
-
-            // Finn best og worst basert på score
-            bestRoute = dayRoutes.reduce((max, route) => (route.score > max.score ? route : max), dayRoutes[0]);
-            worstRoute = dayRoutes.reduce((min, route) => (route.score < min.score ? route : min), dayRoutes[0]);
-
-
-            dayRoutes.forEach(route => {
-                const dayIndex = currentDay - 1; // currentDay 1-4 = days[0-3]
-                const isSelected = days[dayIndex].routes.includes(route.id);
+            function appendRoute(route, type) {
+                const isSelected = day.routes.includes(route.id);
                 const div = document.createElement('div');
                 div.className = `route-option ${isSelected ? 'selected' : ''}`;
+                div.dataset.type = type;
 
-                // Parse: GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx
-                const parts = route.fileName.replace('.gpx', '').split('_');
-                
-                // Extract level (A, B, A1, B2, etc) - it's after DX
-                let level = '';
-                let levelIndex = -1;
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].match(/^D\d+$/)) {
-                        level = parts[i + 1];
-                        levelIndex = i + 1;
-                        break;
-                    }
-                }
-                
-                // Extract locations between level and km/hm
-                const locationParts = [];
-                for (let i = levelIndex + 1; i < parts.length; i++) {
-                    if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
-                    locationParts.push(parts[i]);
-                }
-                
-                // Build location string: find "Helios" to determine direction
-                let fromTo = locationParts.join(' ');
-                const heliosIndex = locationParts.indexOf('Helios');
-                
-                if (heliosIndex !== -1) {
-                    // Helios is present
-                    if (heliosIndex === 0) {
-                        // Helios first: Helios > Destination
-                        const destination = locationParts.slice(1).join(' ');
-                        fromTo = `Helios > ${destination}`;
-                    } else {
-                        // Helios last: Origin > Helios
-                        const origin = locationParts.slice(0, heliosIndex).join(' ');
-                        fromTo = `${origin} > Helios`;
-                    }
-                }
-                
-                const name = `${fromTo} (${level})`;
-                const km = route.stats ? route.stats.distance : '?';
-                const hm = route.stats ? route.stats.elevationGain : '?';
-                
-                const isBest = route === bestRoute;
-                const isWorst = route === worstRoute;
+                let name, km, hm, badgeHTML = '';
 
-                const badgeHTML = isBest ? `<span class="route-badge best">Best Value!</span>` :
+                if (type === 'user') {
+                    name = route.fileName.replace('.gpx', '').replace(/_/g, ' ');
+                    km = route.stats ? route.stats.distance : '?';
+                    hm = route.stats ? route.stats.elevationGain : '?';
+                } else {
+                    const parts = route.fileName.replace('.gpx', '').split('_');
+                    let level = '', levelIndex = -1;
+                    for (let i = 0; i < parts.length; i++) {
+                        if (parts[i].match(/^D\d+$/)) { level = parts[i+1]; levelIndex = i+1; break; }
+                    }
+                    const locationParts = [];
+                    for (let i = levelIndex + 1; i < parts.length; i++) {
+                        if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+                        locationParts.push(parts[i]);
+                    }
+                    let fromTo = locationParts.join(' ');
+                    const hi = locationParts.indexOf('Helios');
+                    if (hi === 0) fromTo = `Helios > ${locationParts.slice(1).join(' ')}`;
+                    else if (hi > 0) fromTo = `${locationParts.slice(0, hi).join(' ')} > Helios`;
+                    name = `${fromTo} (${level})`;
+                    km = route.stats ? route.stats.distance : '?';
+                    hm = route.stats ? route.stats.elevationGain : '?';
+                    const isBest = route === bestRoute, isWorst = route === worstRoute;
+                    badgeHTML = isBest ? `<span class="route-badge best">Best Value!</span>` :
                                 isWorst ? `<span class="route-badge worst">Most Beers!</span>` : '';
-
-
+                }
 
                 div.innerHTML = `
                     <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
@@ -682,34 +664,39 @@
                         ${badgeHTML}
                     </label>
                 `;
+
                 div.onclick = (e) => {
+                    const cb = div.querySelector('input');
+                    const t = div.dataset.type;
                     if (e.target.tagName !== 'INPUT') {
-                        const checkbox = div.querySelector('input');
-                        const checked = document.querySelectorAll('.route-option input:checked').length;
-                        if (!checkbox.checked && checked >= 2) {
-                            alert('Maks 2 ruter per dag!');
-                            return;
+                        if (!cb.checked) {
+                            if (t !== 'user') {
+                                const sameChecked = document.querySelectorAll(`.route-option[data-type="${t}"] input:checked`).length;
+                                if (sameChecked >= 1) { alert(`Kan kun velge én ${t === 'ut' ? '🏨 Fra hotellet' : '🏠 Tilbake'}-rute per dag!`); return; }
+                            }
+                            if (document.querySelectorAll('.route-option input:checked').length >= 2) { alert('Maks 2 ruter per dag!'); return; }
                         }
-                        checkbox.checked = !checkbox.checked;
-                        div.classList.toggle('selected', checkbox.checked);
+                        cb.checked = !cb.checked;
+                        div.classList.toggle('selected', cb.checked);
                     } else {
-                        const checked = document.querySelectorAll('.route-option input:checked').length;
-                        if (e.target.checked && checked > 2) {
-                            e.target.checked = false;
-                            alert('Maks 2 ruter per dag!');
-                            return;
+                        if (e.target.checked) {
+                            if (t !== 'user') {
+                                const sameChecked = document.querySelectorAll(`.route-option[data-type="${t}"] input:checked`).length;
+                                if (sameChecked > 1) { e.target.checked = false; alert(`Kan kun velge én ${t === 'ut' ? '🏨 Fra hotellet' : '🏠 Tilbake'}-rute per dag!`); return; }
+                            }
+                            if (document.querySelectorAll('.route-option input:checked').length > 2) { e.target.checked = false; alert('Maks 2 ruter per dag!'); return; }
                         }
                         div.classList.toggle('selected', e.target.checked);
-
-                        if (div.classList.contains('selected') &&
-                            div.querySelector('.route-badge.best')) {
-                            triggerConfetti();
-                        }
+                        if (div.classList.contains('selected') && div.querySelector('.route-badge.best')) triggerConfetti();
                     }
                 };
                 selector.appendChild(div);
-            });
-            
+            }
+
+            appendSection('📁 Mine ruter', myRoutes, 'user');
+            appendSection('🏨 Fra hotellet', utRoutes, 'ut');
+            appendSection('🏠 Tilbake', hjemRoutes, 'hjem');
+
             modal.classList.add('active');
         }
         
@@ -731,7 +718,7 @@
             closeRouteSelector();
         }
         
-        function addRoute(fileName, points, color) {
+        function addRoute(fileName, points, color, isBundled = false) {
             const latLngs = points.map(p => [p.lat, p.lon]);
             const polyline = L.polyline(latLngs, { color, weight: 3, opacity: 0.7 }).addTo(map);
 
@@ -768,7 +755,8 @@
                 color,
                 originalColor: color,
                 stats: calculateStats(points),
-                visible: true
+                visible: true,
+                isBundled
             });
 
             if (routes.length === 1) map.fitBounds(polyline.getBounds());
@@ -952,7 +940,7 @@ routesContainer.innerHTML = `
                         console.log('✅ Using GPX elevation data');
                     }
                     
-                    addRoute(fileName, points, colors[routes.length % colors.length]);
+                    addRoute(fileName, points, colors[routes.length % colors.length], true);
                 } catch (error) {
                     console.error(`Failed: ${fileName}`);
                 }
@@ -1007,6 +995,15 @@ routesContainer.innerHTML = `
             }
 
             setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
+
+            // Toast
+            const toast = document.getElementById('uploadToastMobile');
+            if (toast) {
+                toast.textContent = `✅ Ruten din er nå valgbar for alle dager!`;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3500);
+            }
+
             e.target.value = '';
         };
         
@@ -1717,55 +1714,63 @@ routesContainer.innerHTML = `
 
     <!-- ===== VÆRVARSELPANEL ===== -->
     <script>
-    (function() {
-        const LAT = 39.7942, LON = 2.6895;
-        const WMO_EMOJI = {
-            0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
-            45:'🌫️',48:'🌫️',
-            51:'🌦️',53:'🌦️',55:'🌧️',
-            61:'🌧️',63:'🌧️',65:'🌧️',
-            71:'❄️',73:'❄️',75:'❄️',77:'❄️',
-            80:'🌦️',81:'🌧️',82:'🌧️',
-            85:'🌨️',86:'🌨️',
-            95:'⛈️',96:'⛈️',99:'⛈️'
-        };
-        function windDir(deg) {
-            return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg/45)%8];
+    const WEATHER_LAT = 39.7942, WEATHER_LON = 2.6895;
+    const DAY_DATES_M = { 1: '2026-04-08', 2: '2026-04-09', 3: '2026-04-10', 4: '2026-04-11', 5: '2026-04-12' };
+    const DAY_NAMES_M = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+    const MONTHS_NO_M = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+    const WMO_EMOJI_M = {
+        0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+        45:'🌫️',48:'🌫️',
+        51:'🌦️',53:'🌦️',55:'🌧️',
+        61:'🌧️',63:'🌧️',65:'🌧️',
+        71:'❄️',73:'❄️',75:'❄️',77:'❄️',
+        80:'🌦️',81:'🌧️',82:'🌧️',
+        85:'🌨️',86:'🌨️',
+        95:'⛈️',96:'⛈️',99:'⛈️'
+    };
+    function windDirM(deg) {
+        return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg/45)%8];
+    }
+    window.fetchWeatherMobile = async function(dayNum) {
+        const date = DAY_DATES_M[dayNum] || DAY_DATES_M[1];
+        const container = document.getElementById('weatherHoursMobile');
+        const labelEl = document.getElementById('weatherDateLabel');
+        if (!container) return;
+        container.innerHTML = '<span style="color:#555;font-size:0.75rem">Laster…</span>';
+        const [, , dd] = date.split('-');
+        const monthIdx = parseInt(date.split('-')[1]) - 1;
+        if (labelEl) labelEl.textContent = `Dag ${dayNum}, ${parseInt(dd)}. ${MONTHS_NO_M[monthIdx]}`;
+        try {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&start_date=${date}&end_date=${date}&timezone=Europe%2FMadrid`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            container.innerHTML = '';
+            data.hourly.time.forEach((t, i) => {
+                const hour = parseInt(t.slice(11,13));
+                if (hour < 6 || hour > 21) return;
+                const temp = Math.round(data.hourly.temperature_2m[i]);
+                const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
+                const dir = windDirM(data.hourly.winddirection_10m[i]);
+                const precip = data.hourly.precipitation[i];
+                const emoji = WMO_EMOJI_M[data.hourly.weathercode[i]] || '🌡️';
+                const cell = document.createElement('div');
+                cell.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1a3a;border-radius:6px;padding:3px 5px;';
+                cell.innerHTML = `
+                    <div style="color:#88aacc;font-size:0.65rem">${hour.toString().padStart(2,'0')}:00</div>
+                    <div style="font-size:1.1rem">${emoji}</div>
+                    <div style="font-weight:bold;color:#fff;font-size:0.8rem">${temp}°</div>
+                    <div style="color:#8bc;font-size:0.6rem">${wind}m/s ${dir}</div>
+                    ${precip > 0 ? `<div style="color:#6af;font-size:0.6rem">${precip.toFixed(1)}mm</div>` : ''}
+                `;
+                container.appendChild(cell);
+            });
+            if (!container.children.length) container.innerHTML = '<span style="color:#555;font-size:0.8rem">Ingen data</span>';
+        } catch(e) {
+            container.innerHTML = `<span style="color:#f66;font-size:0.75rem">Feil: ${e.message}</span>`;
         }
-        async function fetchWeather() {
-            const container = document.getElementById('weatherHoursMobile');
-            try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&forecast_days=1&timezone=Europe%2FMadrid`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-                container.innerHTML = '';
-                data.hourly.time.forEach((t, i) => {
-                    const hour = parseInt(t.slice(11,13));
-                    if (![6,10,12,16,20].includes(hour)) return;
-                    const temp = Math.round(data.hourly.temperature_2m[i]);
-                    const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
-                    const dir = windDir(data.hourly.winddirection_10m[i]);
-                    const precip = data.hourly.precipitation[i];
-                    const emoji = WMO_EMOJI[data.hourly.weathercode[i]] || '🌡️';
-                    const cell = document.createElement('div');
-                    cell.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1a3a;border-radius:6px;padding:3px 5px;';
-                    cell.innerHTML = `
-                        <div style="color:#88aacc;font-size:0.65rem">${hour.toString().padStart(2,'0')}:00</div>
-                        <div style="font-size:1.1rem">${emoji}</div>
-                        <div style="font-weight:bold;color:#fff;font-size:0.8rem">${temp}°</div>
-                        <div style="color:#8bc;font-size:0.6rem">${wind}m/s</div>
-                        ${precip > 0 ? `<div style="color:#6af;font-size:0.6rem">${precip.toFixed(1)}mm</div>` : ''}
-                    `;
-                    container.appendChild(cell);
-                });
-                if (!container.children.length) container.innerHTML = '<span style="color:#555;font-size:0.8rem">Ingen data</span>';
-            } catch(e) {
-                document.getElementById('weatherHoursMobile').innerHTML = `<span style="color:#f66;font-size:0.75rem">Feil: ${e.message}</span>`;
-            }
-        }
-        fetchWeather();
-    })();
+    };
+    fetchWeatherMobile(1);
     </script>
     <!-- ===== END VÆRVARSELPANEL ===== -->
 
