@@ -553,6 +553,25 @@ body {
 }
 
 /* ===== SUMMARY SLIDE ===== */
+.summary-brand {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,0,255,0.2);
+}
+.summary-brand-title {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #ff00ff;
+    text-shadow: 0 0 6px rgba(255,0,255,0.4);
+    line-height: 1.35;
+    margin-bottom: 3px;
+}
+.summary-brand-sub {
+    font-size: 0.58rem;
+    color: #888;
+    line-height: 1.4;
+}
+
 .summary-card {
     padding: 10px 14px 44px;
     display: flex;
@@ -562,6 +581,7 @@ body {
 }
 
 .summary-title {
+    display: none;
     font-size: 0.75rem;
     font-weight: 700;
     color: #00f5ff;
@@ -570,30 +590,30 @@ body {
 }
 
 .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+    margin-bottom: 4px;
 }
 
 .summary-stat {
-    background: rgba(48, 43, 99, 0.5);
-    border: 2px solid #00f5ff;
-    border-radius: 8px;
+    background: none;
+    border: none;
+    border-radius: 0;
     padding: 6px 8px;
     text-align: center;
 }
 
 .summary-stat-value {
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     font-weight: 900;
     color: #ffaa00;
-    text-shadow: 0 0 10px rgba(255, 170, 0, 0.6);
 }
 
 .summary-stat-label {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 2px;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0;
 }
 
 /* ===== AD BANNER (mobile) — vertikalt kortformat ===== */
