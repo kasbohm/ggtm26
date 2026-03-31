@@ -1,3 +1,62 @@
+/* ===== EMPTY DAY SLOTS ===== */
+.mobile-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+.mobile-slot-label {
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+.day-slot-mobile {
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+}
+.day-slot-mobile.empty {
+    border: 2px dashed rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.day-slot-mobile.empty:active {
+    border-color: rgba(255,170,0,0.6);
+    color: rgba(255,170,0,0.8);
+}
+
+/* ===== WEATHER PER DAY CARD ===== */
+.day-weather {
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+}
+.weather-hours-mobile {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-height: 52px;
+    align-items: center;
+}
+.weather-hours-mobile::-webkit-scrollbar { display: none; }
+
+/* ===== DOWNLOAD BUTTON IN DAY CARD ===== */
+.day-download-btn {
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    border: 2px solid #00ff88;
+    color: #0a0a0a;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 700;
+}
+
 /* ===== UPLOAD TOAST ===== */
 #uploadToastMobile.show {
     opacity: 1 !important;

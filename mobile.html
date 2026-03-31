@@ -48,11 +48,6 @@
     <!-- Map -->
     <div id="map"></div>
     
-    <!-- FAB Buttons -->
-    <div class="fab-group" id="fabGroup">
-        <button class="fab download" onclick="downloadCurrentDay()">⬇️</button>
-    </div>
-    
     <!-- Route Selector Modal -->
     <div class="modal" id="routeModal">
         <div class="modal-content">
@@ -81,13 +76,6 @@
         <div class="day-cards" id="dayCards">
             <!-- Summary Slide -->
             <div class="day-card summary-card" style="border-top: 4px solid #ff00ff;">
-                <!-- Vær -->
-                <div style="margin-top:20px;border-bottom:1px solid #2a2a4a;padding-bottom:6px;">
-                    <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">🌤️ Vær — <span id="weatherDateLabel">Dag 1, 8. apr</span></div>
-                    <div id="weatherHoursMobile" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;">
-                        <span style="color:#555;font-size:0.8rem">Laster...</span>
-                    </div>
-                </div>
                 <div class="summary-title">Sammendrag</div>
                 <div class="summary-grid" id="summaryGrid">
                     <div class="summary-stat">
@@ -113,24 +101,28 @@
             <!-- Dag 1 -->
             <div class="day-card" style="border-top: 4px solid #e74c3c;">
                 <div class="day-header">
-                    <span class="day-title">Dag 1 - Port de Soller</span>
+                    <span class="day-title">Dag 1 — Port de Soller</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(0)">📈</button>
+                        <button class="day-download-btn" onclick="downloadDayGPX(1)" id="dlBtn1" style="display:none">⬇️</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
                     </div>
                 </div>
+                <div class="day-weather"><div id="weatherDay1" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day1stats"></div>
                 <div class="day-routes" id="day1routes"></div>
             </div>
             <!-- Dag 2 -->
             <div class="day-card" style="border-top: 4px solid #3498db;">
                 <div class="day-header">
-                    <span class="day-title">Dag 2 - Cap de Formentor</span>
+                    <span class="day-title">Dag 2 — Cap de Formentor</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(1)">📈</button>
+                        <button class="day-download-btn" onclick="downloadDayGPX(2)" id="dlBtn2" style="display:none">⬇️</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
                     </div>
                 </div>
+                <div class="day-weather"><div id="weatherDay2" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day2stats"></div>
                 <div class="day-routes" id="day2routes"></div>
             </div>
@@ -138,12 +130,14 @@
             <!-- Dag 3 -->
             <div class="day-card" style="border-top: 4px solid #2ecc71;">
                 <div class="day-header">
-                    <span class="day-title">Dag 3 - Sa Calobra</span>
+                    <span class="day-title">Dag 3 — Sa Calobra</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(2)">📈</button>
+                        <button class="day-download-btn" onclick="downloadDayGPX(3)" id="dlBtn3" style="display:none">⬇️</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
                     </div>
                 </div>
+                <div class="day-weather"><div id="weatherDay3" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day3stats"></div>
                 <div class="day-routes" id="day3routes"></div>
             </div>
@@ -151,12 +145,14 @@
             <!-- Dag 4 -->
             <div class="day-card" style="border-top: 4px solid #f39c12;">
                 <div class="day-header">
-                    <span class="day-title">Dag 4 - Sant Salvador</span>
+                    <span class="day-title">Dag 4 — Sant Salvador</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(3)">📈</button>
+                        <button class="day-download-btn" onclick="downloadDayGPX(4)" id="dlBtn4" style="display:none">⬇️</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
                     </div>
                 </div>
+                <div class="day-weather"><div id="weatherDay4" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
             </div>
@@ -164,12 +160,14 @@
             <!-- Dag 5 -->
             <div class="day-card" style="border-top: 4px solid #9b59b6;">
                 <div class="day-header">
-                    <span class="day-title">Dag 5 - Rapha, Palma ⭐</span>
+                    <span class="day-title">Dag 5 — Rapha, Palma ⭐</span>
                     <div class="day-buttons">
                         <button class="profile-btn" onclick="showElevationProfile(4)">📈</button>
+                        <button class="day-download-btn" onclick="downloadDayGPX(5)" id="dlBtn5" style="display:none">⬇️</button>
                         <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
                     </div>
                 </div>
+                <div class="day-weather"><div id="weatherDay5" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day5stats"></div>
                 <div class="day-routes" id="day5routes"></div>
             </div>
@@ -505,12 +503,6 @@
             });
             highlightedRouteId = null;
 
-            // Hide FAB on summary slide
-            const fabGroup = document.getElementById('fabGroup');
-            if (fabGroup) {
-                fabGroup.style.display = currentDay === 0 ? 'none' : 'flex';
-            }
-
             updateMapVisibility();
             console.log('✅ updateSwiper complete');
         }
@@ -803,9 +795,17 @@
                 document.getElementById(`day${idx+1}stats`).textContent = statsText;
 
                 const routesContainer = document.getElementById(`day${idx+1}routes`);
+                const dlBtn = document.getElementById(`dlBtn${idx+1}`);
+                if (dlBtn) dlBtn.style.display = dayRoutes.length ? '' : 'none';
 
 if (!dayRoutes.length) {
-  routesContainer.innerHTML = '';
+  routesContainer.innerHTML = `
+    <div class="mobile-slots">
+      <div class="mobile-slot-label">🏨 Fra hotellet</div>
+      <div class="day-slot-mobile empty" onclick="openRouteSelector()">+ Velg rute</div>
+      <div class="mobile-slot-label">🏠 Tilbake</div>
+      <div class="day-slot-mobile empty" onclick="openRouteSelector()">+ Velg rute</div>
+    </div>`;
   return;
 }
 
@@ -1731,15 +1731,15 @@ routesContainer.innerHTML = `
     function windDirM(deg) {
         return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg/45)%8];
     }
+    const weatherLoaded = new Set();
     window.fetchWeatherMobile = async function(dayNum) {
+        if (weatherLoaded.has(dayNum)) return; // Already loaded
         const date = DAY_DATES_M[dayNum] || DAY_DATES_M[1];
-        const container = document.getElementById('weatherHoursMobile');
-        const labelEl = document.getElementById('weatherDateLabel');
+        const container = document.getElementById(`weatherDay${dayNum}`);
         if (!container) return;
         container.innerHTML = '<span style="color:#555;font-size:0.75rem">Laster…</span>';
         const [, , dd] = date.split('-');
         const monthIdx = parseInt(date.split('-')[1]) - 1;
-        if (labelEl) labelEl.textContent = `Dag ${dayNum}, ${parseInt(dd)}. ${MONTHS_NO_M[monthIdx]}`;
         try {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&hourly=temperature_2m,weathercode,windspeed_10m,winddirection_10m,precipitation&start_date=${date}&end_date=${date}&timezone=Europe%2FMadrid`;
             const res = await fetch(url);
@@ -1766,6 +1766,7 @@ routesContainer.innerHTML = `
                 container.appendChild(cell);
             });
             if (!container.children.length) container.innerHTML = '<span style="color:#555;font-size:0.8rem">Ingen data</span>';
+            else weatherLoaded.add(dayNum);
         } catch(e) {
             container.innerHTML = `<span style="color:#f66;font-size:0.75rem">Feil: ${e.message}</span>`;
         }
