@@ -647,22 +647,7 @@ body {
 .splash-screen.hidden {
     opacity: 0;
     pointer-events: none;
-}
-
-.splash-screen.minimized {
-    position: relative;
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    height: auto;
-    width: auto;
-    background: transparent;
-    box-shadow: none;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 8px;
-    flex-shrink: 0;
+    visibility: hidden;
 }
 
 .splash-logo {
@@ -673,31 +658,10 @@ body {
     transition: all 0.8s ease-in-out;
 }
 
-.splash-screen.minimized .splash-logo {
-    width: auto;
-    height: 48px;
-    animation: none;
-    box-shadow: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s;
-    opacity: 0.85;
-}
-
-.splash-screen.minimized .splash-logo:hover {
-    transform: scale(1.05);
-    opacity: 1;
-}
-
 .splash-progress {
     width: 400px;
     max-width: 80%;
     margin-top: 3rem;
-    transition: all 0.8s ease-in-out;
-}
-
-.splash-screen.minimized .splash-progress {
-    display: none;
 }
 
 .splash-progress-bar {

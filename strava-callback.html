@@ -67,11 +67,37 @@
         const state = p.get('state') || '';
         const error = p.get('error');
 
+        console.log('[strava-callback] URL:', location.href);
+        console.log('[strava-callback] code:', code, 'state:', state, 'error:', error, 'opener:', !!window.opener);
+
+        function showDebug(msg) {
+            const d = document.createElement('div');
+            d.style.cssText = 'margin-top:1rem;font-size:0.7rem;color:#666;word-break:break-all;text-align:left;';
+            d.textContent = msg;
+            document.querySelector('.card').appendChild(d);
+        }
+
         if (error) {
-            statusEl.textContent = 'Strava-autorisering avbrutt.';
+            statusEl.textContent = 'Strava-autorisering avbrutt eller nektet.';
             statusEl.className = 'status err';
+            showDebug('error: ' + error);
             closeBtn.style.display = 'inline-block';
-        } else if (code && state.startsWith('strava_') && window.opener) {
+        } else if (!code) {
+            statusEl.textContent = 'Ingen kode mottatt fra Strava.';
+            statusEl.className = 'status err';
+            showDebug('URL: ' + location.href);
+            closeBtn.style.display = 'inline-block';
+        } else if (!state.startsWith('strava_')) {
+            statusEl.textContent = 'Ugyldig state-parameter.';
+            statusEl.className = 'status err';
+            showDebug('state: ' + state);
+            closeBtn.style.display = 'inline-block';
+        } else if (!window.opener) {
+            statusEl.textContent = 'Hovedvinduet er lukket. Lukk dette vinduet og prøv igjen.';
+            statusEl.className = 'status err';
+            showDebug('window.opener er null (Safari-sikkerhet?)');
+            closeBtn.style.display = 'inline-block';
+        } else {
             const dayId = parseInt(state.replace('strava_', ''));
             try {
                 window.opener.postMessage({ type: 'strava_code', code, dayId }, '*');
@@ -81,18 +107,11 @@
                 closeBtn.textContent = 'Lukk vindu';
                 setTimeout(() => window.close(), 1500);
             } catch (e) {
-                statusEl.textContent = 'Feil: ' + e.message;
+                statusEl.textContent = 'postMessage-feil: ' + e.message;
                 statusEl.className = 'status err';
+                showDebug(e.stack || e.message);
                 closeBtn.style.display = 'inline-block';
             }
-        } else if (code && !window.opener) {
-            statusEl.textContent = 'Hovedvinduet er lukket. Lukk dette vinduet og prøv igjen.';
-            statusEl.className = 'status err';
-            closeBtn.style.display = 'inline-block';
-        } else {
-            statusEl.textContent = 'Ugyldig callback. Ingen kode mottatt.';
-            statusEl.className = 'status err';
-            closeBtn.style.display = 'inline-block';
         }
     </script>
 </body>

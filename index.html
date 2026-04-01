@@ -36,8 +36,17 @@
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    
-    <!-- Splash Screen -->
+
+    <!-- Splash screen: full-screen overlay on load only -->
+    <div class="splash-screen" id="splashScreen">
+        <img src="logo.png" class="splash-logo" alt="GGTM26">
+        <div class="splash-progress">
+            <div class="splash-progress-bar">
+                <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
+            </div>
+            <div class="splash-text" id="splashText">Initializing configurator...</div>
+        </div>
+    </div>
 
     <header class="site-header">
         <img src="G.png" class="site-logo" alt="GGTM26" style="height:36px;max-height:36px;width:auto;max-width:150px;object-fit:contain;flex-shrink:0;">
@@ -65,15 +74,6 @@
         <!-- Weather strip -->
         <div class="weather-strip" id="weatherStrip">
             <div id="weatherHours"><span style="color:#666;font-size:0.72rem;padding:0 8px">Laster vær…</span></div>
-            <div class="splash-screen" id="splashScreen">
-                <img src="logo.png" class="splash-logo" alt="GGTM26">
-                <div class="splash-progress">
-                    <div class="splash-progress-bar">
-                        <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
-                    </div>
-                    <div class="splash-text" id="splashText">Initializing configurator...</div>
-                </div>
-            </div>
         </div>
 
         <!-- Left panel group: day panel + info plate -->
@@ -1778,7 +1778,7 @@
             progressText.textContent = `Ferdig! ${bundledRouteFiles.length} standardfiler lastet.`;
             setTimeout(() => {
                 const splashScreen = document.getElementById('splashScreen');
-                splashScreen.classList.add('minimized');
+                splashScreen.classList.add('hidden');
             }, 500);
         }
 
@@ -1787,8 +1787,7 @@
             if (files.length === 0) return;
 
             const { progressContainer, progressFill, progressText } = getProgressElements();
-            
-            progressContainer.classList.remove('minimized');
+
             progressFill.style.width = '0%';
 
             for (let i = 0; i < files.length; i++) {
@@ -1814,9 +1813,6 @@
             }
 
             progressText.textContent = `Ferdig! ${files.length} filer lastet.`;
-            setTimeout(() => {
-                progressContainer.classList.add('minimized');
-            }, 500);
 
             // Show toast
             const toast = document.getElementById('uploadToast');
@@ -3432,6 +3428,7 @@
     })();
     </script>
     <!-- ===== END VEIARBEID ===== -->
+
 
 </body>
 </html>

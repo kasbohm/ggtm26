@@ -954,6 +954,7 @@ routesContainer.innerHTML = `
                 splashFill.style.width = `${((i+1) / bundledRouteFiles.length) * 100}%`;
             }
             loadFromLocalStorage();
+            updateMapVisibility();
             splashText.textContent = 'Ferdig!';
             setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
         }
