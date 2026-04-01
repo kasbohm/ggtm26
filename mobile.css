@@ -296,16 +296,21 @@ body {
     box-shadow: 0 2px 8px rgba(0, 245, 255, 0.4);
 }
 
+.day-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+}
+.day-scroll::-webkit-scrollbar { display: none; }
+
 .day-routes {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    overflow-y: auto;
-    flex: 1;
     margin-top: 4px;
-    scrollbar-width: none;
 }
-.day-routes::-webkit-scrollbar { display: none; }
 
 /* ===== ROUTE TIMELINE ===== */
 .route-timeline {

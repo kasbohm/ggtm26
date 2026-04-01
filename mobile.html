@@ -105,8 +105,10 @@
                     <span class="day-title-small">Dag 1 — Port de Soller</span>
                     <span class="day-stats-inline" id="day1stats"></span>
                 </div>
+                <div class="day-scroll">
                 <div class="day-weather"><div id="weatherDay1" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-routes" id="day1routes"></div>
+                </div>
                 <div class="day-menu">
                     <button class="dmenu-btn" onclick="openRouteSelector(1)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(1)" id="dlBtn1">Last ned</button>
@@ -126,8 +128,10 @@
                     <span class="day-title-small">Dag 2 — Cap de Formentor</span>
                     <span class="day-stats-inline" id="day2stats"></span>
                 </div>
+                <div class="day-scroll">
                 <div class="day-weather"><div id="weatherDay2" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-routes" id="day2routes"></div>
+                </div>
                 <div class="day-menu">
                     <button class="dmenu-btn" onclick="openRouteSelector(2)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(2)" id="dlBtn2">Last ned</button>
@@ -147,8 +151,10 @@
                     <span class="day-title-small">Dag 3 — Sa Calobra</span>
                     <span class="day-stats-inline" id="day3stats"></span>
                 </div>
+                <div class="day-scroll">
                 <div class="day-weather"><div id="weatherDay3" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-routes" id="day3routes"></div>
+                </div>
                 <div class="day-menu">
                     <button class="dmenu-btn" onclick="openRouteSelector(3)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(3)" id="dlBtn3">Last ned</button>
@@ -168,8 +174,10 @@
                     <span class="day-title-small">Dag 4 — Sant Salvador</span>
                     <span class="day-stats-inline" id="day4stats"></span>
                 </div>
+                <div class="day-scroll">
                 <div class="day-weather"><div id="weatherDay4" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-routes" id="day4routes"></div>
+                </div>
                 <div class="day-menu">
                     <button class="dmenu-btn" onclick="openRouteSelector(4)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(4)" id="dlBtn4">Last ned</button>
@@ -653,7 +661,7 @@
                     <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
                     <label for="route-${route.id}">
                         <div class="route-name">${name}</div>
-                        <div class="route-details">${km} km | ⬆️ ${hm} m</div>
+                        <div class="route-details">${km}km / ${hm}m</div>
                         ${badgeHTML}
                     </label>
                 `;
@@ -782,16 +790,7 @@
                     totalHm += hm;
                 }
 
-                let statsText = dayRoutes.length ? `${km.toFixed(1)} km | ⬆️ ${hm} m` : '';
-
-                // Add overlap percentage if 2 routes
-                if (dayRoutes.length === 2) {
-                    const overlap = calculateDayOverlap(dayRoutes);
-                    if (overlap > 0) {
-                        statsText += ` | 🔗 ${overlap}% samme vei`;
-                    }
-                }
-
+                const statsText = dayRoutes.length ? `${km.toFixed(0)}km / ${hm}m` : '';
                 document.getElementById(`day${idx+1}stats`).textContent = statsText;
                 if (typeof updateDayInfoMobile !== 'undefined') updateDayInfoMobile(idx+1, dayRoutes);
 
@@ -844,7 +843,7 @@ routesContainer.innerHTML = `
           <div class="route-leg-content">
             <div class="route-leg-name">${fromTo}</div>
             <div class="route-leg-stats">
-              ${r.stats ? `${r.stats.distance} km · ⬆️ ${r.stats.elevationGain} m` : ''}
+              ${r.stats ? `${r.stats.distance}km / ${r.stats.elevationGain}m` : ''}
             </div>
           </div>
         </div>
@@ -891,9 +890,16 @@ routesContainer.innerHTML = `
             // Oppdater ruteliste i sammendrag
             const summaryRouteList = document.getElementById('summaryRouteList');
             if (summaryRouteList) {
-                summaryRouteList.innerHTML = days.map(day => {
+                const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+                summaryRouteList.innerHTML = days.map((day, i) => {
                     const dayRoutes = sortRoutesUtHjem(day.routes.map(id => routes.find(r => r.id === id)).filter(r => r));
-                    if (dayRoutes.length === 0) return '';
+                    if (dayRoutes.length === 0) {
+                        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;border:1px dashed rgba(255,255,255,0.18);border-radius:6px;padding:5px 8px;cursor:pointer;" onclick="goToDay(${day.id})">
+                            <span style="color:${day.color};opacity:0.5;font-weight:700;font-size:0.78rem;min-width:22px;">D${day.id}</span>
+                            <span style="color:rgba(255,255,255,0.3);font-size:0.72rem;flex:1;">${dayNames[i]} — ingen ruter</span>
+                            <span style="color:rgba(255,255,255,0.2);font-size:0.7rem">›</span>
+                        </div>`;
+                    }
                     const routeNames = dayRoutes.map(r => {
                         const parts = r.fileName.replace('.gpx', '').split('_');
                         const levelIndex = parts.findIndex(p => p.match(/^D\d+$/)) + 1;
@@ -909,10 +915,10 @@ routesContainer.innerHTML = `
                     });
                     let km = 0, hm = 0;
                     dayRoutes.forEach(r => { if (r.stats) { km += parseFloat(r.stats.distance); hm += r.stats.elevationGain; } });
-                    return `<div style="display:flex; align-items:baseline; gap:6px; margin-bottom:5px; border-left: 3px solid ${day.color}; padding-left: 8px;">
-                        <span style="color:${day.color}; font-weight:700; font-size:0.8rem; min-width:22px;">D${day.id}</span>
-                        <span style="color:#00f5ff; font-size:0.75rem; flex:1;">${routeNames.join(' + ')}</span>
-                        <span style="color:#ffaa00; font-size:0.7rem; white-space:nowrap;">${km.toFixed(0)}km ⬆️${hm}m</span>
+                    return `<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px;background:rgba(255,255,255,0.04);border-radius:6px;border-left:3px solid ${day.color};padding:5px 8px;">
+                        <span style="color:${day.color};font-weight:700;font-size:0.78rem;min-width:22px;">D${day.id}</span>
+                        <span style="color:#00f5ff;font-size:0.72rem;flex:1;">${routeNames.join(' + ')}</span>
+                        <span style="color:#ffaa00;font-size:0.68rem;white-space:nowrap;">${km.toFixed(0)}km / ${hm}m</span>
                     </div>`;
                 }).join('');
             }
