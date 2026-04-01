@@ -3054,8 +3054,6 @@
         ];
 
         let currentAd = null;
-        let nextAdTimeout = null;
-        let adIndex = 0;
 
         function showAd(ad) {
             currentAd = ad;
@@ -3130,21 +3128,10 @@
             if (e.target === this) closeAdPopup();
         });
 
-        function scheduleNextAd() {
-            if (adIndex >= ADS.length) return; // all ads shown, stop
-            clearTimeout(nextAdTimeout);
-            const delay = (8 + Math.random() * 12) * 1000;
-            nextAdTimeout = setTimeout(() => {
-                showAd(ADS[adIndex]);
-                adIndex++;
-            }, delay);
-        }
-
-        // Start: first ad appears after 5–10 seconds
+        // Vis én tilfeldig reklame etter 5–10 sek, deretter stopp
         const firstDelay = (5 + Math.random() * 5) * 1000;
-        nextAdTimeout = setTimeout(() => {
-            showAd(ADS[0]);
-            adIndex = 1;
+        setTimeout(() => {
+            showAd(ADS[Math.floor(Math.random() * ADS.length)]);
         }, firstDelay);
     })();
     </script>
