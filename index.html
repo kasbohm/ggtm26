@@ -371,7 +371,7 @@
         ];
 
         // Days structure: each day contains route IDs
-        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
+        const dayColors = ['#e8003d', '#0066ff', '#00cc44', '#cc00ff', '#9b59b6'];
         const days = [
             { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
             { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
@@ -953,8 +953,8 @@
 
             const polyline = L.polyline(latLngs, {
                 color: color,
-                weight: 3,
-                opacity: 0.7
+                weight: 5,
+                opacity: 0.85
             }).addTo(map);
 
             // Legg til piler for å vise retning
