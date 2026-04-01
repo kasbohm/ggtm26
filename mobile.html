@@ -543,9 +543,29 @@
                 return;
             }
 
+            const DAY_FOCUS = [
+                null,
+                [39.794, 2.690, 13],  // Port de Soller
+                [39.965, 3.209, 12],  // Cap de Formentor
+                [39.855, 2.803, 12],  // Sa Calobra
+                [39.460, 3.188, 12],  // Sant Salvador
+            ];
+
             const dayIndex = eff - 1; // Dag 1 = index 0
             const day = days[dayIndex];
             const selectedRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
+
+            if (selectedRoutes.length === 0) {
+                routes.forEach(route => {
+                    route.polyline.setStyle({ opacity: 0 });
+                    if (route.decorator) route.decorator.remove();
+                    route.startMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                    route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
+                });
+                const focus = DAY_FOCUS[eff];
+                if (focus) map.setView([focus[0], focus[1]], focus[2]);
+                return;
+            }
 
             const isHighlighted = highlightedRouteId !== null;
 
@@ -896,10 +916,10 @@ routesContainer.innerHTML = `
                 summaryRouteList.innerHTML = days.map((day, i) => {
                     const dayRoutes = sortRoutesUtHjem(day.routes.map(id => routes.find(r => r.id === id)).filter(r => r));
                     if (dayRoutes.length === 0) {
-                        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;border:1px dashed rgba(255,255,255,0.18);border-radius:6px;padding:5px 8px;cursor:pointer;" onclick="goToDay(${day.id})">
+                        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;border:1px dashed rgba(255,255,255,0.09);border-radius:6px;padding:5px 8px;cursor:pointer;" onclick="goToDay(${day.id})">
                             <span style="color:${day.color};opacity:0.5;font-weight:700;font-size:0.78rem;min-width:22px;">D${day.id}</span>
-                            <span style="color:rgba(255,255,255,0.3);font-size:0.72rem;flex:1;">${dayNames[i]} — ingen ruter</span>
-                            <span style="color:rgba(255,255,255,0.2);font-size:0.7rem">›</span>
+                            <span style="color:rgba(255,255,255,0.7);font-size:0.72rem;flex:1;">${dayNames[i]} — ingen ruter</span>
+                            <span style="color:rgba(255,255,255,0.3);font-size:0.7rem">›</span>
                         </div>`;
                     }
                     const routeNames = dayRoutes.map(r => {

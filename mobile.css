@@ -607,13 +607,13 @@ body {
 .elevation-modal.active { display: flex; }
 
 .elevation-content {
-    background: linear-gradient(180deg, #1a1a2e, #16213e);
-    border: 2px solid #00f5ff;
+    background: rgba(245, 243, 255, 0.97);
+    border: 1px solid rgba(180, 170, 220, 0.5);
     border-radius: 12px;
     width: 100%;
     max-width: 500px;
     padding: 15px;
-    box-shadow: 0 0 40px rgba(0, 245, 255, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .elevation-header {
@@ -624,19 +624,19 @@ body {
 }
 
 .elevation-title {
-    color: #00f5ff;
-    font-size: 0.7rem;
+    color: #2a1a4e;
+    font-size: 0.8rem;
     font-weight: 700;
 }
 
 .elevation-close {
-    background: #ff0080;
-    border: none;
-    color: white;
-    width: 30px;
-    height: 30px;
+    background: rgba(100, 80, 160, 0.15);
+    border: 1px solid rgba(100, 80, 160, 0.3);
+    color: #4a3080;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    font-size: 1.2rem;
+    font-size: 1rem;
     cursor: pointer;
 }
 
