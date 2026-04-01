@@ -1297,7 +1297,7 @@
                     html += `<div class="alle-day" style="border-top:3px solid ${day.color}">
                         <div class="alle-day-header">
                             <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
-                            <button class="btn-sm" onclick="openRouteSelector(${day.id})">Velg</button>
+                            <button class="btn-sm" onclick="openRouteSelector(${day.id})">${count > 0 ? 'Bytt' : 'Velg'}</button>
                             <button class="btn-sm btn-secondary" id="toggle-day-${day.id}" onclick="toggleDayVisibility(${day.id})">${day.visible ? 'Skjul' : 'Vis'}</button>
                             ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button>` : ''}
                         </div>
@@ -1319,7 +1319,7 @@
                 panel.innerHTML = `
                     <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
                         <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
-                        <button class="btn-sm" onclick="openRouteSelector(${dayId})">Velg</button>
+                        <button class="btn-sm" onclick="openRouteSelector(${dayId})">${count > 0 ? 'Bytt' : 'Velg'}</button>
                         ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button>` : ''}
                         ${statsText ? `<div class="single-day-stats">${statsText}</div>` : ''}
                     </div>

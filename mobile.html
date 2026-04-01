@@ -110,7 +110,7 @@
                 <div class="day-routes" id="day1routes"></div>
                 </div>
                 <div class="day-menu">
-                    <button class="dmenu-btn" onclick="openRouteSelector(1)">Velg</button>
+                    <button class="dmenu-btn" id="velgBtn1" onclick="openRouteSelector(1)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(1)" id="dlBtn1">Last ned</button>
                     <button class="dmenu-btn" onclick="showElevationProfile(0)">Profil</button>
                     <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(1)">Info ›</button>
@@ -133,7 +133,7 @@
                 <div class="day-routes" id="day2routes"></div>
                 </div>
                 <div class="day-menu">
-                    <button class="dmenu-btn" onclick="openRouteSelector(2)">Velg</button>
+                    <button class="dmenu-btn" id="velgBtn2" onclick="openRouteSelector(2)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(2)" id="dlBtn2">Last ned</button>
                     <button class="dmenu-btn" onclick="showElevationProfile(1)">Profil</button>
                     <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(2)">Info ›</button>
@@ -156,7 +156,7 @@
                 <div class="day-routes" id="day3routes"></div>
                 </div>
                 <div class="day-menu">
-                    <button class="dmenu-btn" onclick="openRouteSelector(3)">Velg</button>
+                    <button class="dmenu-btn" id="velgBtn3" onclick="openRouteSelector(3)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(3)" id="dlBtn3">Last ned</button>
                     <button class="dmenu-btn" onclick="showElevationProfile(2)">Profil</button>
                     <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(3)">Info ›</button>
@@ -179,7 +179,7 @@
                 <div class="day-routes" id="day4routes"></div>
                 </div>
                 <div class="day-menu">
-                    <button class="dmenu-btn" onclick="openRouteSelector(4)">Velg</button>
+                    <button class="dmenu-btn" id="velgBtn4" onclick="openRouteSelector(4)">Velg</button>
                     <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(4)" id="dlBtn4">Last ned</button>
                     <button class="dmenu-btn" onclick="showElevationProfile(3)">Profil</button>
                     <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(4)">Info ›</button>
@@ -797,6 +797,8 @@
                 const routesContainer = document.getElementById(`day${idx+1}routes`);
                 const dlBtn = document.getElementById(`dlBtn${idx+1}`);
                 if (dlBtn) dlBtn.style.display = dayRoutes.length ? '' : 'none';
+                const velgBtn = document.getElementById(`velgBtn${idx+1}`);
+                if (velgBtn) velgBtn.textContent = dayRoutes.length ? 'Bytt' : 'Velg';
 
 if (!dayRoutes.length) {
   routesContainer.innerHTML = `
