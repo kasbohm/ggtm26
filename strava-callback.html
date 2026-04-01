@@ -74,19 +74,14 @@
         } else if (code && state.startsWith('strava_') && window.opener) {
             const dayId = parseInt(state.replace('strava_', ''));
             try {
-                window.opener.postMessage(
-                    { type: 'strava_code', code, dayId },
-                    window.opener.location.origin
-                );
-                statusEl.textContent = 'Autorisert! Laster opp…';
+                window.opener.postMessage({ type: 'strava_code', code, dayId }, '*');
+                statusEl.textContent = 'Autorisert! Laster opp i bakgrunnen…';
                 statusEl.className = 'status ok';
-                setTimeout(() => {
-                    window.close();
-                    // If close fails (blocked), show button
-                    setTimeout(() => { closeBtn.style.display = 'inline-block'; }, 500);
-                }, 800);
+                closeBtn.style.display = 'inline-block';
+                closeBtn.textContent = 'Lukk vindu';
+                setTimeout(() => window.close(), 1500);
             } catch (e) {
-                statusEl.textContent = 'Kunne ikke kommunisere med hovedvinduet. Lukk og prøv igjen.';
+                statusEl.textContent = 'Feil: ' + e.message;
                 statusEl.className = 'status err';
                 closeBtn.style.display = 'inline-block';
             }

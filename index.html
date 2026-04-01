@@ -402,14 +402,19 @@
                 'width=600,height=700,toolbar=no,menubar=no,resizable=yes');
         };
 
+        function showToast(msg, color, duration) {
+            const t = document.createElement('div');
+            t.style.cssText = `position:fixed;top:70px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 20px;border-radius:8px;font-family:monospace;font-size:0.85rem;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.4);max-width:90vw;text-align:center`;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), duration || 5000);
+            return t;
+        }
+
         window.addEventListener('message', async function(e) {
             if (!e.data || e.data.type !== 'strava_code') return;
             const { code, dayId } = e.data;
-
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#FC4C02;color:#fff;padding:10px 20px;border-radius:8px;font-family:monospace;font-size:0.85rem;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
-            toast.textContent = 'Laster opp til Strava…';
-            document.body.appendChild(toast);
+            const toast = showToast(`Strava: henter token for dag ${dayId}…`, '#FC4C02', 30000);
 
             try {
                 const tokenRes = await fetch('https://www.strava.com/oauth/token', {
@@ -417,11 +422,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ client_id: STRAVA_CLIENT_ID, client_secret: STRAVA_CLIENT_SECRET, code, grant_type: 'authorization_code' })
                 });
+                if (!tokenRes.ok) throw new Error(`Token HTTP ${tokenRes.status}`);
                 const token = await tokenRes.json();
-                if (!token.access_token) throw new Error(token.message || 'Token exchange failed');
+                if (!token.access_token) throw new Error(token.message || JSON.stringify(token));
+
+                toast.textContent = `Strava: laster opp GPX…`;
 
                 const day = days.find(d => d.id === dayId);
+                if (!day) throw new Error(`Dag ${dayId} ikke funnet`);
                 const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(Boolean);
+                if (dayRoutes.length === 0) throw new Error('Ingen ruter valgt for dag ' + dayId);
                 const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Strava');
 
                 const form = new FormData();
@@ -437,16 +447,17 @@
                     headers: { 'Authorization': `Bearer ${token.access_token}` },
                     body: form
                 });
+                if (!uploadRes.ok) throw new Error(`Upload HTTP ${uploadRes.status}`);
                 const upload = await uploadRes.json();
                 if (upload.error) throw new Error(upload.error);
 
-                toast.style.background = '#27ae60';
-                toast.textContent = `✅ Dag ${dayId} lastet opp til Strava!`;
-            } catch (e) {
-                toast.style.background = '#c0392b';
-                toast.textContent = `Strava-feil: ${e.message}`;
+                toast.remove();
+                showToast(`✅ Dag ${dayId} lastet opp til Strava!`, '#27ae60', 6000);
+            } catch (err) {
+                toast.remove();
+                showToast(`Strava-feil: ${err.message}`, '#c0392b', 10000);
+                console.error('Strava upload error:', err);
             }
-            setTimeout(() => toast.remove(), 5000);
         });
 
         const DAY_INFO = {
