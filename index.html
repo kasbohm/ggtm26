@@ -1423,7 +1423,7 @@
                     <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
                         <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
                         <button class="btn-sm" onclick="openRouteSelector(${dayId})">${count > 0 ? 'Bytt' : 'Velg'}</button>
-                        ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button><button class="btn-sm btn-strava" onclick="sendDayToStrava(${dayId})">Strava</button>` : ''}
+                        ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button>` : ''}
                         ${statsText ? `<div class="single-day-stats">${statsText}</div>` : ''}
                     </div>
                     <div class="single-day-slots">
