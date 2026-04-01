@@ -45,6 +45,16 @@
 }
 .weather-hours-mobile::-webkit-scrollbar { display: none; }
 
+.day-info-mobile {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.55;
+    padding: 8px 4px 4px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    margin-top: 6px;
+}
+
 /* ===== DOWNLOAD BUTTON IN DAY CARD ===== */
 .day-download-btn {
     background: linear-gradient(135deg, #00ff88, #00cc66);

@@ -105,74 +105,43 @@
             <div class="day-card" style="border-top: 4px solid #e74c3c;">
                 <div class="day-header">
                     <span class="day-title">Dag 1 — Port de Soller</span>
-                    <div class="day-buttons">
-                        <button class="profile-btn" onclick="showElevationProfile(0)">📈</button>
-                        <button class="day-download-btn" onclick="downloadDayGPX(1)" id="dlBtn1" style="display:none">⬇️</button>
-                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
-                    </div>
                 </div>
                 <div class="day-weather"><div id="weatherDay1" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day1stats"></div>
                 <div class="day-routes" id="day1routes"></div>
+                <div class="day-info-mobile" id="dayInfo1"></div>
             </div>
             <!-- Dag 2 -->
             <div class="day-card" style="border-top: 4px solid #3498db;">
                 <div class="day-header">
                     <span class="day-title">Dag 2 — Cap de Formentor</span>
-                    <div class="day-buttons">
-                        <button class="profile-btn" onclick="showElevationProfile(1)">📈</button>
-                        <button class="day-download-btn" onclick="downloadDayGPX(2)" id="dlBtn2" style="display:none">⬇️</button>
-                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
-                    </div>
                 </div>
                 <div class="day-weather"><div id="weatherDay2" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day2stats"></div>
                 <div class="day-routes" id="day2routes"></div>
+                <div class="day-info-mobile" id="dayInfo2"></div>
             </div>
 
             <!-- Dag 3 -->
             <div class="day-card" style="border-top: 4px solid #2ecc71;">
                 <div class="day-header">
                     <span class="day-title">Dag 3 — Sa Calobra</span>
-                    <div class="day-buttons">
-                        <button class="profile-btn" onclick="showElevationProfile(2)">📈</button>
-                        <button class="day-download-btn" onclick="downloadDayGPX(3)" id="dlBtn3" style="display:none">⬇️</button>
-                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
-                    </div>
                 </div>
                 <div class="day-weather"><div id="weatherDay3" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day3stats"></div>
                 <div class="day-routes" id="day3routes"></div>
+                <div class="day-info-mobile" id="dayInfo3"></div>
             </div>
 
             <!-- Dag 4 -->
             <div class="day-card" style="border-top: 4px solid #f39c12;">
                 <div class="day-header">
                     <span class="day-title">Dag 4 — Sant Salvador</span>
-                    <div class="day-buttons">
-                        <button class="profile-btn" onclick="showElevationProfile(3)">📈</button>
-                        <button class="day-download-btn" onclick="downloadDayGPX(4)" id="dlBtn4" style="display:none">⬇️</button>
-                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
-                    </div>
                 </div>
                 <div class="day-weather"><div id="weatherDay4" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
                 <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
-            </div>
-
-            <!-- Dag 5 -->
-            <div class="day-card" style="border-top: 4px solid #9b59b6;">
-                <div class="day-header">
-                    <span class="day-title">Dag 5 — Rapha, Palma ⭐</span>
-                    <div class="day-buttons">
-                        <button class="profile-btn" onclick="showElevationProfile(4)">📈</button>
-                        <button class="day-download-btn" onclick="downloadDayGPX(5)" id="dlBtn5" style="display:none">⬇️</button>
-                        <button class="day-select-btn" onclick="openRouteSelector()">Velg</button>
-                    </div>
-                </div>
-                <div class="day-weather"><div id="weatherDay5" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
-                <div class="day-stats" id="day5stats"></div>
-                <div class="day-routes" id="day5routes"></div>
+                <div class="day-info-mobile" id="dayInfo4"></div>
             </div>
         </div>
         <div class="day-dots" id="dayDots">
@@ -181,7 +150,6 @@
             <div class="dot" onclick="goToDay(2)">2</div>
             <div class="dot" onclick="goToDay(3)">3</div>
             <div class="dot" onclick="goToDay(4)">4</div>
-            <div class="dot" onclick="goToDay(5)">5</div>
         </div>
     </div>
     
@@ -199,13 +167,12 @@
         // Inline common code for mobile
         const routes = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'];
-        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
+        const dayColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
         const days = [
             { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
             { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
-            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] },
-            { id: 5, name: 'Dag 5', routes: [], visible: true, color: dayColors[4] }
+            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
         ];
         const STORAGE_KEY = 'ggtm26_selected_routes';
 
@@ -257,8 +224,6 @@
             'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
             'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx',
-            'GGTM26_D5_A_Helios_Rapha.gpx',
-            'GGTM26_D5_B_Helios_Rapha.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -476,7 +441,7 @@
                 return;
             }
 
-            if (diff > 0 && currentDay < 5) {
+            if (diff > 0 && currentDay < 4) {
                 currentDay++;
                 console.log('➡️ Next day:', currentDay);
             } else if (diff < 0 && currentDay > 0) {
@@ -583,7 +548,7 @@
             const dayNum = currentDay;
             const dayIndex = currentDay - 1;
             const day = days[dayIndex];
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
             document.getElementById('modalDayTitle').textContent = `Dag ${dayNum} — ${dayNames[dayNum-1]}`;
 
             const bundledDayRoutes = routes.filter(r => {
@@ -796,6 +761,7 @@
                 }
 
                 document.getElementById(`day${idx+1}stats`).textContent = statsText;
+                if (typeof updateDayInfoMobile !== 'undefined') updateDayInfoMobile(idx+1, dayRoutes);
 
                 const routesContainer = document.getElementById(`day${idx+1}routes`);
                 const dlBtn = document.getElementById(`dlBtn${idx+1}`);
@@ -1140,7 +1106,7 @@ routesContainer.innerHTML = `
             let totalClimbingPoints = 0;
             peakIndexes.forEach(peak => totalClimbingPoints += peak.score);
 
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
             let title = profileTitle;
             if (profileTitle.startsWith('Dag ') && dayId >= 1 && dayId <= 5) {
                 title = `Dag ${dayId} (${dayNames[dayId - 1]})`;
@@ -1717,9 +1683,79 @@ routesContainer.innerHTML = `
 
     <!-- ===== VÆRVARSELPANEL ===== -->
     <script>
+    // ===== DAG-INFO OG RUTE-BESKRIVELSER =====
+    const DAY_INFO_M = {
+        1: { intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
+        2: { intro: 'Cap de Formentor er Mallorcas dramatiske nordspiss med spektakulære klipper, svingete vei og noen av øyas mest ikoniske utsiktspunkter.', tip: '💡 Denne dagen blir lang, mulighet for tog tilbake ...' },
+        3: { intro: 'Sa Calobra - Cobraen! Du skjønner det når vi er der. Obligatorisk for alle med Team Gåping på ryggen. Husk kamera (Trond).', tip: '💡 Coll dels Reis (800 moh) er enda tøffere enn selve Sa Calobra' },
+        4: { intro: 'Sant Salvador er en liten, men sjarmerende landsby med en rik historie og en unik kultur.', tip: '💡 Vi kan likegreit ta med oss de andre klosterne på returen' },
+    };
+    const ROUTE_DESC_M = {
+        'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx': 'Sykkelturen går vestover, der landskapet går fra urbant til kupert og grønt. Herfra følger vi den spektakulære kystveien MA-10, som slynger seg langs dramatiske klipper og byr på utsikt over Middelhavet og klassiske fjellpartier helt til Port de Sóller.',
+        'GGTM26_D1_A_Port_de_Soller_Helios_87km_1500hm.gpx': 'Fra Port de Sóller tar vi MA-11A, en roligere og mer intim vei som slynger seg opp gjennom appelsinlunder og små dalfører. Vi passerer fjellandsbyen Galilea, med utsikt over sørkysten, før seige stigninger i skogkledd terreng og nedkjøring tilbake.',
+        'GGTM26_D1_A2_Port_de_Soller_Helios(Puig Major)_98km_1300hm.gpx': 'Etter lunsj oppover mot øyas høyeste punkt, Puig Major, med lange seige klatringer og raske utforkjøringer. Ned mot innlandet via Inca og sørover gjennom åpne jordbruksområder — en roligere avslutning tilbake mot hotellet.',
+        'GGTM26_D1_B_Helios_Port_de_Soller_66km_1000hm.gpx': 'Kortere og mer skånsom enn A-varianten, med klatring opp Coll de sa Creu og karakteristiske utsiktspunkter over Middelhavet. Holder seg unna de tyngste fjellpassene og byr på fin rytme hele veien inn til Port de Sóller.',
+        'GGTM26_D1_B1_Port_de_Soller_Helios_40km_500hm.gpx': 'En kort og effektiv retur gjennom de rolige dalstrøkene sør for Sóller, med lite stigning og god flyt. Man kan også hoppe på det historiske tretoget gjennom fjelltunnelen og sykle den siste biten hjem.',
+        'GGTM26_D1_B2_Port_de_Soller_Helios_60km_1100hm.gpx': 'Returen fra Port de Sóller via MA-11A byr på seige stigninger, inkludert Coll de Sóller, før terrenget flater ut gjennom rolige olivenlunder. En fin blanding av klatring og flatt på vei hjem.',
+        'GGTM26_D2_A_Cap_de_Formentor_Helios_108km_1100hm.gpx': 'Fra fyret sykler vi sørover gjennom halvøyas svingte vei ned til Puerto Pollença og videre innover på Mallorcas flate sletter. Mest nedoverbakke og flatt med godt tempo etter en tung formiddag.',
+        'GGTM26_D2_A_Helios_Cap_de_Formentor_108km_1930hm.gpx': 'Fra hotellet nordover gjennom Tramuntana med klatring over Coll de la Creu og videre ut på Formentor-halvøyet, der veien slynger seg mellom bratte klipper og turkist hav. Med 1930 høydemeter er dette en av turens tyngste ruter.',
+        'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx': 'Kortere vei nordover til Cap de Formentor, primært gjennom innlandet frem til Puerto Pollença. Derfra tar vi Formentor-veien med de karakteristiske svingene og den dramatiske utsikten som belønning.',
+        'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx': 'Etter lunsj sykler vi tilbake til Puerto Pollença og tar toget sørover til Inca, for deretter å sykle den siste biten hjem. En smart retur som sparer bena.',
+        'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx': 'Returen starter med sykling sørover gjennom Pollença-dalen og noen stigninger via rolige innlandsveier, før vi tar toget fra Inca tilbake mot hotellet.',
+        'GGTM26_D3_A_Helios_Sa_Calobra_105km_1900hm.gpx': 'Fra hotellet nordover gjennom Tramuntana og opp Coll dels Reis (870 moh.) — Mallorcas mest kjente klatring. Ruten slynger seg gjennom dramatiske fjelllandskap og de ikoniske serpentinene ned mot Sa Calobra og sjøen.',
+        'GGTM26_D3_A1_Helios_Sa_Calobra_105km_1900hm.gpx': 'En variant av A-ruten med litt annen innfallsvinkel gjennom Tramuntana. Klatringen opp Coll dels Reis er like brutal — den seige stigningen med utsikt over Puig Major er et høydepunkt i seg selv.',
+        'GGTM26_D3_A_Sa_Calobra_Helios_100km_2300hm.gpx': 'Fra bunnen av Sa Calobra klatrer vi opp Coll dels Reis — 9 km med jevn stigning og det ikoniske Nus de sa Corbata-svingen. Derfra returnerer vi via Tramuntana-ryggen. 2300 høydemeter totalt sier alt.',
+        'GGTM26_D3_B_Helios_Sa_Calobra_75km_1100hm.gpx': 'Kortere vei til Sa Calobra der vi unngår de lengste klatringene men likevel møter det uunngåelige: nedkjøringen gjennom de legendariske serpentinene til sjøen.',
+        'GGTM26_D3_B1_Sa_Calobra_Helios_70km_1000hm.gpx': 'Kompakt retur fra Sa Calobra — vi klatrer opp Coll dels Reis og tar de mest direkte veiene sørover. 1000 høydemeter som sitter godt etter formiddagens kjøring.',
+        'GGTM26_D3_B2_Sa_Calobra_Helios_90km_1500hm.gpx': 'Lengre retur fra Sa Calobra via ekstra omveier gjennom Tramuntana-dalen. Coll dels Reis er startpunktet, deretter fine skogsveier og mer variasjon — 1500 hm belønner dem som vil ha mer.',
+        'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx': 'Fra hotellet østover gjennom Mallorcas flate, fruktbare innland — et helt annet Mallorca enn Tramuntana. Åpent og raskt frem til de siste stigningene opp mot Santuari de Sant Salvador (509 moh.).',
+        'GGTM26_D4_A_Sant_Salvador_Helios_96km_1050hm.gpx': 'Fra toppen av klosteret starter returen sørover og vestover gjennom det indre Mallorca, med omveier gjennom rolige fjellandsbyer og vinmarker. Coll de Randa og åsene ved Llucmajor gir de siste høydemeterene.',
+        'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx': 'Direkte og effektiv retur fra Sant Salvador via Mallorcas rolige sletter. Veiene gjennom Felanitx, Campos og Llucmajor er flate og raske — lite stigning, mye fart.',
+        'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx': 'Kortere og direkte rute østover mot Sant Salvador via de flate innlandsveiene. Lar bena bruke energi på det som teller: de siste stigningene opp til klosteret.',
+        'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx': 'Nesten flat retur fra Sant Salvador vestover gjennom Mallorcas brede jordbrukslandskap. Kun 300 høydemeter — turens roligste hjemtur.',
+    };
+
+    function parseRouteNameM(fileName) {
+        const parts = fileName.replace('.gpx', '').split('_');
+        let levelIndex = -1;
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i].match(/^D\d+$/)) { levelIndex = i + 1; break; }
+        }
+        const locationParts = [];
+        for (let i = levelIndex + 1; i < parts.length; i++) {
+            if (parts[i].match(/^\d+km$/) || parts[i].match(/^\d+hm$/)) break;
+            locationParts.push(parts[i]);
+        }
+        const hi = locationParts.indexOf('Helios');
+        if (hi === 0) return `Helios › ${locationParts.slice(1).join(' ')} (${parts[levelIndex] || ''})`;
+        if (hi > 0) return `${locationParts.slice(0, hi).join(' ')} › Helios (${parts[levelIndex] || ''})`;
+        return locationParts.join(' ');
+    }
+
+    function updateDayInfoMobile(dayId, dayRoutes) {
+        const el = document.getElementById(`dayInfo${dayId}`);
+        if (!el) return;
+        const info = DAY_INFO_M[dayId];
+        if (!info) { el.innerHTML = ''; return; }
+
+        let descs = '';
+        dayRoutes.forEach(r => {
+            const d = ROUTE_DESC_M[r.fileName];
+            if (d) descs += `<p style="margin:0 0 6px">${d}</p>`;
+        });
+
+        const showIntro = !descs && info.intro;
+        el.innerHTML = `
+            ${showIntro ? `<p style="margin:0 0 6px">${info.intro}</p>` : descs}
+            <div style="font-size:0.65rem;color:#c8a000;border-top:1px solid rgba(200,160,0,0.2);padding-top:5px;margin-top:2px">${info.tip}</div>
+        `;
+    }
+    </script>
+
+    <script>
     const WEATHER_LAT = 39.7942, WEATHER_LON = 2.6895;
-    const DAY_DATES_M = { 1: '2026-04-08', 2: '2026-04-09', 3: '2026-04-10', 4: '2026-04-11', 5: '2026-04-12' };
-    const DAY_NAMES_M = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+    const DAY_DATES_M = { 1: '2026-04-09', 2: '2026-04-10', 3: '2026-04-11', 4: '2026-04-12' };
+    const DAY_NAMES_M = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
     const MONTHS_NO_M = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
     const WMO_EMOJI_M = {
         0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
@@ -1767,6 +1803,12 @@ routesContainer.innerHTML = `
                     ${precip > 0 ? `<div style="color:#6af;font-size:0.6rem">${precip.toFixed(1)}mm</div>` : ''}
                 `;
                 container.appendChild(cell);
+                if (hour === 12) {
+                    const lunch = document.createElement('div');
+                    lunch.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:6px;padding:3px 5px;';
+                    lunch.innerHTML = `<div style="color:#c8a000;font-size:0.65rem">lunch</div><div style="font-size:1.1rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.8rem">0.5‰</div><div style="color:#c8a000;font-size:0.6rem">1f/t</div><div style="color:#c8a000;font-size:0.58rem">50cl</div>`;
+                    container.appendChild(lunch);
+                }
             });
             if (!container.children.length) container.innerHTML = '<span style="color:#555;font-size:0.8rem">Ingen data</span>';
             else weatherLoaded.add(dayNum);
