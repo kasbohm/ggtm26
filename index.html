@@ -456,12 +456,34 @@
                     headers: { 'Authorization': `Bearer ${token.access_token}` },
                     body: form
                 });
-                if (!uploadRes.ok) throw new Error(`Upload HTTP ${uploadRes.status}`);
+                if (!uploadRes.ok) {
+                    const errBody = await uploadRes.text();
+                    throw new Error(`Upload HTTP ${uploadRes.status}: ${errBody}`);
+                }
                 const upload = await uploadRes.json();
                 if (upload.error) throw new Error(upload.error);
 
+                // Poll until Strava finishes processing
+                toast.textContent = `Strava: prosesserer aktivitet…`;
+                const uploadId = upload.id;
+                let activityId = null;
+                for (let i = 0; i < 15; i++) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    const pollRes = await fetch(`https://www.strava.com/api/v3/uploads/${uploadId}`, {
+                        headers: { 'Authorization': `Bearer ${token.access_token}` }
+                    });
+                    const pollData = await pollRes.json();
+                    console.log('[Strava poll]', pollData);
+                    if (pollData.error) throw new Error('Strava processing error: ' + pollData.error);
+                    if (pollData.activity_id) { activityId = pollData.activity_id; break; }
+                }
+
                 toast.remove();
-                showToast(`✅ Dag ${dayId} lastet opp til Strava!`, '#27ae60', 6000);
+                if (activityId) {
+                    showToast(`✅ Dag ${dayId} lagt til på Strava!`, '#27ae60', 8000);
+                } else {
+                    showToast(`⚠️ Opplastet, men aktivitet ikke klar ennå. Sjekk Strava om litt.`, '#f39c12', 8000);
+                }
             } catch (err) {
                 toast.remove();
                 showToast(`Strava-feil: ${err.message}`, '#c0392b', 10000);
