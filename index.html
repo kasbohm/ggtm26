@@ -133,6 +133,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
+    <script src="js/download-gpx.js"></script>
     <script src="routes-bundle.js"></script>
     <script>
         let currentSelectingDay = 1;
@@ -1242,20 +1243,11 @@
 
         window.downloadDayGpx = function(dayId) {
             const day = days.find(d => d.id === dayId);
-            if (!day || day.routes.length === 0) { alert('Ingen ruter valgt for denne dagen!'); return; }
-            day.routes.forEach(routeId => {
-                const route = routes.find(r => r.id === routeId);
-                if (!route) return;
-                const latlngs = route.polyline.getLatLngs();
-                const trkpts = latlngs.map(ll =>
-                    `      <trkpt lat="${ll.lat.toFixed(6)}" lon="${ll.lng.toFixed(6)}"></trkpt>`
-                ).join('\n');
-                const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="GGTM26" xmlns="http://www.topografix.com/GPX/1/1">\n  <trk>\n    <name>${route.fileName.replace('.gpx','')}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
-                const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-                const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: route.fileName });
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-            });
+            if (!day || day.routes.length === 0) { alert('Ingen ruter valgt for denne dagen! Dette er ikke en hviledag - VELG RUTER!'); return; }
+            const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
+            if (!dayRoutes[0] || !dayRoutes[0].gpxPoints) { alert('GPX-punkter mangler for rutene.'); return; }
+            const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Desktop Computer');
+            triggerGPXDownload(fileName, content);
         };
 
         function renderSlot(route, dayId) {
@@ -1885,60 +1877,6 @@
             }
         };
 
-        window.downloadDayGPX = function(dayId) {
-            const day = days.find(d => d.id === dayId);
-            if (!day || day.routes.length === 0) {
-                alert('Ingen ruter valgt for denne dagen! Dette er ikke en hviledag - VELG RUTER!');
-                return;
-            }
-
-            const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
-            
-            if (!dayRoutes[0] || !dayRoutes[0].gpxPoints) {
-                alert('GPX-punkter mangler for rutene.');
-                return;
-            }
-
-            let allPoints = [];
-            dayRoutes.forEach(route => {
-                if (route.gpxPoints) {
-                    allPoints = allPoints.concat(route.gpxPoints);
-                }
-            });
-
-            let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="Gåpings Mallorca Getaway" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata>
-    <name>Dag ${dayId} - ${dayRoutes.map(r => r.fileName).join(' + ')}</name>
-  </metadata>
-  <trk>
-    <name>Dag ${dayId}</name>
-    <trkseg>
-`;
-            
-            allPoints.forEach(point => {
-                gpxContent += `      <trkpt lat="${point.lat}" lon="${point.lon}">`;
-                if (point.ele !== null && point.ele !== undefined) {
-                    gpxContent += `<ele>${point.ele}</ele>`;
-                }
-                gpxContent += `</trkpt>
-`;
-            });
-            
-            gpxContent += `    </trkseg>
-  </trk>
-</gpx>`;
-            
-            const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Dag_${dayId}_Mallorca.gpx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        };
 
         window.autoMakeElite = function() {
             days.forEach(day => day.routes = []);

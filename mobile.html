@@ -201,6 +201,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="js/climb-classifier.js"></script>
+    <script src="js/download-gpx.js"></script>
     <script>
         let highlightedRouteId = null;
 
@@ -418,28 +419,8 @@
             if (!day || day.routes.length === 0) { alert('Ingen ruter valgt! Dette er ikke en hviledag - VELG RUTER!'); return; }
             const dayRoutes = day.routes.map(routeId => routes.find(r => r.id === routeId)).filter(r => r);
             if (!dayRoutes[0] || !dayRoutes[0].gpxPoints) { alert('GPX-punkter mangler.'); return; }
-            let allPoints = [];
-            dayRoutes.forEach(route => { if (route.gpxPoints) allPoints = allPoints.concat(route.gpxPoints); });
-            let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="Gåpings Mallorca Getaway" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><n>Dag ${dayId}</n></metadata><trk><n>Dag ${dayId}</n><trkseg>
-`;
-            allPoints.forEach(point => {
-                gpxContent += `      <trkpt lat="${point.lat}" lon="${point.lon}">`;
-                if (point.ele !== null && point.ele !== undefined) gpxContent += `<ele>${point.ele}</ele>`;
-                gpxContent += `</trkpt>
-`;
-            });
-            gpxContent += `    </trkseg></trk></gpx>`;
-            const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Dag_${dayId}_Mallorca.gpx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO_M[dayId], 'Handheld Terminal');
+            triggerGPXDownload(fileName, content);
         }
         
         let map, currentDay = 0, modalDayNum = 1;
