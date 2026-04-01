@@ -251,7 +251,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .day-title {
@@ -437,7 +437,7 @@ body {
     overflow-y: auto;
     font-family: 'Courier New', monospace;
     font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.93);
+    color: rgba(255, 255, 255, 1);
     line-height: 1.55;
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 245, 255, 0.25) transparent;
@@ -625,7 +625,7 @@ body {
 
 .elevation-title {
     color: #00f5ff;
-    font-size: 1.1rem;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
@@ -651,11 +651,11 @@ body {
 /* ===== SUMMARY SLIDE ===== */
 .summary-brand {
     margin-bottom: 6px;
-    padding-bottom: 6px;
+    padding-bottom: 0px;
     border-bottom: 1px solid rgba(255,0,255,0.2);
 }
 .summary-brand-title {
-    font-size: 0.62rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: #ff00ff;
     text-shadow: 0 0 6px rgba(255,0,255,0.4);
@@ -663,8 +663,8 @@ body {
     margin-bottom: 3px;
 }
 .summary-brand-sub {
-    font-size: 0.58rem;
-    color: #aaa;
+    font-size: 0.68rem;
+    color: #f4f4f4;
     line-height: 1.4;
 }
 
@@ -689,7 +689,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 0 16px;
-    margin-bottom: 4px;
+    margin-bottom: 0px;
 }
 
 .summary-stat {
