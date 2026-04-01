@@ -3102,12 +3102,10 @@
         window.closeAd = function(e) {
             if (e) e.stopPropagation();
             document.getElementById('adBanner').style.display = 'none';
-            scheduleNextAd();
         };
 
         window.closeAdPopup = function() {
             document.getElementById('adPopup').classList.remove('open');
-            scheduleNextAd();
         };
 
         function openAdPopup(ad) {
