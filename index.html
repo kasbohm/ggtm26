@@ -398,8 +398,14 @@
                 state: 'strava_' + dayId,
                 approval_prompt: 'auto'
             });
-            window.open(`https://www.strava.com/oauth/authorize?${params}`, 'strava_auth',
+            const popup = window.open(`https://www.strava.com/oauth/authorize?${params}`, 'strava_auth',
                 'width=600,height=700,toolbar=no,menubar=no,resizable=yes');
+            if (!popup) {
+                showToast('Popup blokkert — tillat popups for denne siden', '#c0392b', 8000);
+            } else {
+                showToast('Strava: logger inn…  (lukk popup når du er ferdig)', '#555566', 6000);
+            }
+            console.log('Strava redirect_uri:', redirectUri);
         };
 
         function showToast(msg, color, duration) {
