@@ -51,7 +51,6 @@
                     <button onclick="switchDay(2)">Dag 2 — Cap de Formentor</button>
                     <button onclick="switchDay(3)">Dag 3 — Sa Calobra</button>
                     <button onclick="switchDay(4)">Dag 4 — Sant Salvador</button>
-                    <button onclick="switchDay(5)">Dag 5 — Rapha, Palma ⭐</button>
                     <hr class="nav-divider">
                     <button onclick="switchDay('alle')">Alle Dager</button>
                 </div>
@@ -149,7 +148,7 @@
             
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+            const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
             document.getElementById('modalDayTitle').textContent = `Dag ${dayId} - ${dayNames[dayId-1]}`;
             
             // Filter routes for current day from BUNDLED routes only
@@ -376,19 +375,17 @@
             { id: 1, name: 'Dag 1', routes: [], visible: true, color: dayColors[0] },
             { id: 2, name: 'Dag 2', routes: [], visible: true, color: dayColors[1] },
             { id: 3, name: 'Dag 3', routes: [], visible: true, color: dayColors[2] },
-            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] },
-            { id: 5, name: 'Dag 5', routes: [], visible: true, color: dayColors[4] }
+            { id: 4, name: 'Dag 4', routes: [], visible: true, color: dayColors[3] }
         ];
         const STORAGE_KEY = 'ggtm26_selected_routes';
         let currentView = 1;
-        const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+        const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
 
         const DAY_INFO = {
             1: { emoji: '🏖️', title: 'Port de Soller', intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
             2: { emoji: '🦅', title: 'Cap de Formentor', intro: 'Cap de Formentor er Mallorcas dramatiske nordspiss med spektakulære klipper, svingete vei og noen av øyas mest ikoniske utsiktspunkter.', tip: '💡 Denne dagen blir lang, mulighet for tog tilbake ...' },
             3: { emoji: '🐍', title: 'Sa Calobra', intro: 'Sa Calobra - Cobraen! Du skjønner det når vi er der. Obligatorisk for alle med Team Gåping på ryggen. Husk kamera (Trond).', tip: '💡 Coll dels Reis (800 moh) er enda tøffere enn selve Sa Calobra' },
             4: { emoji: '⛪', title: 'Sant Salvador', intro: 'Sant Salvador er en liten, men sjarmerende landsby med en rik historie og en unik kultur.', tip: '💡 Vi kan likegreit ta med oss de andre klosterne på returen' },
-            5: { emoji: '🏪', title: 'Rapha, Palma', intro: 'Vi tar en rolig dag og avslutter turen på Cafe Rapha i Palma som sender Paris-Roubaix LIVE!', tip: '💡 Det blir fort mer en én pils her ... ' },
         };
 
         // Beskrivelse per rute — fyll inn tekst her
@@ -415,8 +412,6 @@
             'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx': 'En direkte og effektiv retur fra Sant Salvador via Mallorcas rolige østlige sletter. Veiene gjennom Felanitx, Campos og Llucmajor er flate og raske — lite stigning, mye fart. En fin avslutning for dem som foretrekker å rulle hjem etter klatringen til klosteret.',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx': 'Kortere og mer direkte rute østover mot Sant Salvador via de flate innlandsveiene i det sentrale Mallorca. Turen sparer de lengre innledende omveiene og lar bena bruke energi på det som teller: de siste stigningene opp til klosteret med den vakre utsikten over øyas østkyst.',
             'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx': 'En nesten flat retur fra Sant Salvador vestover gjennom Mallorcas brede jordbrukslandskap. Veiene via Campos og Llucmajor er raske og lite krevende — kun 300 høydemeter gjør dette til turens roligste hjemtur og en god mulighet til å snurre beina lett etter formiddagens klatring.',
-            'GGTM26_D5_A_Helios_Rapha.gpx': 'Rolig dag med fokus på å nyte sykkelturen og den fantastiske atmosfæren i Palma. Vi starter med en rolig sykkeltur fra hotellet til Port de Andratx, hvor vi kan nyte en god lunsj og så tilbake til Cafe Rapha og følge Paris-Roubaix LIVE på storskjerm. Etterpå can de som ønsker ta en ekstra runde rundt i Palma for å utforske byen litt mer, eller bare slappe av og nyte stemningen.',
-            'GGTM26_D5_B_Helios_Rapha.gpx': 'Korteste veien til Port de Andratx, en rolig og fin sykkeltur langs kysten. Vi starter med en rolig sykkeltur fra hotellet til Port de Andratx, hvor vi kan nyte en god lunsj og så tilbake til Cafe Rapha og følge Paris-Roubaix LIVE på storskjerm. Etterpå can de som ønsker ta en ekstra runde rundt i Palma for å utforske byen litt mer, eller bare slappe av og nyte stemningen.',
         };
 
         function buildProfileSvg(dayId) {
@@ -609,8 +604,6 @@
             'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx',
             'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx',
             'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx',
-            'GGTM26_D5_A_Helios_Rapha.gpx',
-            'GGTM26_D5_B_Helios_Rapha.gpx'
         ];
 
         function parseGPX(xmlString) {
@@ -1951,7 +1944,7 @@
         window.autoMakeElite = function() {
             days.forEach(day => day.routes = []);
             
-            for (let dayNum = 1; dayNum <= 5; dayNum++) {
+            for (let dayNum = 1; dayNum <= 4; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
@@ -1990,13 +1983,13 @@
             updateRouteColors();
             updateSidebar();
             syncDayToggleBtns();
-            alert('✅ Elite (A) ruter lastet for alle 5 dager!');
+            alert('✅ Elite (A) ruter lastet for alle 4 dager!');
         };
 
         window.autoMakeMosjonist = function() {
             days.forEach(day => day.routes = []);
             
-            for (let dayNum = 1; dayNum <= 5; dayNum++) {
+            for (let dayNum = 1; dayNum <= 4; dayNum++) {
                 const day = days.find(d => d.id === dayNum);
                 if (!day) continue;
                 
@@ -2039,7 +2032,7 @@
             updateRouteColors();
             updateSidebar();
             syncDayToggleBtns();
-            alert('✅ Mosjonist (B) ruter lastet for alle 5 dager!');
+            alert('✅ Mosjonist (B) ruter lastet for alle 4 dager!');
         };
 
         // Initialize
@@ -3165,7 +3158,7 @@
     const WEATHER_LON = 2.6895;
 
     // Fixed dates for each day of the trip
-    const DAY_DATES = { 1: '2026-04-08', 2: '2026-04-09', 3: '2026-04-10', 4: '2026-04-11', 5: '2026-04-12' };
+    const DAY_DATES = { 1: '2026-04-09', 2: '2026-04-10', 3: '2026-04-11', 4: '2026-04-12' };
 
     function windDir(deg) {
         const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV'];
