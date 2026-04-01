@@ -43,7 +43,7 @@
         <img src="G.png" class="site-logo" alt="GGTM26" style="height:36px;max-height:36px;width:auto;max-width:150px;object-fit:contain;flex-shrink:0;">
         <nav class="site-nav">
             <div class="nav-program" id="navProgram">
-                <button class="nav-btn" onclick="toggleNavDropdown()">Program ▾</button>
+                <button class="nav-btn">Program ▾</button>
                 <div class="nav-dropdown" id="navDropdown">
                     <button onclick="switchDay('sammendrag')">📋 Sammendrag</button>
                     <hr class="nav-divider">
@@ -381,6 +381,78 @@
         const STORAGE_KEY = 'ggtm26_selected_routes';
         let currentView = 1;
         const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+
+        // ===== STRAVA =====
+        const STRAVA_CLIENT_ID = '3552';
+        const STRAVA_CLIENT_SECRET = '1e1b3a3b56a35a9bd024f559a2f0f414aa199559';
+
+        window.sendDayToStrava = function(dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (!day || day.routes.length === 0) { alert('Velg ruter for dagen først.'); return; }
+            sessionStorage.setItem('strava_pending_day', dayId);
+            const params = new URLSearchParams({
+                client_id: STRAVA_CLIENT_ID,
+                response_type: 'code',
+                redirect_uri: location.href.split('?')[0].split('#')[0],
+                scope: 'activity:write',
+                state: 'strava_upload',
+                approval_prompt: 'auto'
+            });
+            location.href = `https://www.strava.com/oauth/authorize?${params}`;
+        };
+
+        async function handleStravaCallback() {
+            const p = new URLSearchParams(location.search);
+            if (p.get('state') !== 'strava_upload' || !p.get('code')) return;
+            const code = p.get('code');
+            history.replaceState({}, '', location.pathname);
+
+            const dayId = parseInt(sessionStorage.getItem('strava_pending_day'));
+            sessionStorage.removeItem('strava_pending_day');
+            if (!dayId) return;
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#FC4C02;color:#fff;padding:10px 20px;border-radius:8px;font-family:monospace;font-size:0.85rem;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
+            toast.textContent = 'Laster opp til Strava…';
+            document.body.appendChild(toast);
+
+            try {
+                const tokenRes = await fetch('https://www.strava.com/oauth/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: STRAVA_CLIENT_ID, client_secret: STRAVA_CLIENT_SECRET, code, grant_type: 'authorization_code' })
+                });
+                const token = await tokenRes.json();
+                if (!token.access_token) throw new Error(token.message || 'Token exchange failed');
+
+                const day = days.find(d => d.id === dayId);
+                const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(Boolean);
+                const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Strava');
+
+                const form = new FormData();
+                form.append('file', new Blob([content], { type: 'application/gpx+xml' }), fileName);
+                form.append('data_type', 'gpx');
+                form.append('name', `GGTM26 Dag ${dayId} — ${DAY_NAMES[dayId-1]}`);
+                form.append('description', `Team Gåping Mallorca Getaway 2026 #GGTM26`);
+                form.append('sport_type', 'Ride');
+                form.append('private', '1');
+
+                const uploadRes = await fetch('https://www.strava.com/api/v3/uploads', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token.access_token}` },
+                    body: form
+                });
+                const upload = await uploadRes.json();
+                if (upload.error) throw new Error(upload.error);
+
+                toast.style.background = '#27ae60';
+                toast.textContent = `✅ Dag ${dayId} lastet opp til Strava!`;
+            } catch (e) {
+                toast.style.background = '#c0392b';
+                toast.textContent = `Strava-feil: ${e.message}`;
+            }
+            setTimeout(() => toast.remove(), 5000);
+        }
 
         const DAY_INFO = {
             1: { emoji: '🏖️', title: 'Port de Soller', intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
@@ -1151,17 +1223,6 @@
 
         // ===== NAV + LEFT PANEL =====
 
-        window.toggleNavDropdown = function() {
-            document.getElementById('navDropdown').classList.toggle('open');
-        };
-
-        document.addEventListener('click', function(e) {
-            const nav = document.getElementById('navProgram');
-            if (nav && !nav.contains(e.target)) {
-                document.getElementById('navDropdown').classList.remove('open');
-            }
-        });
-
         function showRoute(r) {
             if (r.visible) return;
             r.visible = true;
@@ -1184,7 +1245,6 @@
 
         window.switchDay = function(dayId) {
             currentView = dayId;
-            document.getElementById('navDropdown').classList.remove('open');
 
             if (dayId === 'alle' || dayId === 'sammendrag') {
                 days.forEach(day => {
@@ -1306,7 +1366,7 @@
                             <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
                             <button class="btn-sm" onclick="openRouteSelector(${day.id})">${count > 0 ? 'Bytt' : 'Velg'}</button>
                             <button class="btn-sm btn-secondary" id="toggle-day-${day.id}" onclick="toggleDayVisibility(${day.id})">${day.visible ? 'Skjul' : 'Vis'}</button>
-                            ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button>` : ''}
+                            ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button><button class="btn-sm btn-strava" onclick="sendDayToStrava(${day.id})">Strava</button>` : ''}
                         </div>
                         ${statsText ? `<div class="alle-day-stats">${statsText}</div>` : ''}
                         <div class="alle-day-slots">
@@ -1327,7 +1387,7 @@
                     <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
                         <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
                         <button class="btn-sm" onclick="openRouteSelector(${dayId})">${count > 0 ? 'Bytt' : 'Velg'}</button>
-                        ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button>` : ''}
+                        ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${dayId})">⬇️ Last ned</button><button class="btn-sm btn-strava" onclick="sendDayToStrava(${dayId})">Strava</button>` : ''}
                         ${statsText ? `<div class="single-day-stats">${statsText}</div>` : ''}
                     </div>
                     <div class="single-day-slots">
@@ -1989,7 +2049,16 @@
 
         // Initialize
         updateSidebar();
-        loadBundledRoutes().then(() => switchDay('sammendrag'));
+        loadBundledRoutes().then(() => {
+            const p = new URLSearchParams(location.search);
+            if (p.get('state') === 'strava_upload' && p.get('code')) {
+                const pendingDay = parseInt(sessionStorage.getItem('strava_pending_day'));
+                switchDay(pendingDay || 'sammendrag');
+                handleStravaCallback();
+            } else {
+                switchDay('sammendrag');
+            }
+        });
         renderLeftPanel();
         setTimeout(() => map.invalidateSize(), 50);
     </script>
