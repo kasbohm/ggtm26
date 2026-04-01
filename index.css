@@ -74,11 +74,13 @@ body {
     box-shadow: 0 8px 24px rgba(0,0,0,0.7);
 }
 
-.nav-program:hover .nav-dropdown {
+.nav-program:hover .nav-dropdown,
+.nav-program.open .nav-dropdown {
     display: flex;
 }
 
-.nav-program:hover .nav-btn {
+.nav-program:hover .nav-btn,
+.nav-program.open .nav-btn {
     background: rgba(255,0,255,0.12);
     border-color: #ff00ff;
     border-bottom-left-radius: 0;

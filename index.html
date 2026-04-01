@@ -43,7 +43,7 @@
         <img src="G.png" class="site-logo" alt="GGTM26" style="height:36px;max-height:36px;width:auto;max-width:150px;object-fit:contain;flex-shrink:0;">
         <nav class="site-nav">
             <div class="nav-program" id="navProgram">
-                <button class="nav-btn">Program ▾</button>
+                <button class="nav-btn" onclick="this.parentElement.classList.toggle('open')">Program ▾</button>
                 <div class="nav-dropdown" id="navDropdown">
                     <button onclick="switchDay('sammendrag')">📋 Sammendrag</button>
                     <hr class="nav-divider">
@@ -1243,8 +1243,14 @@
             if (r.meetMarker) r.meetMarker.remove();
         }
 
+        document.addEventListener('click', function(e) {
+            const nav = document.getElementById('navProgram');
+            if (nav && !nav.contains(e.target)) nav.classList.remove('open');
+        });
+
         window.switchDay = function(dayId) {
             currentView = dayId;
+            document.getElementById('navProgram')?.classList.remove('open');
 
             if (dayId === 'alle' || dayId === 'sammendrag') {
                 days.forEach(day => {
