@@ -1751,7 +1751,7 @@ routesContainer.innerHTML = `
             container.innerHTML = '';
             data.hourly.time.forEach((t, i) => {
                 const hour = parseInt(t.slice(11,13));
-                if (hour < 6 || hour > 21) return;
+                if (![8,9,10,11,12,14,15,16,17,18,20].includes(hour)) return;
                 const temp = Math.round(data.hourly.temperature_2m[i]);
                 const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
                 const dir = windDirM(data.hourly.winddirection_10m[i]);

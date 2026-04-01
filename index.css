@@ -209,14 +209,9 @@ body {
 
 /* ===== LEFT PANEL ===== */
 .panel-left {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    width: 320px;
     background: rgba(8,4,18,0.92);
     border: 1px solid rgba(255,0,255,0.3);
     border-radius: 8px;
-    z-index: 500;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 24px rgba(0,0,0,0.55);
 }
@@ -390,6 +385,100 @@ body {
 .btn-sm:hover { background: rgba(255,0,255,0.3); }
 .btn-sm.btn-secondary:hover { background: rgba(0,245,255,0.2); }
 
+/* ===== DAY INFO PANEL ===== */
+@keyframes flipDown {
+    0%   { transform: rotateX(-90deg); opacity: 0.5; }
+    52%  { transform: rotateX(7deg);   opacity: 1;   }
+    68%  { transform: rotateX(-3.5deg); opacity: 1;  }
+    82%  { transform: rotateX(1.5deg);  opacity: 1;  }
+    100% { transform: rotateX(0deg);    opacity: 1;  }
+}
+@keyframes flipUp {
+    0%   { transform: rotateX(0deg);  opacity: 1; }
+    100% { transform: rotateX(-90deg); opacity: 0; }
+}
+
+.panel-left-group {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 320px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    perspective: 700px;
+    perspective-origin: top center;
+}
+
+.day-info-panel {
+    background: rgba(245, 243, 255, 0.96);
+    border: 1px solid rgba(180, 170, 220, 0.5);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 0.85rem 1rem 0.9rem;
+    transform-origin: top center;
+    transform: rotateX(-90deg);
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 10px 32px rgba(0,0,0,0.45);
+    position: relative;
+    display: none;
+}
+.day-info-panel.visible {
+    display: block;
+    animation: flipDown 0.55s ease-out forwards;
+    pointer-events: all;
+}
+.day-info-panel.hiding {
+    display: block;
+    animation: flipUp 0.28s ease-in forwards;
+    pointer-events: none;
+}
+
+.day-info-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.75rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 4px;
+}
+.day-info-close:hover { color: #333; }
+
+.day-info-inner { max-height: 55vh; overflow-y: auto; }
+.day-info-emoji { font-size: 1.3rem; margin-bottom: 0.15rem; }
+.day-info-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #2d1b6e;
+    margin-bottom: 0.4rem;
+}
+.day-info-desc {
+    font-size: 0.71rem;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 0.45rem;
+}
+.day-info-route-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #4466bb;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.5rem;
+    margin-bottom: 0.1rem;
+}
+.day-info-tip {
+    font-size: 0.65rem;
+    color: #c47000;
+    border-top: 1px solid rgba(150,100,0,0.2);
+    padding-top: 0.35rem;
+}
+
 /* ===== WEATHER STRIP ===== */
 .weather-strip {
     position: absolute;
@@ -401,18 +490,22 @@ body {
     border: 1px solid rgba(100,150,200,0.22);
     border-radius: 8px;
     backdrop-filter: blur(10px);
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
 }
-.weather-strip::-webkit-scrollbar { display: none; }
 #weatherHours {
     display: flex;
     gap: 4px;
     padding: 5px 8px;
     min-height: 62px;
     align-items: center;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
+#weatherHours::-webkit-scrollbar { display: none; }
 
 /* ===== RIGHT PANEL CONTAINER ===== */
 .panel-right-container {
@@ -540,15 +633,19 @@ body {
 }
 
 .splash-screen.minimized {
+    position: relative;
     top: auto;
-    bottom: 10px;
-    left: 10px;
+    bottom: auto;
+    left: auto;
+    right: auto;
     height: auto;
     width: auto;
     background: transparent;
     box-shadow: none;
-    justify-content: flex-start;
-    padding: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 8px;
+    flex-shrink: 0;
 }
 
 .splash-logo {
@@ -560,17 +657,19 @@ body {
 }
 
 .splash-screen.minimized .splash-logo {
-    width: 150px;
+    width: auto;
+    height: 48px;
     animation: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
+    box-shadow: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, opacity 0.2s;
+    opacity: 0.85;
 }
 
 .splash-screen.minimized .splash-logo:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+    opacity: 1;
 }
 
 .splash-progress {

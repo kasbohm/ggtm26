@@ -38,15 +38,6 @@
 <body>
     
     <!-- Splash Screen -->
-    <div class="splash-screen" id="splashScreen">
-        <img src="logo.png" alt="Team Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
-        <div class="splash-progress">
-            <div class="splash-progress-bar">
-                <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
-            </div>
-            <div class="splash-text" id="splashText">Initializing configurator...</div>
-        </div>
-    </div>
 
     <header class="site-header">
         <img src="G.png" class="site-logo" alt="GGTM26" style="height:36px;max-height:36px;width:auto;max-width:150px;object-fit:contain;flex-shrink:0;">
@@ -54,6 +45,8 @@
             <div class="nav-program" id="navProgram">
                 <button class="nav-btn" onclick="toggleNavDropdown()">Program ▾</button>
                 <div class="nav-dropdown" id="navDropdown">
+                    <button onclick="switchDay('sammendrag')">📋 Sammendrag</button>
+                    <hr class="nav-divider">
                     <button onclick="switchDay(1)">Dag 1 — Port de Soller</button>
                     <button onclick="switchDay(2)">Dag 2 — Cap de Formentor</button>
                     <button onclick="switchDay(3)">Dag 3 — Sa Calobra</button>
@@ -73,10 +66,25 @@
         <!-- Weather strip -->
         <div class="weather-strip" id="weatherStrip">
             <div id="weatherHours"><span style="color:#666;font-size:0.72rem;padding:0 8px">Laster vær…</span></div>
+            <div class="splash-screen" id="splashScreen">
+                <img src="logo.png" alt="Team Gåpings Mallorca Getaway" class="splash-logo" id="splashLogo" onclick="window.toggleSCPlayer && window.toggleSCPlayer()" title="Click to play music">
+                <div class="splash-progress">
+                    <div class="splash-progress-bar">
+                        <div class="splash-progress-fill" id="splashProgressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="splash-text" id="splashText">Initializing configurator...</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Left floating panel -->
-        <div class="panel-left" id="leftPanel"></div>
+        <!-- Left panel group: day panel + info plate -->
+        <div class="panel-left-group">
+            <div class="panel-left" id="leftPanel"></div>
+            <div class="day-info-panel" id="dayInfoPanel">
+                <button class="day-info-close" onclick="hideDayInfo()">✕</button>
+                <div class="day-info-inner" id="dayInfoInner"></div>
+            </div>
+        </div>
 
         <!-- Right floating panels -->
         <div class="panel-right-container">
@@ -372,6 +380,171 @@
         const STORAGE_KEY = 'ggtm26_selected_routes';
         let currentView = 1;
         const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador', 'Rapha, Palma'];
+
+        const DAY_INFO = {
+            1: { emoji: '🏖️', title: 'Port de Soller', intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
+            2: { emoji: '🦅', title: 'Cap de Formentor', intro: 'Cap de Formentor er Mallorcas dramatiske nordspiss med spektakulære klipper, svingete vei og noen av øyas mest ikoniske utsiktspunkter.', tip: '💡 Denne dagen blir lang, mulighet for tog tilbake ...' },
+            3: { emoji: '🐍', title: 'Sa Calobra', intro: 'Sa Calobra - Cobraen! Du skjønner det når vi er der. Obligatorisk for alle med Team Gåping på ryggen. Husk kamera (Trond).', tip: '💡 Coll dels Reis (800 moh) er enda tøffere enn selve Sa Calobra' },
+            4: { emoji: '⛪', title: 'Sant Salvador', intro: 'Sant Salvador er en liten, men sjarmerende landsby med en rik historie og en unik kultur.', tip: '💡 Vi kan likegreit ta med oss de andre klosterne på returen' },
+            5: { emoji: '🏪', title: 'Rapha, Palma', intro: 'Vi tar en rolig dag og avslutter turen på Cafe Rapha i Palma som sender Paris-Roubaix LIVE!', tip: '💡 Det blir fort mer en én pils her ... ' },
+        };
+
+        // Beskrivelse per rute — fyll inn tekst her
+        const ROUTE_DESC = {
+            'GGTM26_D1_A_Helios_Port_de_Soller_107km_1800hm.gpx': 'Sykkelturen går vestover, der landskapet går fra urbant til kupert og grønt. Herfra følger vi den spektakulære kystveien MA-10, som slynger seg langs dramatiske klipper og byr på utsikt over Middelhavet og klassiske fjellpartier helt til Port de Sóller.',
+            'GGTM26_D1_A_Port_de_Soller_Helios_87km_1500hm.gpx': 'Fra Port de Sóller tar vi MA-11A, en roligere og mer intim vei som slynger seg opp gjennom små dalfører før den kobler seg på det indre veinettet. Videre går turen vest igjen på Mallorcas mindre trafikkerte bakveier. Her passerer vi fjellandsbyen Galilea, med utsikt over sørkysten, før vi fortsetter til noen fine stigninger i skogkledd terreng, før nedkjøring tilbake.',
+            'GGTM26_D1_A2_Port_de_Soller_Helios(Puig Major)_98km_1300hm.gpx': 'Etter lunch fortsetter turen oppover mot øyas høyeste punkt, Puig Major, hvor lange, seige klatringer og raske utforkjøringer gir en skikkelig utfordring. Etter fjellpartiet går ruta ned mot innlandet og videre via Inca, kjent for mer flatt og raskt terreng, før vi sykler sørover gjennom åpne landskap og jordbruksområder, som blir en roligere avslutning tilbake mot hotellet.',
+            'GGTM26_D1_B_Helios_Port_de_Soller_66km_1000hm.gpx': 'Kortere og mer skånsom enn A-varianten, men med det samme klassiske formatet: nordvestover langs Tramuntana-foten med klatring opp Coll de sa Creu og de karakteristiske utsiktspunktene over Middelhavet. Ruten holder seg unna de tyngste fjellpassene og byr på en fin rytme hele veien inn til Port de Sóller.',
+            'GGTM26_D1_B1_Port_de_Soller_Helios_40km_500hm.gpx': 'En kort og effektiv retur gjennom de rolige dalstrøkene sør for Sóller, med lite stigning og god flyt. Veiene her er stille og pene — perfekt for bein som allerede har hatt sin del av dagen. Man kan også hoppe på det historiske tretoget gjennom fjelltunnelen og sykle den siste biten hjem.',
+            'GGTM26_D1_B2_Port_de_Soller_Helios_60km_1100hm.gpx': 'Returen fra Port de Sóller via MA-11A og de indre skogkledd dalene byr på noen overraskende seige stigninger, inkludert Coll de Sóller, før terrenget flater ut og vi krysser innlandet via rolige olivenlunder. En fin blanding av klatring og flatt som gir kroppen akkurat passe motstand på vei hjem.',
+            'GGTM26_D2_A_Cap_de_Formentor_Helios_108km_1100hm.gpx': 'Fra fyret ytterst på odden sykler vi sørover ned til Puerto Pollença og videre innover på Mallorcas flate østlige sletter. Turen er stort sett flat med godt tempo med en liten tur innom Puig de Randa — en velfortjent lettere hjemtur etter en tung formiddag.',
+            'GGTM26_D2_A_Helios_Cap_de_Formentor_108km_1930hm.gpx': 'Fra hotellet nordover gjennom Tramuntana med klatring over Coll de la Creu og videre ut på dramatiske Formentor-halvøyen, der veien slynger seg mellom bratte klipper og turkist hav. Med 1930 høydemeter er dette en av turens tyngste ruter — belønningen er utsikten fra fyret ytterst på odden med Middelhavet på alle kanter.',
+            'GGTM26_D2_B_Helios_Cap_de_Formentor_83km_1000hm.gpx': 'En kortere og mer tilgjengelig vei nordover til Cap de Formentor, primært gjennom innlandet og rolige veier frem til Puerto Pollença. Derfra tar vi Formentor-veien med de karakteristiske svingene og den dramatiske utsikten som belønning. Mindre høydemeter enn A-ruten, men samme wow-faktor ved målet.',
+            'GGTM26_D2_B1_Cap_de_Formentor_Helios_(tog)_40km_500hm.gpx': 'Etter lunsj sykler vi tilbake til Puerto Pollença og tar toget sørover til Inca, for deretter å sykle den siste biten hjem på kjente veier. En smart retur som sparer bena og gir god tid til å nyte resten av dagen etter formiddagens klatring.',
+            'GGTM26_D2_B2_Cap_de_Formentor_Helios_(tog)_60km_1100hm.gpx': 'Returen fra Formentor starter med sykling sørover gjennom Pollença-dalen og noen ekstra stigninger via rolige innlandsveier, før vi tar toget fra Inca tilbake mot hotellet. Med 60 km og 1100 hm er dette et godt B-alternativ som kombinerer sykkel og tog på en effektiv måte.',
+            'GGTM26_D3_A_Helios_Sa_Calobra_105km_1900hm.gpx': 'Fra hotellet nordover gjennom Tramuntana og opp Coll dels Reis (870 moh.) — Mallorcas mest kjente klatring. Ruten slynger seg gjennom dramatiske fjelllandskap og de ikoniske serpentinene på vei ned mot Sa Calobra og sjøen. Det finnes knapt et mer spektakulært mål på øya.',
+            'GGTM26_D3_A1_Helios_Sa_Calobra_105km_1900hm.gpx': 'En variant av A-ruten som tar en litt annen innfallsvinkel gjennom Tramuntana, men ender på samme punkt nede ved sjøen. Klatringen opp Coll dels Reis er like brutal uansett vei — den seige stigningen med utsikt over Puig Major og de ville kalksteinsformasjonene er et høydepunkt i seg selv.',
+            'GGTM26_D3_A_Sa_Calobra_Helios_100km_2300hm.gpx': 'Fra bunnen av Sa Calobra klatrer vi opp Coll dels Reis — 9 km med jevn stigning og det ikoniske Nus de sa Corbata-svingen der veien bukter seg under seg selv. Derfra returnerer vi via Tramuntana-ryggen med ytterligere fjellpass sørover. 2300 høydemeter totalt sier alt.',
+            'GGTM26_D3_B_Helios_Sa_Calobra_75km_1100hm.gpx': 'En kortere og mer tilgjengelig vei til Sa Calobra, der vi unngår de lengste innledende klatringene men likevel møter det uunngåelige: nedkjøringen gjennom de legendariske serpentinene til sjøen. Coll dels Reis er kortere å nå, men veien ned er alltid Sa Calobra på sitt mest dramatiske.',
+            'GGTM26_D3_B1_Sa_Calobra_Helios_70km_1000hm.gpx': 'Kompakt og effektiv retur fra Sa Calobra — vi klatrer opp Coll dels Reis og tar de mest direkte veiene sørover gjennom innlandet. 1000 høydemeter som sitter godt etter formiddagens kjøring, men tempoet holdes høyt og veiene er stort sett jevne og fine resten av veien hjem.',
+            'GGTM26_D3_B2_Sa_Calobra_Helios_90km_1500hm.gpx': 'En lengre retur fra Sa Calobra via et par ekstra omveier gjennom Tramuntana-dalen og ned i innlandet. Coll dels Reis er startpunktet, og deretter venter fine skogsveier og mer variasjon enn den korteste returen — 1500 hm belønner dem som vil ha litt mer i beina.',
+            'GGTM26_D4_A_Helios_Sant_Salvador_83km_900hm.gpx': 'Fra hotellet østover gjennom Mallorcas flate, fruktbare innland — et helt annet Mallorca enn Tramuntana. Terrenget er åpent og raskt frem til de siste stigningene opp mot Santuari de Sant Salvador, klosteret som troner på Puig de Sant Salvador (509 moh.) med panoramautsikt over hele østkysten.',
+            'GGTM26_D4_A_Sant_Salvador_Helios_96km_1050hm.gpx': 'Fra toppen av klosteret starter returen sørover og vestover gjennom det indre Mallorca, med noen klatrende omveier gjennom rolige fjellandsbyer og vinmarker. Coll de Randa og de lave åsene ved Llucmajor gir de siste høydemeterene før vi ruller inn mot hotellet.',
+            'GGTM26_D4_A1_Sant_Salvador_Helios_85km_600hm.gpx': 'En direkte og effektiv retur fra Sant Salvador via Mallorcas rolige østlige sletter. Veiene gjennom Felanitx, Campos og Llucmajor er flate og raske — lite stigning, mye fart. En fin avslutning for dem som foretrekker å rulle hjem etter klatringen til klosteret.',
+            'GGTM26_D4_B_Helios_Sant_Salvador_53km_650hm.gpx': 'Kortere og mer direkte rute østover mot Sant Salvador via de flate innlandsveiene i det sentrale Mallorca. Turen sparer de lengre innledende omveiene og lar bena bruke energi på det som teller: de siste stigningene opp til klosteret med den vakre utsikten over øyas østkyst.',
+            'GGTM26_D4_B_Sant_Salvador_Helios_55km_300hm.gpx': 'En nesten flat retur fra Sant Salvador vestover gjennom Mallorcas brede jordbrukslandskap. Veiene via Campos og Llucmajor er raske og lite krevende — kun 300 høydemeter gjør dette til turens roligste hjemtur og en god mulighet til å snurre beina lett etter formiddagens klatring.',
+            'GGTM26_D5_A_Helios_Rapha.gpx': 'Rolig dag med fokus på å nyte sykkelturen og den fantastiske atmosfæren i Palma. Vi starter med en rolig sykkeltur fra hotellet til Port de Andratx, hvor vi kan nyte en god lunsj og så tilbake til Cafe Rapha og følge Paris-Roubaix LIVE på storskjerm. Etterpå can de som ønsker ta en ekstra runde rundt i Palma for å utforske byen litt mer, eller bare slappe av og nyte stemningen.',
+            'GGTM26_D5_B_Helios_Rapha.gpx': 'Korteste veien til Port de Andratx, en rolig og fin sykkeltur langs kysten. Vi starter med en rolig sykkeltur fra hotellet til Port de Andratx, hvor vi kan nyte en god lunsj og så tilbake til Cafe Rapha og følge Paris-Roubaix LIVE på storskjerm. Etterpå can de som ønsker ta en ekstra runde rundt i Palma for å utforske byen litt mer, eller bare slappe av og nyte stemningen.',
+        };
+
+        function buildProfileSvg(dayId) {
+            const day = days.find(d => d.id === dayId);
+            if (!day || day.routes.length === 0) return '';
+            const { utRoute, hjemRoute } = getDayRoutesSorted(day);
+            const allPoints = [];
+            if (utRoute && utRoute.gpxPoints) allPoints.push(...utRoute.gpxPoints);
+            if (hjemRoute && hjemRoute.gpxPoints) allPoints.push(...hjemRoute.gpxPoints);
+            const eles = allPoints.map(p => p.ele).filter(e => e != null);
+            if (eles.length < 2) return '';
+            // Downsample to max 300 points
+            const step = Math.max(1, Math.floor(eles.length / 300));
+            const sampled = eles.filter((_, i) => i % step === 0);
+            const minE = Math.min(...sampled), maxE = Math.max(...sampled), range = maxE - minE || 1;
+            const W = 280, H = 50;
+            const pts = sampled.map((e, i) => {
+                const x = (i / (sampled.length - 1)) * W;
+                const y = H - ((e - minE) / range) * (H - 4);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+            return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:50px;display:block;margin-top:6px;margin-bottom:2px" preserveAspectRatio="none">
+                <polyline points="${pts}" fill="none" stroke="#4466bb" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>`;
+        }
+
+        function showDayInfo(dayId) {
+            const panel = document.getElementById('dayInfoPanel');
+            const inner = document.getElementById('dayInfoInner');
+            if (!panel || !inner) return;
+            const info = DAY_INFO[dayId];
+            if (!info) { hideDayInfo(); return; }
+            const day = days.find(d => d.id === dayId);
+            const { utRoute, hjemRoute } = day ? getDayRoutesSorted(day) : { utRoute: null, hjemRoute: null };
+
+            let routeDescs = '';
+            [utRoute, hjemRoute].forEach(r => {
+                if (!r) return;
+                const desc = ROUTE_DESC[r.fileName];
+                if (!desc) return;
+                routeDescs += `<div class="day-info-desc">${desc}</div>`;
+            });
+
+            const hasRouteDescs = routeDescs.length > 0;
+
+            inner.innerHTML = `
+                ${!hasRouteDescs && info.intro ? `<div class="day-info-desc">${info.intro}</div>` : ''}
+                ${routeDescs}
+                ${buildProfileSvg(dayId)}
+                <div class="day-info-tip">${info.tip}</div>
+            `;
+            panel.classList.remove('hiding');
+            panel.style.display = 'none';
+            void panel.offsetWidth;
+            panel.style.display = '';
+            panel.classList.add('visible');
+        }
+        window.hideDayInfo = function() {
+            const panel = document.getElementById('dayInfoPanel');
+            if (!panel || !panel.classList.contains('visible')) return;
+            panel.classList.remove('visible');
+            panel.classList.add('hiding');
+            panel.addEventListener('animationend', () => {
+                panel.classList.remove('hiding');
+                panel.style.display = 'none';
+                setTimeout(() => { panel.style.display = ''; }, 0);
+            }, { once: true });
+        };
+
+        function showSummaryInfo() {
+            const panel = document.getElementById('dayInfoPanel');
+            const inner = document.getElementById('dayInfoInner');
+            if (!panel || !inner) return;
+
+            let totalKm = 0, totalHm = 0;
+            let allOk = true;
+
+            let html = '';
+
+            days.forEach(day => {
+                const { utRoute, hjemRoute } = getDayRoutesSorted(day);
+                const { km, hm } = getDayStats(day);
+                const dayName = DAY_NAMES[day.id - 1];
+
+                totalKm += km;
+                totalHm += hm;
+
+                const hasUt = !!utRoute;
+                const hasHjem = !!hjemRoute;
+                if (!hasUt || !hasHjem) allOk = false;
+
+                html += `<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.1)">`;
+                html += `<div style="font-weight:700;font-size:0.82rem;color:#24243e;margin-bottom:3px">Dag ${day.id} — ${dayName}</div>`;
+
+                if (hasUt) {
+                    html += `<div style="font-size:0.73rem;color:#1a5c2a">${parseRouteDisplayName(utRoute.fileName)}</div>`;
+                } else {
+                    html += `<div style="font-size:0.73rem;color:#c0392b">⚠️ Mangler ut-rute</div>`;
+                }
+                if (hasHjem) {
+                    html += `<div style="font-size:0.73rem;color:#1a5c2a">${parseRouteDisplayName(hjemRoute.fileName)}</div>`;
+                } else {
+                    html += `<div style="font-size:0.73rem;color:#c0392b">⚠️ Mangler hjem-rute</div>`;
+                }
+                if (km > 0 || hm > 0) {
+                    html += `<div style="font-size:0.7rem;color:#555;margin-top:2px">${km.toFixed(1)} km · ⬆️ ${hm} m</div>`;
+                }
+                html += `</div>`;
+            });
+
+            if (totalKm > 0) {
+                html += `<div style="margin-top:4px;padding-top:6px;font-size:0.85rem;font-weight:700;color:#24243e;border-top:2px solid rgba(0,0,0,0.12)">`;
+                html += `Totalt: ${totalKm.toFixed(1)} km · ⬆️ ${totalHm} m</div>`;
+            }
+
+            if (allOk && totalKm > 0) {
+                html += `<div style="margin-top:8px;font-size:0.73rem;color:#27ae60;background:rgba(39,174,96,0.1);border-radius:6px;padding:6px 8px">✅ Alle dager er konfigurert!</div>`;
+            } else if (!allOk) {
+                html += `<div style="margin-top:8px;font-size:0.73rem;color:#c0392b;background:rgba(192,57,43,0.08);border-radius:6px;padding:6px 8px">⚠️ Noen dager mangler ruter. Bruk Program-menyen for å velge.</div>`;
+            } else {
+                html += `<div style="margin-top:8px;font-size:0.73rem;color:#666;background:rgba(0,0,0,0.05);border-radius:6px;padding:6px 8px">Ingen ruter valgt ennå. Bruk Program-menyen for å konfigurere turen din.</div>`;
+            }
+
+            inner.innerHTML = html;
+            panel.classList.remove('hiding');
+            panel.style.display = 'none';
+            void panel.offsetWidth;
+            panel.style.display = '';
+            panel.classList.add('visible');
+        }
 
         function saveToLocalStorage() {
             const data = days.map(day => ({
@@ -991,7 +1164,7 @@
             currentView = dayId;
             document.getElementById('navDropdown').classList.remove('open');
 
-            if (dayId === 'alle') {
+            if (dayId === 'alle' || dayId === 'sammendrag') {
                 days.forEach(day => {
                     day.routes.forEach(rId => {
                         const r = routes.find(x => x.id === rId);
@@ -1011,8 +1184,12 @@
             updateRouteColors();
             renderLeftPanel();
 
+            if (dayId === 'sammendrag') showSummaryInfo();
+            else if (dayId !== 'alle') showDayInfo(dayId);
+            else hideDayInfo();
+
             // Update weather for the selected day
-            if (dayId !== 'alle' && typeof DAY_DATES !== 'undefined' && DAY_DATES[dayId]) {
+            if (dayId !== 'alle' && dayId !== 'sammendrag' && typeof DAY_DATES !== 'undefined' && DAY_DATES[dayId]) {
                 fetchWeather(DAY_DATES[dayId]);
             }
         };
@@ -1100,6 +1277,10 @@
             const panel = document.getElementById('leftPanel');
             if (!panel) return;
 
+            if (currentView === 'sammendrag') {
+                panel.innerHTML = '';
+                return;
+            }
             if (currentView === 'alle') {
                 let html = '';
                 days.forEach(day => {
@@ -1848,7 +2029,7 @@
 
         // Initialize
         updateSidebar();
-        loadBundledRoutes();
+        loadBundledRoutes().then(() => switchDay('sammendrag'));
         renderLeftPanel();
         setTimeout(() => map.invalidateSize(), 50);
     </script>
@@ -3009,7 +3190,7 @@
 
             data.hourly.time.forEach((t, i) => {
                 const hour = parseInt(t.slice(11, 13));
-                if (hour < 6 || hour > 21) return;
+                if (![8,9,10,11,12,14,15,16,17,18,20].includes(hour)) return;
                 const temp = Math.round(data.hourly.temperature_2m[i]);
                 const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
                 const dir = windDir(data.hourly.winddirection_10m[i]);
@@ -3025,6 +3206,19 @@
                     ${precip > 0 ? `<div style="color:#6af;font-size:0.65rem">${precip.toFixed(1)}mm</div>` : ''}
                 `;
                 container.appendChild(cell);
+
+                if (hour === 12) {
+                    const lunch = document.createElement('div');
+                    lunch.style.cssText = 'text-align:center;min-width:48px;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:6px;padding:4px 5px;';
+                    lunch.innerHTML = `
+                        <div style="color:#c8a000;font-size:0.7rem">lunch</div>
+                        <div style="font-size:1.2rem">🍺</div>
+                        <div style="font-weight:bold;color:#ffe066;font-size:0.82rem">0.5‰</div>
+                        <div style="color:#c8a000;font-size:0.68rem">1f/t</div>
+                        <div style="color:#c8a000;font-size:0.65rem">50cl</div>
+                    `;
+                    container.appendChild(lunch);
+                }
             });
             if (container.children.length <= 1) container.innerHTML = '<span style="color:#aaa;padding:0 8px;font-size:0.72rem">Ingen data</span>';
         } catch(e) {
