@@ -3,7 +3,7 @@
 const GPX_DAY_SLUGS  = ['PortdeSoller', 'CapdeFormentor', 'SaCalobra', 'SantSalvador'];
 const GPX_DAY_PLACES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
 
-function buildDayGPX(dayId, dayRoutes, dayInfo, device) {
+function buildDayGPX(dayId, dayRoutes, dayInfo, device, tripDate) {
     const slug  = GPX_DAY_SLUGS[dayId - 1]  || `Dag${dayId}`;
     const place = GPX_DAY_PLACES[dayId - 1] || `Dag ${dayId}`;
     const desc  = dayInfo ? dayInfo.intro : '';
@@ -11,12 +11,22 @@ function buildDayGPX(dayId, dayRoutes, dayInfo, device) {
     const generated = new Date().toISOString();
     const creator = `Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for ${device}`;
 
-    let trkpts = '';
     let allPoints = [];
     dayRoutes.forEach(route => { if (route.gpxPoints) allPoints = allPoints.concat(route.gpxPoints); });
-    allPoints.forEach(point => {
+
+    // Synthetic timestamps: start 08:00 local (06:00 UTC) on the trip date, spread over 6h
+    const startMs = tripDate
+        ? new Date(`${tripDate}T06:00:00Z`).getTime()
+        : Date.now();
+    const durationMs = 6 * 3600 * 1000;
+    const n = allPoints.length;
+
+    let trkpts = '';
+    allPoints.forEach((point, i) => {
+        const t = new Date(startMs + (n > 1 ? (i / (n - 1)) * durationMs : 0)).toISOString();
         trkpts += `      <trkpt lat="${point.lat}" lon="${point.lon}">`;
         if (point.ele !== null && point.ele !== undefined) trkpts += `<ele>${point.ele}</ele>`;
+        trkpts += `<time>${t}</time>`;
         trkpts += `</trkpt>\n`;
     });
 

@@ -389,6 +389,7 @@
         window.sendDayToStrava = function(dayId) {
             const day = days.find(d => d.id === dayId);
             if (!day || day.routes.length === 0) { alert('Velg ruter for dagen først.'); return; }
+            if (!confirm('Ruten lastes opp til Strava som en privat aktivitet (ikke rute).\n\nDu kan konvertere den til rute manuelt inne på Strava etterpå.\n\nFortsette?')) return;
             const redirectUri = location.origin + location.pathname.replace(/[^/]*$/, '') + 'strava-callback.html';
             const params = new URLSearchParams({
                 client_id: STRAVA_CLIENT_ID,
@@ -438,7 +439,8 @@
                 if (!day) throw new Error(`Dag ${dayId} ikke funnet`);
                 const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(Boolean);
                 if (dayRoutes.length === 0) throw new Error('Ingen ruter valgt for dag ' + dayId);
-                const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Strava');
+                const tripDate = (typeof DAY_DATES !== 'undefined') ? DAY_DATES[dayId] : null;
+                const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Strava', tripDate);
 
                 const form = new FormData();
                 form.append('file', new Blob([content], { type: 'application/gpx+xml' }), fileName);
@@ -3187,63 +3189,9 @@
         95:'⛈️', 96:'⛈️', 99:'⛈️'
     };
 
-    // April Fools fake weather — only shown on 2026-04-01
-    function renderFakeWeather(container, date) {
-        container.innerHTML = '';
-        const MONTHS_NO = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
-        const [, , dd] = date.split('-');
-        const monthIdx = parseInt(date.split('-')[1]) - 1;
-        const label = document.createElement('div');
-        label.style.cssText = 'color:#f66;font-size:0.68rem;white-space:nowrap;padding:0 6px 0 2px;align-self:center;opacity:0.9;';
-        label.textContent = `${parseInt(dd)}. ${MONTHS_NO[monthIdx]}`;
-        container.appendChild(label);
-
-        const badHours = [
-            { h:8,  t:7,  code:65, wind:18, dir:220, precip:3.4 },
-            { h:9,  t:7,  code:65, wind:22, dir:215, precip:4.8 },
-            { h:10, t:6,  code:63, wind:25, dir:210, precip:6.1 },
-            { h:11, t:6,  code:63, wind:27, dir:205, precip:7.2 },
-            { h:12, t:5,  code:63, wind:29, dir:200, precip:8.0 },
-            // lunch
-            { h:14, t:5,  code:65, wind:31, dir:195, precip:9.5 },
-            { h:15, t:4,  code:65, wind:33, dir:190, precip:10.8 },
-            { h:16, t:4,  code:67, wind:35, dir:185, precip:12.2 },
-            { h:17, t:3,  code:67, wind:37, dir:180, precip:13.6 },
-            { h:18, t:3,  code:67, wind:38, dir:178, precip:14.1 },
-            { h:20, t:-13, code:65, wind:68, dir:310, precip:28.8 },
-        ];
-
-        badHours.forEach(({ h, t, code, wind, dir, precip }) => {
-            if (h === 12) {
-                const lunch = document.createElement('div');
-                lunch.style.cssText = 'text-align:center;min-width:48px;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:6px;padding:4px 5px;';
-                lunch.innerHTML = `<div style="color:#c8a000;font-size:0.7rem">lunch</div><div style="font-size:1.2rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.82rem">0.5‰</div><div style="color:#c8a000;font-size:0.68rem">1f/t</div><div style="color:#c8a000;font-size:0.65rem">50cl</div>`;
-                container.appendChild(lunch);
-            }
-            const emoji = WMO_EMOJI[code] || '❄️';
-            const cell = document.createElement('div');
-            cell.style.cssText = 'text-align:center;min-width:48px;background:#200a0a;border-radius:6px;padding:4px 5px;border:1px solid rgba(255,50,50,0.15);';
-            cell.innerHTML = `
-                <div style="color:#cc6666;font-size:0.7rem">${h.toString().padStart(2,'0')}:00</div>
-                <div style="font-size:1.2rem">${emoji}</div>
-                <div style="font-weight:bold;color:#ff8888;font-size:0.82rem">${t}°</div>
-                <div style="color:#c88;font-size:0.68rem">${wind}m/s ${windDir(dir)}</div>
-                <div style="color:#f88;font-size:0.65rem">${precip.toFixed(1)}mm</div>
-            `;
-            container.appendChild(cell);
-        });
-    }
-
     window.fetchWeather = async function(date) {
         const container = document.getElementById('weatherHours');
         if (!container) return;
-
-        // April Fools: show fake terrible weather today only
-        const today = new Date().toISOString().slice(0, 10);
-        if (today === '2026-04-01') {
-            renderFakeWeather(container, date);
-            return;
-        }
 
         container.innerHTML = '<span style="color:#666;font-size:0.72rem;padding:0 8px">Laster…</span>';
         try {

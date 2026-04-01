@@ -1797,48 +1797,11 @@ routesContainer.innerHTML = `
     }
     const weatherLoaded = new Set();
 
-    function renderFakeWeatherM(container) {
-        container.innerHTML = '';
-        const badHours = [
-            { h:8,  t:7,  code:65, wind:18, dir:220, precip:3.4 },
-            { h:10, t:6,  code:63, wind:25, dir:210, precip:6.1 },
-            { h:12, t:5,  code:63, wind:29, dir:200, precip:8.0 },
-            { h:14, t:5,  code:65, wind:31, dir:195, precip:9.5 },
-            { h:16, t:4,  code:67, wind:35, dir:185, precip:12.2 },
-        ];
-        badHours.forEach(({ h, t, code, wind, dir, precip }) => {
-            if (h === 12) {
-                const lunch = document.createElement('div');
-                lunch.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:5px;padding:2px 4px;';
-                lunch.innerHTML = `<div style="color:#c8a000;font-size:0.6rem">lunch</div><div style="font-size:1rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.75rem">0.5‰</div><div style="color:#c8a000;font-size:0.56rem">1f/t</div><div style="color:#c8a000;font-size:0.55rem">50cl</div>`;
-                container.appendChild(lunch);
-            }
-            const emoji = WMO_EMOJI_M[code] || '🌧️';
-            const cell = document.createElement('div');
-            cell.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#200a0a;border-radius:5px;padding:2px 4px;border:1px solid rgba(255,50,50,0.15);';
-            cell.innerHTML = `
-                <div style="color:#cc6666;font-size:0.6rem">${h.toString().padStart(2,'0')}:00</div>
-                <div style="font-size:1rem">${emoji}</div>
-                <div style="font-weight:bold;color:#ff8888;font-size:0.75rem">${t}°</div>
-                <div style="color:#c88;font-size:0.56rem">${wind}m/s ${windDirM(dir)}</div>
-                <div style="color:#f88;font-size:0.55rem">${precip.toFixed(1)}mm</div>
-            `;
-            container.appendChild(cell);
-        });
-    }
-
     window.fetchWeatherMobile = async function(dayNum) {
         if (weatherLoaded.has(dayNum)) return; // Already loaded
         const date = DAY_DATES_M[dayNum] || DAY_DATES_M[1];
         const container = document.getElementById(`weatherDay${dayNum}`);
         if (!container) return;
-
-        const today = new Date().toISOString().slice(0, 10);
-        if (today === '2026-04-01') {
-            renderFakeWeatherM(container);
-            weatherLoaded.add(dayNum);
-            return;
-        }
 
         container.innerHTML = '<span style="color:#555;font-size:0.75rem">Laster…</span>';
         const [, , dd] = date.split('-');
