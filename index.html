@@ -544,11 +544,8 @@
                 ${buildProfileSvg(dayId)}
                 <div class="day-info-tip">${info.tip}</div>
             `;
-            panel.classList.remove('hiding');
-            panel.style.display = 'none';
-            void panel.offsetWidth;
-            panel.style.display = '';
-            panel.classList.add('visible');
+            panel.classList.remove('hiding', 'visible');
+            requestAnimationFrame(() => panel.classList.add('visible'));
         }
         window.hideDayInfo = function() {
             const panel = document.getElementById('dayInfoPanel');
@@ -556,9 +553,7 @@
             panel.classList.remove('visible');
             panel.classList.add('hiding');
             panel.addEventListener('animationend', () => {
-                panel.classList.remove('hiding');
-                panel.style.display = 'none';
-                setTimeout(() => { panel.style.display = ''; }, 0);
+                panel.classList.remove('hiding', 'visible');
             }, { once: true });
         };
 
@@ -567,11 +562,8 @@
             const inner = document.getElementById('dayInfoInner');
             if (!panel || !inner) return;
             inner.innerHTML = html;
-            panel.classList.remove('hiding');
-            panel.style.display = 'none';
-            void panel.offsetWidth;
-            panel.style.display = '';
-            panel.classList.add('visible');
+            panel.classList.remove('hiding', 'visible');
+            requestAnimationFrame(() => panel.classList.add('visible'));
         }
 
         function showStartPanel() {
@@ -1274,6 +1266,9 @@
             if (dayId !== 'alle' && dayId !== 'sammendrag' && typeof DAY_DATES !== 'undefined' && DAY_DATES[dayId]) {
                 fetchWeather(DAY_DATES[dayId]);
             }
+
+            // Re-enable scroll wheel zoom — panel reflow can sometimes disable it
+            setTimeout(() => { if (map.scrollWheelZoom) map.scrollWheelZoom.enable(); }, 50);
         };
 
 

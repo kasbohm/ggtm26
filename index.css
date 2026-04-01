@@ -433,10 +433,16 @@ body {
     pointer-events: none;
     box-shadow: 0 10px 32px rgba(0,0,0,0.45);
     position: relative;
-    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
 }
 .day-info-panel.visible {
-    display: block;
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+    padding: 0.85rem 1rem 0.9rem;
     animation: flipDown 0.55s ease-out forwards;
     pointer-events: all;
 }
