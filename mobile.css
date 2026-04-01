@@ -41,7 +41,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     min-height: 46px;
-    align-items: center;
+    align-items: flex-start;
 }
 .weather-hours-mobile::-webkit-scrollbar { display: none; }
 
@@ -234,13 +234,17 @@ body {
     display: flex;
     height: 100%;
     transition: transform 0.3s;
+    align-items: stretch;
 }
 
 .day-card {
     min-width: 100%;
+    width: 100%;
     padding: 10px 10px;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .day-header {
@@ -294,26 +298,29 @@ body {
 
 .day-routes {
     display: flex;
-    gap: 8px;
-    overflow-x: auto;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
     flex: 1;
-    margin-top: 8px;
+    margin-top: 4px;
+    scrollbar-width: none;
 }
+.day-routes::-webkit-scrollbar { display: none; }
 
 /* ===== ROUTE TIMELINE ===== */
 .route-timeline {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
 }
 
 .route-leg {
     display: flex;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 6px 10px;
     background: rgba(255, 255, 255, 0.05);
-    border-left: 4px solid;
+    border-left: 3px solid;
     border-radius: 6px;
 }
 
@@ -358,16 +365,90 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* ===== NEW SLIDE STRUCTURE ===== */
+.day-title-small {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #c084fc;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
+}
+
+.day-stats-inline {
+    font-size: 0.7rem;
+    color: #ffaa00;
+}
+
+.day-menu {
+    display: flex;
+    gap: 4px;
+    padding-top: 5px;
+    flex-shrink: 0;
+}
+
+.dmenu-btn {
+    flex: 1;
+    padding: 5px 2px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 245, 255, 0.35);
+    background: rgba(0, 245, 255, 0.08);
+    color: #00f5ff;
+    font-size: 0.68rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    transition: background 0.15s;
+    text-align: center;
+}
+
+.dmenu-btn:active {
+    background: rgba(0, 245, 255, 0.22);
+}
+
+.dmenu-btn.dmenu-dl {
+    border-color: rgba(0, 255, 136, 0.35);
+    background: rgba(0, 255, 136, 0.08);
+    color: #00ff88;
+}
+
+.dmenu-btn.dmenu-info {
+    border-color: rgba(255, 170, 0, 0.35);
+    background: rgba(255, 170, 0, 0.08);
+    color: #ffaa00;
+}
+
+.info-card {
+    overflow: hidden;
+}
+
+.info-card-back {
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.info-card-inner {
+    flex: 1;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.55;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 245, 255, 0.25) transparent;
+    padding-bottom: 8px;
+}
+
 /* ===== DAY DOTS ===== */
 .day-dots {
     display: flex;
     justify-content: center;
     gap: 8px;
-    position: absolute;
-    bottom: 8px;
+    position: fixed;
+    bottom: 288px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 100;
 }
 
 .dot {

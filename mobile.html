@@ -71,85 +71,118 @@
         </div>
     </div>
     
+    <!-- Slide indicators overlaid on map -->
+    <div class="day-dots" id="dayDots">
+        <div class="dot active" onclick="goToDay(0)">📊</div>
+        <div class="dot" onclick="goToDay(1)">1</div>
+        <div class="dot" onclick="goToDay(2)">2</div>
+        <div class="dot" onclick="goToDay(3)">3</div>
+        <div class="dot" onclick="goToDay(4)">4</div>
+    </div>
+
     <!-- Day Swiper -->
     <div class="day-swiper">
         <div class="day-cards" id="dayCards">
-            <!-- Summary Slide -->
-            <div class="day-card summary-card" style="border-top: 4px solid #ff00ff;">
+
+            <!-- Slide 0: Summary -->
+            <div class="day-card summary-card" style="border-top: 4px solid #ff00ff; overflow-y: auto;">
                 <div class="summary-brand">
                     <div class="summary-brand-title">🌴 Team Gåpings Mallorca Getaway Semi-Automatic Online Configurator for Handheld Terminal</div>
                     <div class="summary-brand-sub">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</div>
                 </div>
                 <div class="summary-grid" id="summaryGrid">
-                    <div class="summary-stat">
-                        <span class="summary-stat-value" id="totalDays">0</span>
-                        <span class="summary-stat-label"> dager</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span class="summary-stat-value" id="totalRoutes">0</span>
-                        <span class="summary-stat-label"> ruter</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span class="summary-stat-value" id="totalKm">0</span>
-                        <span class="summary-stat-label"> km</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span class="summary-stat-value" id="totalHm">0</span>
-                        <span class="summary-stat-label"> hm</span>
-                    </div>
+                    <div class="summary-stat"><span class="summary-stat-value" id="totalDays">0</span><span class="summary-stat-label"> dager</span></div>
+                    <div class="summary-stat"><span class="summary-stat-value" id="totalRoutes">0</span><span class="summary-stat-label"> ruter</span></div>
+                    <div class="summary-stat"><span class="summary-stat-value" id="totalKm">0</span><span class="summary-stat-label"> km</span></div>
+                    <div class="summary-stat"><span class="summary-stat-value" id="totalHm">0</span><span class="summary-stat-label"> hm</span></div>
                 </div>
-                <div id="summaryRouteList" style="margin-top: 6px; overflow-y: auto; flex: 1;"></div>
+                <div id="summaryRouteList" style="margin-top:6px;flex:1;"></div>
             </div>
 
-            <!-- Dag 1 -->
+            <!-- Slide 1: Dag 1 -->
             <div class="day-card" style="border-top: 4px solid #e74c3c;">
                 <div class="day-header">
-                    <span class="day-title">Dag 1 — Port de Soller</span>
+                    <span class="day-title-small">Dag 1 — Port de Soller</span>
+                    <span class="day-stats-inline" id="day1stats"></span>
                 </div>
                 <div class="day-weather"><div id="weatherDay1" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
-                <div class="day-stats" id="day1stats"></div>
                 <div class="day-routes" id="day1routes"></div>
-                <div class="day-info-mobile" id="dayInfo1"></div>
+                <div class="day-menu">
+                    <button class="dmenu-btn" onclick="openRouteSelector(1)">Velg</button>
+                    <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(1)" id="dlBtn1">Last ned</button>
+                    <button class="dmenu-btn" onclick="showElevationProfile(0)">Profil</button>
+                    <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(1)">Info ›</button>
+                </div>
             </div>
-            <!-- Dag 2 -->
+            <!-- Slide 2: Info 1 -->
+            <div class="day-card info-card" style="border-top: 4px solid #e74c3c;">
+                <div class="info-card-back"><button class="dmenu-btn" onclick="goToSlide(1)">‹ Dag 1</button></div>
+                <div class="info-card-inner" id="infoCard1"></div>
+            </div>
+
+            <!-- Slide 3: Dag 2 -->
             <div class="day-card" style="border-top: 4px solid #3498db;">
                 <div class="day-header">
-                    <span class="day-title">Dag 2 — Cap de Formentor</span>
+                    <span class="day-title-small">Dag 2 — Cap de Formentor</span>
+                    <span class="day-stats-inline" id="day2stats"></span>
                 </div>
                 <div class="day-weather"><div id="weatherDay2" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
-                <div class="day-stats" id="day2stats"></div>
                 <div class="day-routes" id="day2routes"></div>
-                <div class="day-info-mobile" id="dayInfo2"></div>
+                <div class="day-menu">
+                    <button class="dmenu-btn" onclick="openRouteSelector(2)">Velg</button>
+                    <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(2)" id="dlBtn2">Last ned</button>
+                    <button class="dmenu-btn" onclick="showElevationProfile(1)">Profil</button>
+                    <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(2)">Info ›</button>
+                </div>
+            </div>
+            <!-- Slide 4: Info 2 -->
+            <div class="day-card info-card" style="border-top: 4px solid #3498db;">
+                <div class="info-card-back"><button class="dmenu-btn" onclick="goToSlide(3)">‹ Dag 2</button></div>
+                <div class="info-card-inner" id="infoCard2"></div>
             </div>
 
-            <!-- Dag 3 -->
+            <!-- Slide 5: Dag 3 -->
             <div class="day-card" style="border-top: 4px solid #2ecc71;">
                 <div class="day-header">
-                    <span class="day-title">Dag 3 — Sa Calobra</span>
+                    <span class="day-title-small">Dag 3 — Sa Calobra</span>
+                    <span class="day-stats-inline" id="day3stats"></span>
                 </div>
                 <div class="day-weather"><div id="weatherDay3" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
-                <div class="day-stats" id="day3stats"></div>
                 <div class="day-routes" id="day3routes"></div>
-                <div class="day-info-mobile" id="dayInfo3"></div>
+                <div class="day-menu">
+                    <button class="dmenu-btn" onclick="openRouteSelector(3)">Velg</button>
+                    <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(3)" id="dlBtn3">Last ned</button>
+                    <button class="dmenu-btn" onclick="showElevationProfile(2)">Profil</button>
+                    <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(3)">Info ›</button>
+                </div>
+            </div>
+            <!-- Slide 6: Info 3 -->
+            <div class="day-card info-card" style="border-top: 4px solid #2ecc71;">
+                <div class="info-card-back"><button class="dmenu-btn" onclick="goToSlide(5)">‹ Dag 3</button></div>
+                <div class="info-card-inner" id="infoCard3"></div>
             </div>
 
-            <!-- Dag 4 -->
+            <!-- Slide 7: Dag 4 -->
             <div class="day-card" style="border-top: 4px solid #f39c12;">
                 <div class="day-header">
-                    <span class="day-title">Dag 4 — Sant Salvador</span>
+                    <span class="day-title-small">Dag 4 — Sant Salvador</span>
+                    <span class="day-stats-inline" id="day4stats"></span>
                 </div>
                 <div class="day-weather"><div id="weatherDay4" class="weather-hours-mobile"><span style="color:#444;font-size:0.7rem">—</span></div></div>
-                <div class="day-stats" id="day4stats"></div>
                 <div class="day-routes" id="day4routes"></div>
-                <div class="day-info-mobile" id="dayInfo4"></div>
+                <div class="day-menu">
+                    <button class="dmenu-btn" onclick="openRouteSelector(4)">Velg</button>
+                    <button class="dmenu-btn dmenu-dl" onclick="downloadDayGPX(4)" id="dlBtn4">Last ned</button>
+                    <button class="dmenu-btn" onclick="showElevationProfile(3)">Profil</button>
+                    <button class="dmenu-btn dmenu-info" onclick="goToInfoSlide(4)">Info ›</button>
+                </div>
             </div>
-        </div>
-        <div class="day-dots" id="dayDots">
-            <div class="dot active" onclick="goToDay(0)">📊</div>
-            <div class="dot" onclick="goToDay(1)">1</div>
-            <div class="dot" onclick="goToDay(2)">2</div>
-            <div class="dot" onclick="goToDay(3)">3</div>
-            <div class="dot" onclick="goToDay(4)">4</div>
+            <!-- Slide 8: Info 4 -->
+            <div class="day-card info-card" style="border-top: 4px solid #f39c12;">
+                <div class="info-card-back"><button class="dmenu-btn" onclick="goToSlide(7)">‹ Dag 4</button></div>
+                <div class="info-card-inner" id="infoCard4"></div>
+            </div>
+
         </div>
     </div>
     
@@ -401,7 +434,23 @@
             URL.revokeObjectURL(url);
         }
         
-        let map, currentDay = 0;
+        let map, currentDay = 0, modalDayNum = 1;
+
+        function effectiveDay() {
+            return currentDay === 0 ? 0 : Math.ceil(currentDay / 2);
+        }
+
+        function goToSlide(n) {
+            currentDay = n;
+            updateSwiper();
+            const eff = effectiveDay();
+            if (eff > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(eff);
+        }
+
+        function goToInfoSlide(dayNum) {
+            currentDay = dayNum * 2;
+            updateSwiper();
+        }
         
         // Init map
         map = L.map('map').setView([39.6, 2.9], 10);
@@ -424,60 +473,45 @@
         const swiper = document.querySelector('.day-swiper');
         const cards = document.getElementById('dayCards');
         
-        console.log('🎯 SWIPE SETUP:', { swiper: !!swiper, cards: !!cards });
-        
         swiper.addEventListener('touchstart', e => {
             startX = e.touches[0].clientX;
-            console.log('👆 TOUCHSTART at', startX);
         });
-        
+
         swiper.addEventListener('touchend', e => {
             const endX = e.changedTouches[0].clientX;
             const diff = startX - endX;
-            console.log('🏁 TOUCHEND:', { start: startX, end: endX, diff, currentDay });
-
-            if (Math.abs(diff) < 50) {
-                console.log('❌ Too short');
-                return;
-            }
-
-            if (diff > 0 && currentDay < 4) {
+            if (Math.abs(diff) < 50) return;
+            if (diff > 0 && currentDay < 8) {
                 currentDay++;
-                console.log('➡️ Next day:', currentDay);
             } else if (diff < 0 && currentDay > 0) {
                 currentDay--;
-                console.log('⬅️ Prev day:', currentDay);
             }
             updateSwiper();
-            if (currentDay > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(currentDay);
+            const eff = effectiveDay();
+            if (eff > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(eff);
         });
         
-        function goToDay(dayIndex) {
-            console.log('🎯 goToDay:', currentDay, '→', dayIndex);
-            currentDay = dayIndex;
+        function goToDay(dotIdx) {
+            const slideForDot = [0, 1, 3, 5, 7];
+            currentDay = slideForDot[dotIdx] || 0;
             updateSwiper();
-            if (dayIndex > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(dayIndex);
+            const eff = effectiveDay();
+            if (eff > 0 && typeof fetchWeatherMobile !== 'undefined') fetchWeatherMobile(eff);
         }
         
         function updateSwiper() {
-            console.log('🔄 updateSwiper - currentDay:', currentDay);
             cards.style.transform = `translateX(-${currentDay * 100}%)`;
+            const dotIdx = effectiveDay();
             const dots = document.querySelectorAll('.dot');
-            console.log('🔍 Found dots:', dots.length);
-            dots.forEach((dot, i) => {
-                const isActive = i === currentDay;
-                dot.classList.toggle('active', isActive);
-                console.log(`  Dot ${i}: ${isActive ? 'ACTIVE' : 'inactive'}`);
-            });
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === dotIdx));
             highlightedRouteId = null;
-
             updateMapVisibility();
-            console.log('✅ updateSwiper complete');
         }
         
         function updateMapVisibility() {
-            // Summary slide (currentDay === 0): vis alle valgte ruter
-            if (currentDay === 0) {
+            const eff = effectiveDay();
+            // Summary slide (eff === 0): vis alle valgte ruter
+            if (eff === 0) {
                 const allSelectedIds = new Set(days.flatMap(d => d.routes));
                 routes.forEach(route => {
                     const isSelected = allSelectedIds.has(route.id);
@@ -501,7 +535,7 @@
                 return;
             }
 
-            const dayIndex = currentDay - 1; // Dag 1 = index 0
+            const dayIndex = eff - 1; // Dag 1 = index 0
             const day = days[dayIndex];
             const selectedRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(r => r);
 
@@ -540,21 +574,20 @@
             }
         }
         
-        function openRouteSelector() {
-            if (currentDay === 0) return;
+        function openRouteSelector(dayNum) {
+            modalDayNum = dayNum || (effectiveDay() > 0 ? effectiveDay() : 1);
 
             const modal = document.getElementById('routeModal');
             const selector = document.getElementById('routeSelector');
-            const dayNum = currentDay;
-            const dayIndex = currentDay - 1;
+            const dayIndex = modalDayNum - 1;
             const day = days[dayIndex];
             const dayNames = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
-            document.getElementById('modalDayTitle').textContent = `Dag ${dayNum} — ${dayNames[dayNum-1]}`;
+            document.getElementById('modalDayTitle').textContent = `Dag ${modalDayNum} — ${dayNames[modalDayNum-1]}`;
 
             const bundledDayRoutes = routes.filter(r => {
                 if (!r.isBundled) return false;
                 const match = r.fileName.match(/GGTM26_D(\d+)_/);
-                return match && parseInt(match[1]) === dayNum;
+                return match && parseInt(match[1]) === modalDayNum;
             });
 
             bundledDayRoutes.forEach(route => {
@@ -668,8 +701,7 @@
             const selected = Array.from(document.querySelectorAll('.route-option input:checked'))
                 .map(cb => parseInt(cb.id.split('-')[1]));
 
-            const dayIndex = currentDay - 1;
-            days[dayIndex].routes = selected;
+            days[modalDayNum - 1].routes = selected;
 
             saveToLocalStorage(); // 🔥 LEGG TIL DENNE
 
@@ -771,9 +803,9 @@ if (!dayRoutes.length) {
   routesContainer.innerHTML = `
     <div class="mobile-slots">
       <div class="mobile-slot-label">🏨 Fra hotellet</div>
-      <div class="day-slot-mobile empty" onclick="openRouteSelector()">+ Velg rute</div>
+      <div class="day-slot-mobile empty" onclick="openRouteSelector(${idx+1})">+ Velg rute</div>
       <div class="mobile-slot-label">🏠 Tilbake</div>
-      <div class="day-slot-mobile empty" onclick="openRouteSelector()">+ Velg rute</div>
+      <div class="day-slot-mobile empty" onclick="openRouteSelector(${idx+1})">+ Velg rute</div>
     </div>`;
   return;
 }
@@ -1733,7 +1765,7 @@ routesContainer.innerHTML = `
     }
 
     function updateDayInfoMobile(dayId, dayRoutes) {
-        const el = document.getElementById(`dayInfo${dayId}`);
+        const el = document.getElementById(`infoCard${dayId}`);
         if (!el) return;
         const info = DAY_INFO_M[dayId];
         if (!info) { el.innerHTML = ''; return; }
@@ -1741,13 +1773,13 @@ routesContainer.innerHTML = `
         let descs = '';
         dayRoutes.forEach(r => {
             const d = ROUTE_DESC_M[r.fileName];
-            if (d) descs += `<p style="margin:0 0 6px">${d}</p>`;
+            if (d) descs += `<p style="margin:0 0 8px">${d}</p>`;
         });
 
         const showIntro = !descs && info.intro;
         el.innerHTML = `
-            ${showIntro ? `<p style="margin:0 0 6px">${info.intro}</p>` : descs}
-            <div style="font-size:0.65rem;color:#c8a000;border-top:1px solid rgba(200,160,0,0.2);padding-top:5px;margin-top:2px">${info.tip}</div>
+            ${showIntro ? `<p style="margin:0 0 8px">${info.intro}</p>` : descs}
+            <div style="font-size:0.65rem;color:#c8a000;border-top:1px solid rgba(200,160,0,0.2);padding-top:5px;margin-top:4px">${info.tip}</div>
         `;
     }
     </script>
@@ -1771,11 +1803,50 @@ routesContainer.innerHTML = `
         return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg/45)%8];
     }
     const weatherLoaded = new Set();
+
+    function renderFakeWeatherM(container) {
+        container.innerHTML = '';
+        const badHours = [
+            { h:8,  t:7,  code:65, wind:18, dir:220, precip:3.4 },
+            { h:10, t:6,  code:63, wind:25, dir:210, precip:6.1 },
+            { h:12, t:5,  code:63, wind:29, dir:200, precip:8.0 },
+            { h:14, t:5,  code:65, wind:31, dir:195, precip:9.5 },
+            { h:16, t:4,  code:67, wind:35, dir:185, precip:12.2 },
+        ];
+        badHours.forEach(({ h, t, code, wind, dir, precip }) => {
+            if (h === 12) {
+                const lunch = document.createElement('div');
+                lunch.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:5px;padding:2px 4px;';
+                lunch.innerHTML = `<div style="color:#c8a000;font-size:0.6rem">lunch</div><div style="font-size:1rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.75rem">0.5‰</div><div style="color:#c8a000;font-size:0.56rem">1f/t</div><div style="color:#c8a000;font-size:0.55rem">50cl</div>`;
+                container.appendChild(lunch);
+            }
+            const emoji = WMO_EMOJI_M[code] || '🌧️';
+            const cell = document.createElement('div');
+            cell.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#200a0a;border-radius:5px;padding:2px 4px;border:1px solid rgba(255,50,50,0.15);';
+            cell.innerHTML = `
+                <div style="color:#cc6666;font-size:0.6rem">${h.toString().padStart(2,'0')}:00</div>
+                <div style="font-size:1rem">${emoji}</div>
+                <div style="font-weight:bold;color:#ff8888;font-size:0.75rem">${t}°</div>
+                <div style="color:#c88;font-size:0.56rem">${wind}m/s ${windDirM(dir)}</div>
+                <div style="color:#f88;font-size:0.55rem">${precip.toFixed(1)}mm</div>
+            `;
+            container.appendChild(cell);
+        });
+    }
+
     window.fetchWeatherMobile = async function(dayNum) {
         if (weatherLoaded.has(dayNum)) return; // Already loaded
         const date = DAY_DATES_M[dayNum] || DAY_DATES_M[1];
         const container = document.getElementById(`weatherDay${dayNum}`);
         if (!container) return;
+
+        const today = new Date().toISOString().slice(0, 10);
+        if (today === '2026-04-01') {
+            renderFakeWeatherM(container);
+            weatherLoaded.add(dayNum);
+            return;
+        }
+
         container.innerHTML = '<span style="color:#555;font-size:0.75rem">Laster…</span>';
         const [, , dd] = date.split('-');
         const monthIdx = parseInt(date.split('-')[1]) - 1;
