@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strava — GGTM26</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0f0c29;
+            color: #d0d0d0;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+        }
+        .strava-logo {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .status {
+            font-size: 0.95rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        .status.ok { color: #27ae60; }
+        .status.err { color: #e74c3c; }
+        .close-btn {
+            background: #FC4C02;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+        }
+        .close-btn:hover { background: #e04302; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="strava-logo">🟠</div>
+        <div class="status" id="status">Kobler til Strava…</div>
+        <button class="close-btn" id="closeBtn" onclick="window.close()">Lukk vindu</button>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const closeBtn = document.getElementById('closeBtn');
+
+        const p = new URLSearchParams(location.search);
+        const code = p.get('code');
+        const state = p.get('state') || '';
+        const error = p.get('error');
+
+        if (error) {
+            statusEl.textContent = 'Strava-autorisering avbrutt.';
+            statusEl.className = 'status err';
+            closeBtn.style.display = 'inline-block';
+        } else if (code && state.startsWith('strava_') && window.opener) {
+            const dayId = parseInt(state.replace('strava_', ''));
+            try {
+                window.opener.postMessage(
+                    { type: 'strava_code', code, dayId },
+                    window.opener.location.origin
+                );
+                statusEl.textContent = 'Autorisert! Laster opp…';
+                statusEl.className = 'status ok';
+                setTimeout(() => {
+                    window.close();
+                    // If close fails (blocked), show button
+                    setTimeout(() => { closeBtn.style.display = 'inline-block'; }, 500);
+                }, 800);
+            } catch (e) {
+                statusEl.textContent = 'Kunne ikke kommunisere med hovedvinduet. Lukk og prøv igjen.';
+                statusEl.className = 'status err';
+                closeBtn.style.display = 'inline-block';
+            }
+        } else if (code && !window.opener) {
+            statusEl.textContent = 'Hovedvinduet er lukket. Lukk dette vinduet og prøv igjen.';
+            statusEl.className = 'status err';
+            closeBtn.style.display = 'inline-block';
+        } else {
+            statusEl.textContent = 'Ugyldig callback. Ingen kode mottatt.';
+            statusEl.className = 'status err';
+            closeBtn.style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html>

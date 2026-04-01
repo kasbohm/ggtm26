@@ -386,24 +386,14 @@
         const STRAVA_CLIENT_ID = '3552';
         const STRAVA_CLIENT_SECRET = '1e1b3a3b56a35a9bd024f559a2f0f414aa199559';
 
-        // If this page is loaded as a Strava OAuth popup callback, relay code to opener and close
-        (function() {
-            const p = new URLSearchParams(location.search);
-            const state = p.get('state') || '';
-            if (state.startsWith('strava_') && p.get('code') && window.opener) {
-                const dayId = parseInt(state.replace('strava_', ''));
-                window.opener.postMessage({ type: 'strava_code', code: p.get('code'), dayId }, location.origin);
-                window.close();
-            }
-        })();
-
         window.sendDayToStrava = function(dayId) {
             const day = days.find(d => d.id === dayId);
             if (!day || day.routes.length === 0) { alert('Velg ruter for dagen først.'); return; }
+            const redirectUri = location.origin + location.pathname.replace(/[^/]*$/, '') + 'strava-callback.html';
             const params = new URLSearchParams({
                 client_id: STRAVA_CLIENT_ID,
                 response_type: 'code',
-                redirect_uri: location.href.split('?')[0].split('#')[0],
+                redirect_uri: redirectUri,
                 scope: 'activity:write',
                 state: 'strava_' + dayId,
                 approval_prompt: 'auto'
@@ -413,7 +403,7 @@
         };
 
         window.addEventListener('message', async function(e) {
-            if (e.origin !== location.origin || !e.data || e.data.type !== 'strava_code') return;
+            if (!e.data || e.data.type !== 'strava_code') return;
             const { code, dayId } = e.data;
 
             const toast = document.createElement('div');
@@ -639,21 +629,19 @@
 
             showInfoPanel(`
                 <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:8px;margin-bottom:4px">
-                    ${stat(totalDays, 'dager')}
-                    ${stat(totalRoutes, 'ruter')}
                     ${stat(totalKm.toFixed(0) + ' km', 'distanse')}
                     ${stat(Math.round(totalHm) + ' m', 'høydemeter')}
                 </div>
                 ${status}`);
         }
 
-        function saveToLocalStorage() {
+        window.saveToLocalStorage = function saveToLocalStorage() {
             const data = days.map(day => ({
                 id: day.id,
                 routes: day.routes
             }));
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
+        };
 
         function loadFromLocalStorage() {
             const saved = localStorage.getItem(STORAGE_KEY);

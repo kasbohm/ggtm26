@@ -91,8 +91,6 @@
                     <div class="summary-brand-sub">Planlegg vårens store eventyr! Sett sammen til-og fra ruter som passer deg og dine bein! Vi møtes til lunsj!</div>
                 </div>
                 <div class="summary-grid" id="summaryGrid">
-                    <div class="summary-stat"><span class="summary-stat-value" id="totalDays">0</span><span class="summary-stat-label"> dager</span></div>
-                    <div class="summary-stat"><span class="summary-stat-value" id="totalRoutes">0</span><span class="summary-stat-label"> ruter</span></div>
                     <div class="summary-stat"><span class="summary-stat-value" id="totalKm">0</span><span class="summary-stat-label"> km</span></div>
                     <div class="summary-stat"><span class="summary-stat-value" id="totalHm">0</span><span class="summary-stat-label"> hm</span></div>
                 </div>
@@ -885,8 +883,6 @@ routesContainer.innerHTML = `
             });
 
             // Update summary slide
-            document.getElementById('totalDays').textContent = totalDaysWithRoutes;
-            document.getElementById('totalRoutes').textContent = totalRoutesCount;
             document.getElementById('totalKm').textContent = totalKm.toFixed(0);
             document.getElementById('totalHm').textContent = Math.round(totalHm);
 
