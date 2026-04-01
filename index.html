@@ -55,7 +55,7 @@
                     <button onclick="switchDay('alle')">Alle Dager</button>
                 </div>
             </div>
-            <button class="nav-btn" onclick="document.getElementById('gpxInput').click()">⬆️ Last opp GPX</button>
+            <button class="nav-btn" onclick="document.getElementById('gpxInput').click()">Last opp GPX</button>
         </nav>
     </header>
 
@@ -244,7 +244,7 @@
                     <input type="checkbox" id="route-${route.id}" ${isSelected ? 'checked' : ''}>
                     <label for="route-${route.id}">
                         <div class="route-name">${name}</div>
-                        <div class="route-details">${km} km | ⬆️ ${hm} m</div>
+                        <div class="route-details">${km} km / ${hm} m</div>
                         ${badgeHTML}
                     </label>
                 `;
@@ -322,7 +322,8 @@
             updateRouteColors();
             updateSidebar();
             closeRouteSelector();
-            if (currentView === 'sammendrag') showSummaryInfo();
+            if (currentView === 'sammendrag') showStartPanel();
+            else if (currentView === 'alle') showSummaryInfo();
             else if (typeof currentView === 'number') showDayInfo(currentView);
         };
 
@@ -494,66 +495,79 @@
             }, { once: true });
         };
 
-        function showSummaryInfo() {
+        function showInfoPanel(html) {
             const panel = document.getElementById('dayInfoPanel');
             const inner = document.getElementById('dayInfoInner');
             if (!panel || !inner) return;
-
-            let totalKm = 0, totalHm = 0;
-            let allOk = true;
-
-            let html = '';
-
-            days.forEach(day => {
-                const { utRoute, hjemRoute } = getDayRoutesSorted(day);
-                const { km, hm } = getDayStats(day);
-                const dayName = DAY_NAMES[day.id - 1];
-
-                totalKm += km;
-                totalHm += hm;
-
-                const hasUt = !!utRoute;
-                const hasHjem = !!hjemRoute;
-                if (!hasUt || !hasHjem) allOk = false;
-
-                html += `<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.1)">`;
-                html += `<div style="font-weight:700;font-size:0.82rem;color:#24243e;margin-bottom:3px">Dag ${day.id} — ${dayName}</div>`;
-
-                if (hasUt) {
-                    html += `<div style="font-size:0.73rem;color:#1a5c2a">${parseRouteDisplayName(utRoute.fileName)}</div>`;
-                } else {
-                    html += `<div style="font-size:0.73rem;color:#c0392b">⚠️ Mangler ut-rute</div>`;
-                }
-                if (hasHjem) {
-                    html += `<div style="font-size:0.73rem;color:#1a5c2a">${parseRouteDisplayName(hjemRoute.fileName)}</div>`;
-                } else {
-                    html += `<div style="font-size:0.73rem;color:#c0392b">⚠️ Mangler hjem-rute</div>`;
-                }
-                if (km > 0 || hm > 0) {
-                    html += `<div style="font-size:0.7rem;color:#555;margin-top:2px">${km.toFixed(1)} km · ⬆️ ${hm} m</div>`;
-                }
-                html += `</div>`;
-            });
-
-            if (totalKm > 0) {
-                html += `<div style="margin-top:4px;padding-top:6px;font-size:0.85rem;font-weight:700;color:#24243e;border-top:2px solid rgba(0,0,0,0.12)">`;
-                html += `Totalt: ${totalKm.toFixed(1)} km · ⬆️ ${totalHm} m</div>`;
-            }
-
-            if (allOk && totalKm > 0) {
-                html += `<div style="margin-top:8px;font-size:0.73rem;color:#27ae60;background:rgba(39,174,96,0.1);border-radius:6px;padding:6px 8px">✅ Alle dager er konfigurert!</div>`;
-            } else if (!allOk) {
-                html += `<div style="margin-top:8px;font-size:0.73rem;color:#c0392b;background:rgba(192,57,43,0.08);border-radius:6px;padding:6px 8px">⚠️ Noen dager mangler ruter. Bruk Program-menyen for å velge.</div>`;
-            } else {
-                html += `<div style="margin-top:8px;font-size:0.73rem;color:#666;background:rgba(0,0,0,0.05);border-radius:6px;padding:6px 8px">Ingen ruter valgt ennå. Bruk Program-menyen for å konfigurere turen din.</div>`;
-            }
-
             inner.innerHTML = html;
             panel.classList.remove('hiding');
             panel.style.display = 'none';
             void panel.offsetWidth;
             panel.style.display = '';
             panel.classList.add('visible');
+        }
+
+        function showStartPanel() {
+            let rows = '';
+            days.forEach(day => {
+                const { utRoute, hjemRoute, km, hm, count } = (() => {
+                    const { utRoute, hjemRoute } = getDayRoutesSorted(day);
+                    const { km, hm, count } = getDayStats(day);
+                    return { utRoute, hjemRoute, km, hm, count };
+                })();
+                if (count === 0) {
+                    rows += `<div style="border:1.5px dashed rgba(0,0,0,0.25);border-radius:8px;padding:8px 10px;margin-bottom:6px;opacity:0.6">
+                        <span style="font-size:0.78rem;color:#555">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
+                        <button class="btn-sm" style="float:right;margin-top:-2px" onclick="openRouteSelector(${day.id})">Velg</button>
+                    </div>`;
+                } else {
+                    const names = [utRoute, hjemRoute].filter(Boolean).map(r => r.name).join(' / ');
+                    rows += `<div style="border-left:3px solid ${day.color};background:rgba(0,0,0,0.03);border-radius:4px;padding:8px 10px;margin-bottom:6px">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span style="font-size:0.78rem;font-weight:700;color:#302b63">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
+                            <button class="btn-sm" onclick="openRouteSelector(${day.id})">Bytt</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#555;margin-top:2px">${km.toFixed(1)} km · ${hm} m</div>
+                    </div>`;
+                }
+            });
+            showInfoPanel(`
+                <p style="font-size:0.8rem;color:#555;line-height:1.5;margin:0 0 10px">
+                    <strong style="color:#302b63">Program: 4 dager, 4 destinasjoner, ulike ruter til og fra.</strong><br>
+                    Vil du ha lange dager i sadelen, velg A. Vil du ha mange timer i solen? Velg B.
+                    Usikker? Se etter noe midt i mellom. Vi møtes til lunch!
+                </p>
+                ${rows}`);
+        }
+
+        function showSummaryInfo() {
+            let totalKm = 0, totalHm = 0, totalDays = 0, totalRoutes = 0;
+            days.forEach(day => {
+                const { km, hm, count } = getDayStats(day);
+                totalKm += km; totalHm += hm;
+                if (count > 0) { totalDays++; totalRoutes += count; }
+            });
+
+            const stat = (val, label) => `<div style="text-align:center;padding:4px 10px">
+                <div style="font-size:1.4rem;font-weight:900;color:#302b63">${val}</div>
+                <div style="font-size:0.68rem;color:#888;margin-top:1px">${label}</div>
+            </div>`;
+
+            const allOk = days.every(day => getDayStats(day).count >= 2);
+            const status = totalKm === 0
+                ? `<div style="font-size:0.72rem;color:#888;background:rgba(0,0,0,0.05);border-radius:6px;padding:5px 8px;margin-top:6px">Ingen ruter valgt ennå.</div>`
+                : allOk
+                ? `<div style="font-size:0.72rem;color:#27ae60;background:rgba(39,174,96,0.08);border-radius:6px;padding:5px 8px;margin-top:6px">✅ Alle dager konfigurert!</div>`
+                : `<div style="font-size:0.72rem;color:#c0392b;background:rgba(192,57,43,0.06);border-radius:6px;padding:5px 8px;margin-top:6px">⚠️ Noen dager mangler ruter</div>`;
+
+            showInfoPanel(`
+                <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:4px;border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:8px;margin-bottom:4px">
+                    ${stat(totalDays, 'dager')}
+                    ${stat(totalRoutes, 'ruter')}
+                    ${stat(totalKm.toFixed(0) + ' km', 'distanse')}
+                    ${stat(Math.round(totalHm) + ' m', 'høydemeter')}
+                </div>
+                ${status}`);
         }
 
         function saveToLocalStorage() {
@@ -1181,6 +1195,7 @@
                     });
                 });
             } else {
+                days.forEach(d => d.visible = false);
                 routes.forEach(r => {
                     const day = days.find(d => d.routes.includes(r.id));
                     const isCurrentDay = day && day.id === dayId;
@@ -1192,9 +1207,9 @@
             updateRouteColors();
             renderLeftPanel();
 
-            if (dayId === 'sammendrag') showSummaryInfo();
-            else if (dayId !== 'alle') showDayInfo(dayId);
-            else hideDayInfo();
+            if (dayId === 'sammendrag') showStartPanel();
+            else if (dayId === 'alle') showSummaryInfo();
+            else showDayInfo(dayId);
 
             // Update weather for the selected day
             if (dayId !== 'alle' && dayId !== 'sammendrag' && typeof DAY_DATES !== 'undefined' && DAY_DATES[dayId]) {
@@ -1257,7 +1272,7 @@
             const hm = route.stats ? route.stats.elevationGain : '?';
             return `<div class="day-slot filled" style="border-left:3px solid ${route.color}">
                 <div class="slot-name">${name}</div>
-                <div class="slot-stats">${km} km · ⬆️ ${hm} m</div>
+                <div class="slot-stats">${km} km · ${hm} m</div>
             </div>`;
         }
 
@@ -1268,7 +1283,7 @@
             const hm = route.stats ? route.stats.elevationGain : '?';
             return `<div class="day-slot-compact filled" style="border-left:3px solid ${route.color}">
                 <div class="slot-name">${name}</div>
-                <div class="slot-stats">${km} km · ⬆️ ${hm} m</div>
+                <div class="slot-stats">${km} km · ${hm} m</div>
             </div>`;
         }
 
@@ -1285,7 +1300,7 @@
                 days.forEach(day => {
                     const { utRoute, hjemRoute } = getDayRoutesSorted(day);
                     const { km, hm, count } = getDayStats(day);
-                    const statsText = count > 0 ? `${km.toFixed(1)} km · ⬆️ ${hm} m` : '';
+                    const statsText = count > 0 ? `${km.toFixed(1)} km · ${hm} m` : '';
                     html += `<div class="alle-day" style="border-top:3px solid ${day.color}">
                         <div class="alle-day-header">
                             <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
@@ -1307,7 +1322,7 @@
                 if (!day) return;
                 const { utRoute, hjemRoute } = getDayRoutesSorted(day);
                 const { km, hm, count } = getDayStats(day);
-                const statsText = count > 0 ? `${km.toFixed(1)} km · ⬆️ ${hm} m` : '';
+                const statsText = count > 0 ? `${km.toFixed(1)} km · ${hm} m` : '';
                 panel.innerHTML = `
                     <div class="single-day-header" style="border-bottom:2px solid ${day.color}">
                         <span class="single-day-title">Dag ${dayId} — ${DAY_NAMES[dayId-1]}</span>
@@ -1364,7 +1379,7 @@
                         <strong>Opplastede ruter:</strong><br>
                         ${userRoutes.length} ${userRoutes.length === 1 ? 'rute' : 'ruter'}<br>
                         ${totalDistance.toFixed(1)} km kombinert<br>
-                        ${totalElevationGain > 0 ? `⬆️ ${totalElevationGain} m` : ''}
+                        ${totalElevationGain > 0 ? ` ${totalElevationGain} m` : ''}
                         ${overlapHtml}
                     </div>
                 `;
@@ -1394,7 +1409,7 @@
                             ${route.stats ? `
                                 <div class="route-stats">
                                     <div>📏 ${route.stats.distance} km</div>
-                                    ${route.stats.elevationGain ? `<div>⬆️ ${route.stats.elevationGain} m</div>` : ''}
+                                    ${route.stats.elevationGain ? `<div> ${route.stats.elevationGain} m</div>` : ''}
                                     ${route.stats.minEle !== null ? `<div>🏔️ ${route.stats.minEle} - ${route.stats.maxEle} moh</div>` : ''}
                                 </div>
                             ` : ''}
@@ -1437,7 +1452,7 @@
                 
                 const hasElevation = statsRoutes.some(r => r.stats && r.stats.elevationGain > 0);
                 if (hasElevation && totalElevationGain > 0) {
-                    statsHtml += ` | <strong>⬆️ ${totalElevationGain.toLocaleString('no-NO')} m</strong>`;
+                    statsHtml += ` | <strong> ${totalElevationGain.toLocaleString('no-NO')} m</strong>`;
                 }
                 
                 if (statsRoutes.length >= 2) {
@@ -1492,7 +1507,7 @@
                     if (sortedDayRoutes.length > 0) {
                         let statsText = `${dayDistance.toFixed(1)} km`;
                         if (dayElevationGain > 0) {
-                            statsText += ` | ⬆️ ${dayElevationGain} m`;
+                            statsText += ` / ${dayElevationGain} m`;
                         }
                         if (dayMinEle !== Infinity) {
                             statsText += ` | 🏔️ ${dayMinEle}-${dayMaxEle}m`;
@@ -1567,7 +1582,7 @@
                             <div class="day-route-name">${displayName}</div>
                             <div class="day-route-stats">
                                 ${route.stats ? route.stats.distance + ' km' : ''}
-                                ${route.stats && route.stats.elevationGain ? ' | ⬆️ ' + route.stats.elevationGain + ' m' : ''}
+                                ${route.stats && route.stats.elevationGain ? ' / ' + route.stats.elevationGain + ' m' : ''}
                             </div>
                         </div>
                     `;
