@@ -386,30 +386,35 @@
         const STRAVA_CLIENT_ID = '3552';
         const STRAVA_CLIENT_SECRET = '1e1b3a3b56a35a9bd024f559a2f0f414aa199559';
 
+        // If this page is loaded as a Strava OAuth popup callback, relay code to opener and close
+        (function() {
+            const p = new URLSearchParams(location.search);
+            const state = p.get('state') || '';
+            if (state.startsWith('strava_') && p.get('code') && window.opener) {
+                const dayId = parseInt(state.replace('strava_', ''));
+                window.opener.postMessage({ type: 'strava_code', code: p.get('code'), dayId }, location.origin);
+                window.close();
+            }
+        })();
+
         window.sendDayToStrava = function(dayId) {
             const day = days.find(d => d.id === dayId);
             if (!day || day.routes.length === 0) { alert('Velg ruter for dagen først.'); return; }
-            sessionStorage.setItem('strava_pending_day', dayId);
             const params = new URLSearchParams({
                 client_id: STRAVA_CLIENT_ID,
                 response_type: 'code',
                 redirect_uri: location.href.split('?')[0].split('#')[0],
                 scope: 'activity:write',
-                state: 'strava_upload',
+                state: 'strava_' + dayId,
                 approval_prompt: 'auto'
             });
-            location.href = `https://www.strava.com/oauth/authorize?${params}`;
+            window.open(`https://www.strava.com/oauth/authorize?${params}`, 'strava_auth',
+                'width=600,height=700,toolbar=no,menubar=no,resizable=yes');
         };
 
-        async function handleStravaCallback() {
-            const p = new URLSearchParams(location.search);
-            if (p.get('state') !== 'strava_upload' || !p.get('code')) return;
-            const code = p.get('code');
-            history.replaceState({}, '', location.pathname);
-
-            const dayId = parseInt(sessionStorage.getItem('strava_pending_day'));
-            sessionStorage.removeItem('strava_pending_day');
-            if (!dayId) return;
+        window.addEventListener('message', async function(e) {
+            if (e.origin !== location.origin || !e.data || e.data.type !== 'strava_code') return;
+            const { code, dayId } = e.data;
 
             const toast = document.createElement('div');
             toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#FC4C02;color:#fff;padding:10px 20px;border-radius:8px;font-family:monospace;font-size:0.85rem;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
@@ -433,7 +438,7 @@
                 form.append('file', new Blob([content], { type: 'application/gpx+xml' }), fileName);
                 form.append('data_type', 'gpx');
                 form.append('name', `GGTM26 Dag ${dayId} — ${DAY_NAMES[dayId-1]}`);
-                form.append('description', `Team Gåping Mallorca Getaway 2026 #GGTM26`);
+                form.append('description', 'Team Gåping Mallorca Getaway 2026 #GGTM26');
                 form.append('sport_type', 'Ride');
                 form.append('private', '1');
 
@@ -452,7 +457,7 @@
                 toast.textContent = `Strava-feil: ${e.message}`;
             }
             setTimeout(() => toast.remove(), 5000);
-        }
+        });
 
         const DAY_INFO = {
             1: { emoji: '🏖️', title: 'Port de Soller', intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
@@ -2056,14 +2061,8 @@
         // Initialize
         updateSidebar();
         loadBundledRoutes().then(() => {
-            const p = new URLSearchParams(location.search);
-            if (p.get('state') === 'strava_upload' && p.get('code')) {
-                const pendingDay = parseInt(sessionStorage.getItem('strava_pending_day'));
-                switchDay(pendingDay || 'sammendrag');
-                handleStravaCallback();
-            } else {
-                switchDay('sammendrag');
-            }
+            loadFromLocalStorage();
+            switchDay('sammendrag');
         });
         renderLeftPanel();
         setTimeout(() => map.invalidateSize(), 50);
