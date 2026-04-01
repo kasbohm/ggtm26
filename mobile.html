@@ -1787,26 +1787,26 @@ routesContainer.innerHTML = `
             container.innerHTML = '';
             data.hourly.time.forEach((t, i) => {
                 const hour = parseInt(t.slice(11,13));
-                if (![8,9,10,11,12,14,15,16,17,18,20].includes(hour)) return;
+                if (![8,10,12,14,16].includes(hour)) return;
                 const temp = Math.round(data.hourly.temperature_2m[i]);
                 const wind = Math.round(data.hourly.windspeed_10m[i] / 3.6);
                 const dir = windDirM(data.hourly.winddirection_10m[i]);
                 const precip = data.hourly.precipitation[i];
                 const emoji = WMO_EMOJI_M[data.hourly.weathercode[i]] || '🌡️';
                 const cell = document.createElement('div');
-                cell.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1a3a;border-radius:6px;padding:3px 5px;';
+                cell.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#1a1a3a;border-radius:5px;padding:2px 4px;';
                 cell.innerHTML = `
-                    <div style="color:#88aacc;font-size:0.65rem">${hour.toString().padStart(2,'0')}:00</div>
-                    <div style="font-size:1.1rem">${emoji}</div>
-                    <div style="font-weight:bold;color:#fff;font-size:0.8rem">${temp}°</div>
-                    <div style="color:#8bc;font-size:0.6rem">${wind}m/s ${dir}</div>
-                    ${precip > 0 ? `<div style="color:#6af;font-size:0.6rem">${precip.toFixed(1)}mm</div>` : ''}
+                    <div style="color:#88aacc;font-size:0.6rem">${hour.toString().padStart(2,'0')}:00</div>
+                    <div style="font-size:1rem">${emoji}</div>
+                    <div style="font-weight:bold;color:#fff;font-size:0.75rem">${temp}°</div>
+                    <div style="color:#8bc;font-size:0.56rem">${wind}m/s ${dir}</div>
+                    ${precip > 0 ? `<div style="color:#6af;font-size:0.55rem">${precip.toFixed(1)}mm</div>` : ''}
                 `;
                 container.appendChild(cell);
                 if (hour === 12) {
                     const lunch = document.createElement('div');
-                    lunch.style.cssText = 'text-align:center;min-width:44px;flex-shrink:0;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:6px;padding:3px 5px;';
-                    lunch.innerHTML = `<div style="color:#c8a000;font-size:0.65rem">lunch</div><div style="font-size:1.1rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.8rem">0.5‰</div><div style="color:#c8a000;font-size:0.6rem">1f/t</div><div style="color:#c8a000;font-size:0.58rem">50cl</div>`;
+                    lunch.style.cssText = 'text-align:center;min-width:38px;flex-shrink:0;background:#1a1400;border:1px solid rgba(255,200,0,0.25);border-radius:5px;padding:2px 4px;';
+                    lunch.innerHTML = `<div style="color:#c8a000;font-size:0.6rem">lunch</div><div style="font-size:1rem">🍺</div><div style="font-weight:bold;color:#ffe066;font-size:0.75rem">0.5‰</div><div style="color:#c8a000;font-size:0.56rem">1f/t</div><div style="color:#c8a000;font-size:0.55rem">50cl</div>`;
                     container.appendChild(lunch);
                 }
             });

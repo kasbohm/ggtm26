@@ -37,10 +37,10 @@
 }
 .weather-hours-mobile {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
-    min-height: 52px;
+    min-height: 46px;
     align-items: center;
 }
 .weather-hours-mobile::-webkit-scrollbar { display: none; }
@@ -238,7 +238,7 @@ body {
 
 .day-card {
     min-width: 100%;
-    padding: 15px;
+    padding: 10px 10px;
     display: flex;
     flex-direction: column;
 }
