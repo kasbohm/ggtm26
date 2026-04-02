@@ -383,33 +383,6 @@
         let currentView = 1;
         const DAY_NAMES = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
 
-        // ===== STRAVA =====
-        const STRAVA_CLIENT_ID = '3552';
-        const STRAVA_CLIENT_SECRET = '1e1b3a3b56a35a9bd024f559a2f0f414aa199559';
-
-        window.sendDayToStrava = function(dayId) {
-            const day = days.find(d => d.id === dayId);
-            if (!day || day.routes.length === 0) { alert('Velg ruter for dagen først.'); return; }
-            if (!confirm('Ruten lastes opp til Strava som en privat aktivitet (ikke rute).\n\nDu kan konvertere den til rute manuelt inne på Strava etterpå.\n\nFortsette?')) return;
-            const redirectUri = location.origin + location.pathname.replace(/[^/]*$/, '') + 'strava-callback.html';
-            const params = new URLSearchParams({
-                client_id: STRAVA_CLIENT_ID,
-                response_type: 'code',
-                redirect_uri: redirectUri,
-                scope: 'activity:write',
-                state: 'strava_' + dayId,
-                approval_prompt: 'auto'
-            });
-            const popup = window.open(`https://www.strava.com/oauth/authorize?${params}`, 'strava_auth',
-                'width=600,height=700,toolbar=no,menubar=no,resizable=yes');
-            if (!popup) {
-                showToast('Popup blokkert — tillat popups for denne siden', '#c0392b', 8000);
-            } else {
-                showToast('Strava: logger inn…  (lukk popup når du er ferdig)', '#555566', 6000);
-            }
-            console.log('Strava redirect_uri:', redirectUri);
-        };
-
         function showToast(msg, color, duration) {
             const t = document.createElement('div');
             t.style.cssText = `position:fixed;top:70px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 20px;border-radius:8px;font-family:monospace;font-size:0.85rem;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.4);max-width:90vw;text-align:center`;
@@ -419,77 +392,6 @@
             return t;
         }
 
-        window.addEventListener('message', async function(e) {
-            if (!e.data || e.data.type !== 'strava_code') return;
-            const { code, dayId } = e.data;
-            const toast = showToast(`Strava: henter token for dag ${dayId}…`, '#FC4C02', 30000);
-
-            try {
-                const tokenRes = await fetch('https://www.strava.com/oauth/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ client_id: STRAVA_CLIENT_ID, client_secret: STRAVA_CLIENT_SECRET, code, grant_type: 'authorization_code' })
-                });
-                if (!tokenRes.ok) throw new Error(`Token HTTP ${tokenRes.status}`);
-                const token = await tokenRes.json();
-                if (!token.access_token) throw new Error(token.message || JSON.stringify(token));
-
-                toast.textContent = `Strava: laster opp GPX…`;
-
-                const day = days.find(d => d.id === dayId);
-                if (!day) throw new Error(`Dag ${dayId} ikke funnet`);
-                const dayRoutes = day.routes.map(id => routes.find(r => r.id === id)).filter(Boolean);
-                if (dayRoutes.length === 0) throw new Error('Ingen ruter valgt for dag ' + dayId);
-                const tripDate = (typeof DAY_DATES !== 'undefined') ? DAY_DATES[dayId] : null;
-                const { fileName, content } = buildDayGPX(dayId, dayRoutes, DAY_INFO[dayId], 'Strava', tripDate);
-
-                const form = new FormData();
-                form.append('file', new Blob([content], { type: 'application/gpx+xml' }), fileName);
-                form.append('data_type', 'gpx');
-                form.append('name', `GGTM26 Dag ${dayId} — ${DAY_NAMES[dayId-1]}`);
-                form.append('description', 'Team Gåping Mallorca Getaway 2026 #GGTM26');
-                form.append('sport_type', 'Ride');
-                form.append('private', '1');
-
-                const uploadRes = await fetch('https://www.strava.com/api/v3/uploads', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token.access_token}` },
-                    body: form
-                });
-                if (!uploadRes.ok) {
-                    const errBody = await uploadRes.text();
-                    throw new Error(`Upload HTTP ${uploadRes.status}: ${errBody}`);
-                }
-                const upload = await uploadRes.json();
-                if (upload.error) throw new Error(upload.error);
-
-                // Poll until Strava finishes processing
-                toast.textContent = `Strava: prosesserer aktivitet…`;
-                const uploadId = upload.id;
-                let activityId = null;
-                for (let i = 0; i < 15; i++) {
-                    await new Promise(r => setTimeout(r, 2000));
-                    const pollRes = await fetch(`https://www.strava.com/api/v3/uploads/${uploadId}`, {
-                        headers: { 'Authorization': `Bearer ${token.access_token}` }
-                    });
-                    const pollData = await pollRes.json();
-                    console.log('[Strava poll]', pollData);
-                    if (pollData.error) throw new Error('Strava processing error: ' + pollData.error);
-                    if (pollData.activity_id) { activityId = pollData.activity_id; break; }
-                }
-
-                toast.remove();
-                if (activityId) {
-                    showToast(`✅ Dag ${dayId} lagt til på Strava!`, '#27ae60', 8000);
-                } else {
-                    showToast(`⚠️ Opplastet, men aktivitet ikke klar ennå. Sjekk Strava om litt.`, '#f39c12', 8000);
-                }
-            } catch (err) {
-                toast.remove();
-                showToast(`Strava-feil: ${err.message}`, '#c0392b', 10000);
-                console.error('Strava upload error:', err);
-            }
-        });
 
         const DAY_INFO = {
             1: { emoji: '🏖️', title: 'Port de Soller', intro: 'Port de Sóller er en sjarmerende havneby med halvmåneformet bukt, rolig strandliv og klassisk mallorcansk stemning – perfekt for en avslappet pause.', tip: '💡 Bonus - Puig Major på returen, øyas høyeste punkt' },
@@ -1402,7 +1304,7 @@
                             <span class="alle-day-title">Dag ${day.id} — ${DAY_NAMES[day.id-1]}</span>
                             <button class="btn-sm" onclick="openRouteSelector(${day.id})">${count > 0 ? 'Bytt' : 'Velg'}</button>
                             <button class="btn-sm btn-secondary" id="toggle-day-${day.id}" onclick="toggleDayVisibility(${day.id})">${day.visible ? 'Skjul' : 'Vis'}</button>
-                            ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button><button class="btn-sm btn-strava" onclick="sendDayToStrava(${day.id})">Strava</button>` : ''}
+                            ${count > 0 ? `<button class="btn-sm btn-download" onclick="downloadDayGpx(${day.id})">⬇️</button>` : ''}
                         </div>
                         ${statsText ? `<div class="alle-day-stats">${statsText}</div>` : ''}
                         <div class="alle-day-slots">

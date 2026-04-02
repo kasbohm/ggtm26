@@ -841,23 +841,7 @@ body {
 }
 .route-option[data-type="user"] .route-name { color: #ccc; }
 
-/* Strava button */
-.btn-strava {
-    background: rgba(252,76,2,0.15);
-    border: 1px solid rgba(252,76,2,0.5);
-    color: #FC4C02;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-.btn-strava:hover {
-    background: rgba(252,76,2,0.3);
-    border-color: #FC4C02;
-}
+
 
 /* Download button */
 .btn-download {
