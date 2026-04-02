@@ -1177,19 +1177,71 @@
             if (nav && !nav.contains(e.target)) nav.classList.remove('open');
         });
 
+        let lunchMarker = null;
+
+        function clearLunchMarker() {
+            if (lunchMarker) { lunchMarker.remove(); lunchMarker = null; }
+        }
+
+        function placeLunchMarker(lat, lon, label) {
+            clearLunchMarker();
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="display:flex;flex-direction:column;align-items:center;width:120px;">
+                    <div style="
+                        height:26px;line-height:26px;
+                        background:#fff;
+                        border:2px solid #555;
+                        border-radius:8px;
+                        padding:0 10px;
+                        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+                        white-space:nowrap;
+                        font-family:sans-serif;
+                        font-size:0.75rem;
+                        font-weight:600;
+                        color:#222;
+                    ">🍺 ${label}</div>
+                    <div style="width:2px;height:10px;background:#555;"></div>
+                    <div style="width:8px;height:8px;background:#555;border-radius:50%;"></div>
+                </div>`,
+                iconAnchor: [60, 44],
+                iconSize: [120, 44],
+            });
+            lunchMarker = L.marker([lat, lon], { icon, interactive: false }).addTo(map);
+        }
+
         window.switchDay = function(dayId) {
             currentView = dayId;
             document.getElementById('navProgram')?.classList.remove('open');
+            clearLunchMarker();
 
-            if (dayId === 'alle' || dayId === 'sammendrag') {
+            if (dayId === 'sammendrag') {
                 days.forEach(day => {
                     day.routes.forEach(rId => {
                         const r = routes.find(x => x.id === rId);
-                        if (!r) return;
-                        if (day.visible) showRoute(r); else hideRoute(r);
+                        if (r) showRoute(r);
                     });
                 });
+                routes.forEach(r => {
+                    if (!days.some(d => d.routes.includes(r.id))) hideRoute(r);
+                });
+            } else if (dayId === 'alle') {
+                days.forEach(d => d.visible = true);
+                const allSelectedIds = new Set(days.flatMap(d => d.routes));
+                routes.forEach(r => {
+                    if (allSelectedIds.has(r.id)) showRoute(r); else hideRoute(r);
+                });
+                const visiblePolylines = routes.filter(r => r.visible).map(r => r.polyline);
+                if (visiblePolylines.length > 0) {
+                    map.fitBounds(L.featureGroup(visiblePolylines).getBounds(), { padding: [30, 30] });
+                }
             } else {
+                const DAY_FOCUS = {
+                    1: [39.79618634116553, 2.696669839260343, 13],  // Port de Soller
+                    2: [39.95979455065529, 3.210197778196782, 12],  // Cap de Formentor
+                    3: [39.85102591162623, 2.7999380599789365, 12], // Sa Calobra
+                    4: [39.455671698235484, 3.185898040747934, 12], // Sant Salvador
+                };
                 days.forEach(d => d.visible = false);
                 routes.forEach(r => {
                     const day = days.find(d => d.routes.includes(r.id));
@@ -1198,6 +1250,16 @@
                 });
                 const day = days.find(d => d.id === dayId);
                 if (day) day.visible = true;
+                const dayPolylines = routes.filter(r => r.visible).map(r => r.polyline);
+                if (dayPolylines.length > 0) {
+                    map.fitBounds(L.featureGroup(dayPolylines).getBounds(), { padding: [30, 30] });
+                } else {
+                    const focus = DAY_FOCUS[dayId];
+                    if (focus) {
+                        map.setView([focus[0], focus[1]], focus[2]);
+                        placeLunchMarker(focus[0], focus[1], DAY_NAMES[dayId - 1]);
+                    }
+                }
             }
             updateRouteColors();
             renderLeftPanel();
