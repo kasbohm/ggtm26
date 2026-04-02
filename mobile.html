@@ -421,7 +421,40 @@
             triggerGPXDownload(fileName, content);
         }
         
-        let map, currentDay = 0, modalDayNum = 1;
+        let map, currentDay = 0, modalDayNum = 1, lunchMarker = null;
+
+        const DAY_NAMES_MOBILE = ['Port de Soller', 'Cap de Formentor', 'Sa Calobra', 'Sant Salvador'];
+
+        function clearLunchMarker() {
+            if (lunchMarker) { lunchMarker.remove(); lunchMarker = null; }
+        }
+
+        function placeLunchMarker(lat, lon, label) {
+            clearLunchMarker();
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="display:flex;flex-direction:column;align-items:center;width:120px;">
+                    <div style="
+                        height:26px;line-height:26px;
+                        background:#fff;
+                        border:2px solid #555;
+                        border-radius:8px;
+                        padding:0 10px;
+                        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+                        white-space:nowrap;
+                        font-family:sans-serif;
+                        font-size:0.75rem;
+                        font-weight:600;
+                        color:#222;
+                    ">🍺 ${label}</div>
+                    <div style="width:2px;height:10px;background:#555;"></div>
+                    <div style="width:8px;height:8px;background:#555;border-radius:50%;"></div>
+                </div>`,
+                iconAnchor: [60, 44],
+                iconSize: [120, 44],
+            });
+            lunchMarker = L.marker([lat, lon], { icon, interactive: false }).addTo(map);
+        }
 
         function effectiveDay() {
             return currentDay === 0 ? 0 : Math.ceil(currentDay / 2);
@@ -542,10 +575,14 @@
                     route.endMarker.setStyle({ fillOpacity: 0, opacity: 0 });
                 });
                 const focus = DAY_FOCUS[eff];
-                if (focus) map.setView([focus[0], focus[1]], focus[2]);
+                if (focus) {
+                    map.setView([focus[0], focus[1]], focus[2]);
+                    placeLunchMarker(focus[0], focus[1], DAY_NAMES_MOBILE[eff - 1]);
+                }
                 return;
             }
 
+            clearLunchMarker();
             const isHighlighted = highlightedRouteId !== null;
 
             routes.forEach(route => {
@@ -954,6 +991,7 @@ routesContainer.innerHTML = `
                 splashFill.style.width = `${((i+1) / bundledRouteFiles.length) * 100}%`;
             }
             loadFromLocalStorage();
+            updateUI();
             updateMapVisibility();
             splashText.textContent = 'Ferdig!';
             setTimeout(() => document.getElementById('splash').classList.add('hidden'), 500);
