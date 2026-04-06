@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GGTM26 – Mallorca Sykkeltur</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #fc4c02, #f7b733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            font-size: 1.1rem;
+            color: #aaa;
+        }
+        .route-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .route-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(252, 76, 2, 0.15);
+            border-color: rgba(252, 76, 2, 0.3);
+        }
+        .route-card .day {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #fc4c02;
+            margin-bottom: 0.5rem;
+        }
+        .route-card h2 {
+            font-size: 1.6rem;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+        .route-card h2 a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .route-card h2 a:hover {
+            color: #fc4c02;
+        }
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+        .stat .icon {
+            font-size: 1.1rem;
+        }
+        .description {
+            line-height: 1.7;
+            color: #b0b0b0;
+            font-size: 0.95rem;
+        }
+        .strava-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1.2rem;
+            background: #fc4c02;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .strava-btn:hover {
+            background: #e04400;
+        }
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #666;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GGTM26 Mallorca</h1>
+            <p>Fire dager på to hjul gjennom Mallorcas mest spektakulære landskap</p>
+        </header>
+
+        <div class="route-card">
+            <div class="day">Dag 1</div>
+            <h2><a href="https://www.strava.com/routes/3476325473836276168">Port de Soller</a></h2>
+            <div class="stats">
+                <span class="stat"><span class="icon">&#x1F6E3;</span> 106,6 km</span>
+                <span class="stat"><span class="icon">&#x26F0;</span> 1 517 hm</span>
+            </div>
+            <p class="description">
+                En perfekt åpningsetappe som fører dere ned mot den sjarmerende havnebyen Port de Soller
+                på Mallorcas nordvestkyst. Ruten byr på kuperte veier gjennom olivenlunder og
+                appelsinhager, med flere mellomfjellspass i Serra de Tramuntana. Forvent bratte, korte
+                klatringer belønnet med svingete nedkjøringer og glimt av det blå Middelhavet
+                mellom fjelltoppene. Et fenomenalt førsteinntrykk av øya.
+            </p>
+            <a class="strava-btn" href="https://www.strava.com/routes/3476325473836276168">Se rute på Strava</a>
+        </div>
+
+        <div class="route-card">
+            <div class="day">Dag 2</div>
+            <h2><a href="https://www.strava.com/routes/3476323598492394952">Cap de Formentor</a></h2>
+            <div class="stats">
+                <span class="stat"><span class="icon">&#x1F6E3;</span> 123,1 km</span>
+                <span class="stat"><span class="icon">&#x26F0;</span> 1 505 hm</span>
+            </div>
+            <p class="description">
+                Mallorcas nordligste punkt og en absolutt ikonisk sykkelopplevelse. Veien ut til
+                fyrtårnet på Cap de Formentor slynger seg dramatisk langs stupbratte klipper
+                med svimle utsikter over havet hundrevis av meter under dere. Underveis passerer
+                dere gjennom den pittoreske byen Pollenca og over fjelloverganger med panoramautsikt
+                over begge sider av halvøya. Dagens lengste etappe, men minnene varer evig.
+            </p>
+            <a class="strava-btn" href="https://www.strava.com/routes/3476323598492394952">Se rute på Strava</a>
+        </div>
+
+        <div class="route-card">
+            <div class="day">Dag 3</div>
+            <h2><a href="https://www.strava.com/routes/3476323598492225992">Sa Calobra</a></h2>
+            <div class="stats">
+                <span class="stat"><span class="icon">&#x1F6E3;</span> 144,8 km</span>
+                <span class="stat"><span class="icon">&#x26F0;</span> 2 252 hm</span>
+            </div>
+            <p class="description">
+                Kongedagen. Sa Calobra er selve helligdommen for syklister på Mallorca — en legendarisk
+                nedkjøring (og brutal returklatring) med 26 hårnålssvinger som snor seg ned til
+                havnivå gjennom Torrent de Pareis-juvet. Med nesten 145 km og over 2 250 høydemeter
+                er dette turens tøffeste etappe, men også den mest uforglemmelige. Landskapet er
+                rått, vilt og fullstendig overveldende. Dere vil forstå hvorfor proffene trener her.
+            </p>
+            <a class="strava-btn" href="https://www.strava.com/routes/3476323598492225992">Se rute på Strava</a>
+        </div>
+
+        <div class="route-card">
+            <div class="day">Dag 4</div>
+            <h2><a href="https://www.strava.com/routes/3476319372667989448">Sant Salvador</a></h2>
+            <div class="stats">
+                <span class="stat"><span class="icon">&#x1F6E3;</span> 107,5 km</span>
+                <span class="stat"><span class="icon">&#x26F0;</span> 992 hm</span>
+            </div>
+            <p class="description">
+                En verdig avslutning med klatringen opp til klosteret Santuari de Sant Salvador
+                — en av Mallorcas mest klassiske stigninger. Fra toppen på 509 meter har dere
+                360-graders utsikt over hele den sørøstlige delen av øya. Etappen er den letteste
+                av de fire med under 1 000 høydemeter, noe som passer perfekt etter gårsdagens
+                kraftanstrengelse. Rull gjennom landlige småveier, vakre landsbyer og flate
+                sletter før det siste triumferende oppoverbakket til toppen.
+            </p>
+            <a class="strava-btn" href="https://www.strava.com/routes/3476319372667989448">Se rute på Strava</a>
+        </div>
+
+        <footer>
+            <p>GGTM26 &middot; Totalt: 482 km &middot; 6 266 høydemeter</p>
+        </footer>
+    </div>
+</body>
+</html>
