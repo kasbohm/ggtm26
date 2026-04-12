@@ -3242,8 +3242,6 @@
     (function() {
         proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
 
-        const DEEPL_KEY = window.CONFIG?.DEEPL_KEY || null;
-
         const PROXY = 'https://corsproxy.io/?';
         const WFS_BASE = 'http://www.conselldemallorca.info/geoserver/SIT/ows';
         const URL_ICON = PROXY + encodeURIComponent(`${WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature&typeName=SIT:incidencies_icon&outputFormat=application/json`);
@@ -3308,28 +3306,6 @@
                 .bindPopup(`<b style="background:#f5a623;color:#000;border:1.5px solid #000;border-radius:3px;padding:1px 6px;font-size:12px;display:inline-block">${road}</b><br>${obs}${dateStr}`);
         }
 
-        async function translateBatch(texts) {
-            if (!texts.length || !DEEPL_KEY) return texts;
-            try {
-                const body = new URLSearchParams({ target_lang: 'NB' });
-                texts.forEach(t => body.append('text', t));
-                const res = await fetch(PROXY + encodeURIComponent('https://api-free.deepl.com/v2/translate'), {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `DeepL-Auth-Key ${DEEPL_KEY}`,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body
-                });
-                const data = await res.json();
-                console.log('DeepL svar:', data);
-                if (!data.translations) return texts;
-                return data.translations.map(t => t.text);
-            } catch (e) {
-                console.warn('DeepL feil:', e);
-                return texts;
-            }
-        }
 
         async function loadVeiarbeid() {
             try {
@@ -3346,16 +3322,6 @@
                     console.log('🚧 Veiarbeid felt:', Object.keys(iconFeatures[0].properties));
                     console.log('🚧 Eksempel:', iconFeatures[0].properties);
                 }
-
-                // Batch-oversett alle observacions i én DeepL-kall
-                const texts = iconFeatures.map(f => f.properties.observacions || '');
-                const translated = await translateBatch(texts.filter(t => t));
-                let ti = 0;
-                iconFeatures.forEach(f => {
-                    if (f.properties.observacions) {
-                        f.properties.observacions = translated[ti++];
-                    }
-                });
 
                 iconFeatures.forEach(f => {
                     if (!f.geometry) return;
